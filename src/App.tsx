@@ -275,7 +275,7 @@ export default function App() {
       waText += `\n`;
     });
 
-    waText += `_Update via Sepak Takraw Simulator_\n`;
+    waText += `_Update via Sepak Takraw Tournament Management System_\n`;
 
     // Menggunakan textarea fallback untuk bypass keamanan iframe
     const textArea = document.createElement("textarea");
@@ -774,7 +774,7 @@ export default function App() {
            <div className="flex items-center gap-3">
               <div className={`${theme.primary} text-white p-2 rounded-xl shadow-md`}><IconTrophy /></div>
               <div className="hidden sm:block">
-                 <div className="font-black tracking-widest text-gray-800 leading-none">SEPAK TAKRAW<span className={theme.textPrimary}> SIMULATOR</span></div>
+                 <div className="font-black tracking-widest text-gray-800 leading-none">SEPAK TAKRAW<span className={theme.textPrimary}> Tournament Management System</span></div>
                  <div className={`text-[10px] font-black uppercase tracking-widest mt-1 ${theme.textPrimary} opacity-70`}>by fiqhipondaa9</div>
               </div>
            </div>
@@ -1131,7 +1131,7 @@ export default function App() {
           {/* SIGNATURE FOOTER */}
           <div className="text-center mt-16 pb-8 print:mt-10 print:pb-4">
             <p className="font-black text-sm tracking-widest uppercase text-gray-400">
-              Sepak Takraw Simulator <span className={`mx-2 ${theme.textPrimary}`}>&bull;</span> by <span className={theme.textPrimary}>fiqhipondaa9</span>
+              Sepak Takraw Tournament Management System <span className={`mx-2 ${theme.textPrimary}`}>&bull;</span> by <span className={theme.textPrimary}>fiqhipondaa9</span>
             </p>
           </div>
         </main>
