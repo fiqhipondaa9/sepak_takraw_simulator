@@ -502,13 +502,22 @@ export default function App() {
     setSchedule(newSchedule);
   };
 
+  // --- LOGIKA MENGHITUNG PEMENANG PARTAI (DENGAN DUKUNGAN W.O. GANDA) ---
   const calculatePartyWinner = (sets, teamA, teamB) => {
-    let winsA = 0; let winsB = 0;
+    let winsA = 0; let winsB = 0; let zeros = 0;
     sets.forEach(set => {
       const a = parseInt(set.scoreA); const b = parseInt(set.scoreB);
-      if (!isNaN(a) && !isNaN(b)) { if (a > b) winsA++; else if (b > a) winsB++; }
+      if (!isNaN(a) && !isNaN(b)) { 
+         if (a > b) winsA++; 
+         else if (b > a) winsB++; 
+         else if (a === 0 && b === 0) zeros++; // Deteksi input 0-0 (Walk-Over)
+      }
     });
-    if (winsA >= 2) return teamA; if (winsB >= 2) return teamB;
+    
+    if (winsA >= 2) return teamA; 
+    if (winsB >= 2) return teamB;
+    // Jika ada 2 set dengan skor 0-0, otomatis W.O. Ganda (Seri)
+    if (zeros >= 2 || (winsA === 1 && winsB === 1 && zeros === 1)) return 'SERI'; 
     return null; 
   };
 
@@ -520,10 +529,26 @@ export default function App() {
         updatedSets[setIndex] = { ...updatedSets[setIndex], [side]: newScore };
         targetParty.sets = updatedSets; targetParty.winner = calculatePartyWinner(updatedSets, match.teamA, match.teamB);
         updatedParties[partyIndex] = targetParty;
-        let matchWinsA = 0; let matchWinsB = 0;
-        updatedParties.forEach(p => { if (p.winner === match.teamA) matchWinsA++; if (p.winner === match.teamB) matchWinsB++; });
+        
+        let matchWinsA = 0; let matchWinsB = 0; let matchSeri = 0;
+        updatedParties.forEach(p => { 
+           if (p.winner === match.teamA) matchWinsA++; 
+           else if (p.winner === match.teamB) matchWinsB++; 
+           else if (p.winner === 'SERI') matchSeri++;
+        });
+        
         const requiredWins = Math.ceil(updatedParties.length / 2); let finalWinner = null;
-        if (matchWinsA >= requiredWins) finalWinner = match.teamA; if (matchWinsB >= requiredWins) finalWinner = match.teamB;
+        
+        if (matchWinsA >= requiredWins) finalWinner = match.teamA; 
+        else if (matchWinsB >= requiredWins) finalWinner = match.teamB;
+        else if (matchSeri >= requiredWins) finalWinner = 'SERI';
+        else if (matchWinsA + matchWinsB + matchSeri === updatedParties.length) {
+           // Jika seluruh partai selesai tapi tak ada yang capai requiredWins
+           if (matchWinsA > matchWinsB) finalWinner = match.teamA;
+           else if (matchWinsB > matchWinsA) finalWinner = match.teamB;
+           else finalWinner = 'SERI';
+        }
+        
         return { ...match, parties: updatedParties, winner: finalWinner, winsA: matchWinsA, winsB: matchWinsB };
       }
       return match;
@@ -588,17 +613,25 @@ export default function App() {
       if (!match.winner) return;
       const tA = match.teamA; const tB = match.teamB;
       standings[tA].play += 1; standings[tB].play += 1;
-      if (match.winner === tA) { standings[tA].win += 1; standings[tB].lose += 1; } else { standings[tB].win += 1; standings[tA].lose += 1; }
+      
+      if (match.winner === tA) { standings[tA].win += 1; standings[tB].lose += 1; } 
+      else if (match.winner === tB) { standings[tB].win += 1; standings[tA].lose += 1; }
+      else if (match.winner === 'SERI') { standings[tA].lose += 1; standings[tB].lose += 1; } // W.O Ganda = Dua-duanya Kalah
 
       let matchPartyWinsA = 0; let matchPartyWinsB = 0;
       match.parties.forEach(party => {
         if (party.winner === tA) { standings[tA].partyWin += 1; standings[tB].partyLose += 1; matchPartyWinsA += 1; } 
         else if (party.winner === tB) { standings[tB].partyWin += 1; standings[tA].partyLose += 1; matchPartyWinsB += 1; }
+        else if (party.winner === 'SERI') { standings[tA].partyLose += 1; standings[tB].partyLose += 1; }
+
         party.sets.forEach(set => {
           const a = parseInt(set.scoreA); const b = parseInt(set.scoreB);
           if (!isNaN(a) && !isNaN(b)) {
-            if (a > b) { standings[tA].setWin += 1; standings[tB].setLose += 1; } else if (b > a) { standings[tB].setWin += 1; standings[tA].setLose += 1; }
-            standings[tA].pointWin += a; standings[tA].pointLose += b; standings[tB].pointWin += b; standings[tB].pointLose += a;
+            if (a > b) { standings[tA].setWin += 1; standings[tB].setLose += 1; } 
+            else if (b > a) { standings[tB].setWin += 1; standings[tA].setLose += 1; }
+            
+            standings[tA].pointWin += a; standings[tA].pointLose += b; 
+            standings[tB].pointWin += b; standings[tB].pointLose += a;
           }
         });
       });
@@ -606,8 +639,10 @@ export default function App() {
       if (eventCategory === 'team') {
         if (match.winner === tA) { standings[tA].totalPoints += (matchPartyWinsB === 1) ? 2 : 3; standings[tB].totalPoints += (matchPartyWinsB === 1) ? 1 : 0; } 
         else if (match.winner === tB) { standings[tB].totalPoints += (matchPartyWinsA === 1) ? 2 : 3; standings[tA].totalPoints += (matchPartyWinsA === 1) ? 1 : 0; }
+        // Jika SERI, tidak ada yang dapat total point
       } else {
-        if (match.winner === tA) standings[tA].totalPoints += 2; else if (match.winner === tB) standings[tB].totalPoints += 2;
+        if (match.winner === tA) standings[tA].totalPoints += 2; 
+        else if (match.winner === tB) standings[tB].totalPoints += 2;
       }
     });
 
@@ -681,13 +716,32 @@ export default function App() {
       const newData = JSON.parse(JSON.stringify(prev)); 
       const match = newData[rIndex][mIndex]; const targetParty = match.parties[pIndex];
       targetParty.sets[sIndex][side] = newScore; targetParty.winner = calculatePartyWinner(targetParty.sets, match.teamA, match.teamB);
-      let matchWinsA = 0; let matchWinsB = 0;
-      match.parties.forEach(p => { if (p.winner === match.teamA) matchWinsA++; if (p.winner === match.teamB) matchWinsB++; });
+      
+      let matchWinsA = 0; let matchWinsB = 0; let matchSeri = 0;
+      match.parties.forEach(p => { 
+         if (p.winner === match.teamA) matchWinsA++; 
+         else if (p.winner === match.teamB) matchWinsB++; 
+         else if (p.winner === 'SERI') matchSeri++;
+      });
+      
       const requiredWins = Math.ceil(match.parties.length / 2); let finalWinner = null;
-      if (matchWinsA >= requiredWins) finalWinner = match.teamA; if (matchWinsB >= requiredWins) finalWinner = match.teamB;
+      if (matchWinsA >= requiredWins) finalWinner = match.teamA; 
+      else if (matchWinsB >= requiredWins) finalWinner = match.teamB;
+      else if (matchSeri >= requiredWins) finalWinner = 'SERI';
+      else if (matchWinsA + matchWinsB + matchSeri === match.parties.length) {
+         if (matchWinsA > matchWinsB) finalWinner = match.teamA;
+         else if (matchWinsB > matchWinsA) finalWinner = match.teamB;
+         else finalWinner = 'SERI';
+      }
+
       match.winner = finalWinner; match.winsA = matchWinsA; match.winsB = matchWinsB;
-      if (match.nextMatchRef && finalWinner) { const { r, m, slot } = match.nextMatchRef; newData[r][m][slot] = finalWinner; } 
-      else if (match.nextMatchRef && !finalWinner) { const { r, m, slot } = match.nextMatchRef; newData[r][m][slot] = '?'; }
+      // Jangan majukan ke babak selanjutnya jika W.O Ganda
+      if (match.nextMatchRef && finalWinner && finalWinner !== 'SERI') { 
+         const { r, m, slot } = match.nextMatchRef; newData[r][m][slot] = finalWinner; 
+      } 
+      else if (match.nextMatchRef) { 
+         const { r, m, slot } = match.nextMatchRef; newData[r][m][slot] = '?'; 
+      }
       return newData;
     });
   };
@@ -725,7 +779,7 @@ export default function App() {
     return (
       <div key={match.id} className={`bg-white rounded-3xl shadow-sm border ${isLive && !isProjectorMode ? 'border-red-400 shadow-md ring-4 ring-red-50' : theme.border} overflow-hidden flex flex-col transition-all duration-300 hover:shadow-md print:border-gray-300 print:shadow-none print:ring-0 ${isProjectorMode ? (isLive ? 'border-4 border-red-500 shadow-2xl' : 'border-none shadow-xl') : ''}`}>
         
-        <div className={`p-4 text-center border-b ${isLive ? 'border-red-200' : theme.border} ${match.winner ? `${theme.accent} ${theme.accentText} border-transparent print:bg-gray-100` : isLive ? 'bg-red-50/80 print:bg-white' : `bg-gray-50/50 print:bg-white`} ${isProjectorMode ? 'py-5' : ''} relative`}>
+        <div className={`p-4 text-center border-b ${isLive ? 'border-red-200' : theme.border} ${match.winner ? (match.winner === 'SERI' ? 'bg-gray-100 border-transparent print:bg-gray-100' : `${theme.accent} ${theme.accentText} border-transparent print:bg-gray-100`) : isLive ? 'bg-red-50/80 print:bg-white' : `bg-gray-50/50 print:bg-white`} ${isProjectorMode ? 'py-5' : ''} relative`}>
           
           {/* INDIKATOR LIVE (FITUR BARU) */}
           {isLive && (
@@ -766,7 +820,7 @@ export default function App() {
         <div className={`bg-gray-50/50 flex-1 flex flex-col gap-3 print:bg-white ${isProjectorMode ? 'p-8' : 'p-5'}`}>
           {(!isTeamA_TBD && !isTeamB_TBD) ? match.parties.map((party, pIndex) => (
             <div key={pIndex} className={`bg-white border ${theme.border} rounded-2xl relative shadow-sm ${isProjectorMode ? 'p-6' : 'p-3'}`}>
-               {match.parties.length > 1 && ( <div className={`font-bold text-center text-gray-400 mb-3 uppercase tracking-widest border-b border-gray-100 pb-2 ${isProjectorMode ? 'text-sm' : 'text-[10px]'}`}> {party.label} {party.winner && <span className={`${theme.textPrimary} ml-1`}>(W: {party.winner})</span>} </div> )}
+               {match.parties.length > 1 && ( <div className={`font-bold text-center text-gray-400 mb-3 uppercase tracking-widest border-b border-gray-100 pb-2 ${isProjectorMode ? 'text-sm' : 'text-[10px]'}`}> {party.label} {party.winner && <span className={`${party.winner === 'SERI' ? 'text-gray-400' : theme.textPrimary} ml-1`}>{party.winner === 'SERI' ? '(W.O Ganda)' : `(W: ${party.winner})`}</span>} </div> )}
                <div className="flex justify-center gap-4 sm:gap-8">
                  {[0, 1, 2].map((setIndex) => {
                     // MENGUBAH STRING MENJADI ANGKA AGAR PERBANDINGAN MATEMATIKA AKURAT
@@ -799,7 +853,7 @@ export default function App() {
             <div className={`h-full flex items-center justify-center text-gray-400 font-medium text-center py-8 ${isProjectorMode ? 'text-xl' : 'text-sm'}`}>Menunggu penantang...</div>
           )}
         </div>
-        {match.winner && ( <div className={`${theme.primary} p-3 text-center text-white font-black flex items-center justify-center gap-2 print:border-t print:bg-gray-100 print:text-black ${isProjectorMode ? 'text-2xl py-5' : 'text-base'}`}> <IconTrophy /> WINNER: {match.winner} </div> )}
+        {match.winner && ( <div className={`${match.winner === 'SERI' ? 'bg-gray-500 text-white' : `${theme.primary} text-white`} p-3 text-center font-black flex items-center justify-center gap-2 print:border-t print:bg-gray-100 print:text-black ${isProjectorMode ? 'text-2xl py-5' : 'text-base'}`}> {match.winner === 'SERI' ? <><IconX /> DOUBLE WALK-OVER</> : <><IconTrophy /> WINNER: {match.winner}</>} </div> )}
       </div>
     );
   };
