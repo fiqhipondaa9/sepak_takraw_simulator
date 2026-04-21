@@ -401,7 +401,7 @@ export default function App() {
     let finalSchedule = []; 
     let matchCounter = 1;
     const numParties = eventCategory === 'team' ? 3 : 1;
-    const partyLabels = ['Regu / Double 1', 'Regu / Double 2', 'Regu / Double 3'];
+    const partyLabels = ['Double / Regu / Quadrant 1', 'Double / Regu / Quadrant 2', 'Double / Regu / Quadrant 3'];
 
     const activeCourts = courts.length > 0 ? courts : ['Lapangan Utama'];
     let courtNextAvailableTimes = activeCourts.map(() => {
@@ -613,7 +613,7 @@ export default function App() {
     if (orderedTeams.length < size) return alert(`Jumlah tim (${orderedTeams.length}) tidak cukup.`);
 
     const numRounds = Math.log2(size); let rounds = [];
-    const numParties = eventCategory === 'team' ? 3 : 1; const partyLabels = ['Regu / Double 1', 'Regu / Double 2', 'Regu / Double 3'];
+    const numParties = eventCategory === 'team' ? 3 : 1; const partyLabels = ['Double / Regu / Quadrant 1', 'Double / Regu / Quadrant 2', 'Double / Regu / Quadrant 3'];
 
     for(let r = 0; r < numRounds; r++) {
        let matchesInRound = size / Math.pow(2, r + 1); let roundMatches = [];
