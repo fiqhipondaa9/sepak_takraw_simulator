@@ -55,6 +55,8 @@ export default function App() {
   const [schedule, setSchedule] = useState(savedData.schedule || []);
   const [tournamentType, setTournamentType] = useState(savedData.tournamentType || 'group'); 
   const [eventCategory, setEventCategory] = useState(savedData.eventCategory || 'single'); 
+  const [eventDiscipline, setEventDiscipline] = useState(savedData.eventDiscipline || 'Regu'); 
+  const [mixDisciplines, setMixDisciplines] = useState(savedData.mixDisciplines || ['Double', 'Regu', 'Quadrant']); // STATE BARU: Untuk format Mix
   const [numGroups, setNumGroups] = useState(savedData.numGroups || 2); 
   const [groupAssignments, setGroupAssignments] = useState(savedData.groupAssignments || {}); 
   const [courts, setCourts] = useState(savedData.courts || ['Lapangan Utama', 'Lapangan B']);
@@ -118,7 +120,7 @@ export default function App() {
   // --- EFEK AUTO-SAVE (SISTEM ANTI-MATI LAMPU) ---
   React.useEffect(() => {
     const dataToSave = {
-      activeTheme, teams, schedule, tournamentType, eventCategory, numGroups, 
+      activeTheme, teams, schedule, tournamentType, eventCategory, eventDiscipline, mixDisciplines, numGroups, 
       groupAssignments, courts, teamLogos, sponsorLogos, championshipTitles, knockoutData
     };
     try {
@@ -126,7 +128,7 @@ export default function App() {
     } catch (e) {
       console.warn("Gagal auto-save: Memori local storage penuh (mungkin gambar logo terlalu besar).");
     }
-  }, [activeTheme, teams, schedule, tournamentType, eventCategory, numGroups, groupAssignments, courts, teamLogos, sponsorLogos, championshipTitles, knockoutData]);
+  }, [activeTheme, teams, schedule, tournamentType, eventCategory, eventDiscipline, mixDisciplines, numGroups, groupAssignments, courts, teamLogos, sponsorLogos, championshipTitles, knockoutData]);
 
   // --- EFEK PERINGATAN TUTUP TAB (CEGAH KELUAR TIDAK SENGAJA) ---
   React.useEffect(() => {
@@ -148,7 +150,7 @@ export default function App() {
   // --- FUNGSI FITUR FILE (SAVE & OPEN JSON) ---
   const handleSaveFile = () => {
     const dataToSave = {
-      teams, schedule, tournamentType, eventCategory, numGroups, 
+      teams, schedule, tournamentType, eventCategory, eventDiscipline, mixDisciplines, numGroups, 
       groupAssignments, teamLogos, sponsorLogos, championshipTitles, knockoutData, courts, activeTheme
     };
     const blob = new Blob([JSON.stringify(dataToSave)], { type: 'application/json' });
@@ -171,6 +173,8 @@ export default function App() {
         setSchedule(data.schedule || []);
         setTournamentType(data.tournamentType || 'group');
         setEventCategory(data.eventCategory || 'single');
+        setEventDiscipline(data.eventDiscipline || 'Regu'); 
+        if (data.mixDisciplines) setMixDisciplines(data.mixDisciplines); // MUAT STATE BARU
         setNumGroups(data.numGroups || 2);
         setGroupAssignments(data.groupAssignments || {});
         setTeamLogos(data.teamLogos || {});
@@ -432,7 +436,11 @@ export default function App() {
     let finalSchedule = []; 
     let matchCounter = 1;
     const numParties = eventCategory === 'team' ? 3 : 1;
-    const partyLabels = ['Double / Regu / Quadrant 1', 'Double / Regu / Quadrant 2', 'Double / Regu / Quadrant 3'];
+    
+    // LOGIKA LABEL SPESIFIK & MIX FORMAT
+    const partyLabels = eventDiscipline === 'Mix' 
+      ? mixDisciplines // Jika Mix, ambil dari array mix [Double, Regu, Quadrant]
+      : [`${eventDiscipline} 1`, `${eventDiscipline} 2`, `${eventDiscipline} 3`];
 
     const activeCourts = courts.length > 0 ? courts : ['Lapangan Utama'];
     let courtNextAvailableTimes = activeCourts.map(() => {
@@ -443,7 +451,7 @@ export default function App() {
     allMatches.forEach(matchInfo => {
       let initialParties = [];
       for(let p = 0; p < numParties; p++) {
-        initialParties.push({ id: `p${p}`, label: eventCategory === 'team' ? partyLabels[p] : 'Pertandingan Utama', sets: [{ scoreA: '', scoreB: '' }, { scoreA: '', scoreB: '' }, { scoreA: '', scoreB: '' }], winner: null });
+        initialParties.push({ id: `p${p}`, label: eventCategory === 'team' ? partyLabels[p] : `Pertandingan ${eventDiscipline === 'Mix' ? 'Campuran' : eventDiscipline}`, sets: [{ scoreA: '', scoreB: '' }, { scoreA: '', scoreB: '' }, { scoreA: '', scoreB: '' }], winner: null });
       }
       
       let earliestTimeIdx = 0;
@@ -644,7 +652,12 @@ export default function App() {
     if (orderedTeams.length < size) return alert(`Jumlah tim (${orderedTeams.length}) tidak cukup.`);
 
     const numRounds = Math.log2(size); let rounds = [];
-    const numParties = eventCategory === 'team' ? 3 : 1; const partyLabels = ['Double / Regu / Quadrant 1', 'Double / Regu / Quadrant 2', 'Double / Regu / Quadrant 3'];
+    const numParties = eventCategory === 'team' ? 3 : 1; 
+    
+    // LABEL SPESIFIK DI FASE GUGUR
+    const partyLabels = eventDiscipline === 'Mix' 
+      ? mixDisciplines 
+      : [`${eventDiscipline} 1`, `${eventDiscipline} 2`, `${eventDiscipline} 3`];
 
     for(let r = 0; r < numRounds; r++) {
        let matchesInRound = size / Math.pow(2, r + 1); let roundMatches = [];
@@ -652,7 +665,7 @@ export default function App() {
           let tA = '?'; let tB = '?';
           if (r === 0) { tA = orderedTeams[m * 2]; tB = orderedTeams[m * 2 + 1]; }
           let initialParties = [];
-          for(let p = 0; p < numParties; p++) { initialParties.push({ id: `kp${p}`, label: eventCategory === 'team' ? partyLabels[p] : 'Pertandingan Utama', sets: [{ scoreA: '', scoreB: '' }, { scoreA: '', scoreB: '' }, { scoreA: '', scoreB: '' }], winner: null }); }
+          for(let p = 0; p < numParties; p++) { initialParties.push({ id: `kp${p}`, label: eventCategory === 'team' ? partyLabels[p] : `Pertandingan ${eventDiscipline === 'Mix' ? 'Campuran' : eventDiscipline}`, sets: [{ scoreA: '', scoreB: '' }, { scoreA: '', scoreB: '' }, { scoreA: '', scoreB: '' }], winner: null }); }
           let nextR = r + 1; let nextM = Math.floor(m / 2); let nextSlot = m % 2 === 0 ? 'teamA' : 'teamB';
           roundMatches.push({ id: `k_${r}_${m}`, roundIndex: r, matchIndex: m, title: r === numRounds - 1 ? 'BABAK FINAL' : r === numRounds - 2 ? 'SEMI FINAL' : 'PEREMPAT FINAL', teamA: tA, teamB: tB, parties: initialParties, winner: null, winsA: 0, winsB: 0, nextMatchRef: nextR < numRounds ? { r: nextR, m: nextM, slot: nextSlot } : null });
        }
@@ -949,12 +962,12 @@ export default function App() {
               {/* RIGHT COLUMN BENTO MODULES */}
               <div className="lg:col-span-5 flex flex-col gap-6">
                 
-                {/* CARD 2: EVENT CATEGORY */}
+                {/* CARD 2: EVENT CATEGORY & DISCIPLINE */}
                 <div className="bg-white rounded-3xl shadow-sm border border-gray-100 p-6">
                   <h2 className="text-sm font-black text-gray-400 mb-4 uppercase tracking-widest">Kategori Nomor Event</h2>
-                  <div className="flex flex-col gap-3">
+                  <div className="flex flex-col gap-3 mb-6">
                     <label className={`flex items-center p-4 rounded-2xl border-2 cursor-pointer transition-all ${eventCategory === 'single' ? `${theme.border} ${theme.soft}` : 'border-gray-100 hover:border-gray-200'}`}>
-                      <input type="radio" value="single" checked={eventCategory === 'single'} onChange={() => setEventCategory('single')} className="hidden" />
+                      <input type="radio" value="single" checked={eventCategory === 'single'} onChange={() => { setEventCategory('single'); if(eventDiscipline === 'Mix') setEventDiscipline('Regu'); }} className="hidden" />
                       <div className={`w-5 h-5 rounded-full border-2 flex items-center justify-center mr-4 flex-shrink-0 ${eventCategory === 'single' ? `border-transparent ${theme.primary}` : 'border-gray-300'}`}>
                          {eventCategory === 'single' && <div className="w-2 h-2 bg-white rounded-full"></div>}
                       </div>
@@ -972,6 +985,40 @@ export default function App() {
                       </div>
                     </label>
                   </div>
+
+                  <h2 className="text-sm font-black text-gray-400 mb-4 uppercase tracking-widest">Disiplin Spesifik (Label Papan Skor)</h2>
+                  <div className="flex flex-wrap bg-gray-50 p-1 rounded-2xl border border-gray-100 gap-1">
+                    <button onClick={() => setEventDiscipline('Regu')} className={`flex-1 py-3 text-xs font-black rounded-xl transition-all ${eventDiscipline === 'Regu' ? 'bg-white shadow-sm text-gray-800' : 'text-gray-400 hover:text-gray-600'}`}>Regu</button>
+                    <button onClick={() => setEventDiscipline('Double')} className={`flex-1 py-3 text-xs font-black rounded-xl transition-all ${eventDiscipline === 'Double' ? 'bg-white shadow-sm text-gray-800' : 'text-gray-400 hover:text-gray-600'}`}>Double</button>
+                    <button onClick={() => setEventDiscipline('Quadrant')} className={`flex-1 py-3 text-xs font-black rounded-xl transition-all ${eventDiscipline === 'Quadrant' ? 'bg-white shadow-sm text-gray-800' : 'text-gray-400 hover:text-gray-600'}`}>Quadrant</button>
+                    {eventCategory === 'team' && (
+                      <button onClick={() => setEventDiscipline('Mix')} className={`flex-1 py-3 px-2 text-xs font-black rounded-xl transition-all ${eventDiscipline === 'Mix' ? `${theme.primary} shadow-sm text-white` : 'text-gray-400 hover:text-gray-600'}`}>Campuran (Mix)</button>
+                    )}
+                  </div>
+                  
+                  {/* PANEL DROPDOWN KHUSUS MIX */}
+                  {eventCategory === 'team' && eventDiscipline === 'Mix' && (
+                    <div className={`mt-4 p-4 rounded-2xl border ${theme.border} ${theme.soft} flex flex-col gap-3 animate-in fade-in zoom-in-95 duration-200`}>
+                       <div className="flex flex-col gap-1">
+                          <span className={`text-[10px] font-black uppercase tracking-widest ${theme.textPrimary} opacity-70 px-1`}>Format Partai 1</span>
+                          <select value={mixDisciplines[0]} onChange={(e) => setMixDisciplines([e.target.value, mixDisciplines[1], mixDisciplines[2]])} className="w-full bg-white border border-gray-200 text-gray-800 font-bold text-xs rounded-xl px-3 py-2 outline-none focus:border-gray-400 shadow-sm cursor-pointer">
+                            <option value="Double">Double</option><option value="Regu">Regu</option><option value="Quadrant">Quadrant</option>
+                          </select>
+                       </div>
+                       <div className="flex flex-col gap-1">
+                          <span className={`text-[10px] font-black uppercase tracking-widest ${theme.textPrimary} opacity-70 px-1`}>Format Partai 2</span>
+                          <select value={mixDisciplines[1]} onChange={(e) => setMixDisciplines([mixDisciplines[0], e.target.value, mixDisciplines[2]])} className="w-full bg-white border border-gray-200 text-gray-800 font-bold text-xs rounded-xl px-3 py-2 outline-none focus:border-gray-400 shadow-sm cursor-pointer">
+                            <option value="Double">Double</option><option value="Regu">Regu</option><option value="Quadrant">Quadrant</option>
+                          </select>
+                       </div>
+                       <div className="flex flex-col gap-1">
+                          <span className={`text-[10px] font-black uppercase tracking-widest ${theme.textPrimary} opacity-70 px-1`}>Format Partai 3</span>
+                          <select value={mixDisciplines[2]} onChange={(e) => setMixDisciplines([mixDisciplines[0], mixDisciplines[1], e.target.value])} className="w-full bg-white border border-gray-200 text-gray-800 font-bold text-xs rounded-xl px-3 py-2 outline-none focus:border-gray-400 shadow-sm cursor-pointer">
+                            <option value="Double">Double</option><option value="Regu">Regu</option><option value="Quadrant">Quadrant</option>
+                          </select>
+                       </div>
+                    </div>
+                  )}
                 </div>
 
                 {/* CARD 3: TOURNAMENT SYSTEM & COURTS */}
