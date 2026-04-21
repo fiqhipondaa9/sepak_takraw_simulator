@@ -372,30 +372,61 @@ export default function App() {
       if (!isAllAssigned) return alert("Ada tim yang belum masuk ke dalam grup!");
     }
 
+    // --- ALGORITMA ROUND-ROBIN (JADWAL ADIL STANDAR INTERNASIONAL) ---
+    const createRoundRobin = (groupTeams, groupLabel) => {
+      if (groupTeams.length < 2) return [];
+      let rSchedule = [];
+      let currentTeams = [...groupTeams];
+      
+      // Jika jumlah tim ganjil, tambahkan "Dummy" (tim bayangan untuk BYE / Istirahat)
+      if (currentTeams.length % 2 !== 0) {
+        currentTeams.push(null);
+      }
+      
+      const numTeams = currentTeams.length;
+      const rounds = numTeams - 1;
+      const half = numTeams / 2;
+
+      for (let r = 0; r < rounds; r++) {
+        for (let i = 0; i < half; i++) {
+          const teamA = currentTeams[i];
+          const teamB = currentTeams[numTeams - 1 - i];
+          // Hanya masukkan ke jadwal jika tidak melawan Dummy (tim mendapat lawan nyata)
+          if (teamA !== null && teamB !== null) {
+            rSchedule.push({ teamA, teamB, groupLabel });
+          }
+        }
+        // Rotasi tim searah jarum jam (Tim di index 0 tetap diam sebagai poros)
+        currentTeams.splice(1, 0, currentTeams.pop());
+      }
+      return rSchedule;
+    };
+
     let allMatches = [];
     const activeNumGroups = Number(numGroups) || 2;
     
     if (tournamentType === 'group') {
       const groupLetters = Array.from({length: activeNumGroups}, (_, i) => String.fromCharCode(65 + i));
       let matchesByGroup = {}; let maxMatchesInAGroup = 0;
+      
       groupLetters.forEach(groupId => {
         const groupTeams = teams.filter(t => groupAssignments[t] === groupId);
-        let gMatches = [];
-        for (let i = 0; i < groupTeams.length; i++) {
-          for (let j = i + 1; j < groupTeams.length; j++) {
-            gMatches.push({ teamA: groupTeams[i], teamB: groupTeams[j], groupLabel: `Grup ${groupId}` });
-          }
-        }
+        // Buat jadwal Round-Robin per Grup
+        const gMatches = createRoundRobin(groupTeams, `Grup ${groupId}`);
         matchesByGroup[groupId] = gMatches;
         if (gMatches.length > maxMatchesInAGroup) maxMatchesInAGroup = gMatches.length;
       });
+      
+      // Menggabungkan jadwal dari grup yang berbeda secara bergantian (Silang Grup)
+      // Contoh: Match 1 dari Grup A, Match 2 dari Grup B, Match 3 dari Grup A, dst.
       for (let i = 0; i < maxMatchesInAGroup; i++) {
-        groupLetters.forEach(groupId => { if (matchesByGroup[groupId][i]) allMatches.push(matchesByGroup[groupId][i]); });
+        groupLetters.forEach(groupId => { 
+          if (matchesByGroup[groupId][i]) allMatches.push(matchesByGroup[groupId][i]); 
+        });
       }
     } else {
-      for (let i = 0; i < teams.length; i++) {
-        for (let j = i + 1; j < teams.length; j++) { allMatches.push({ teamA: teams[i], teamB: teams[j], groupLabel: 'Pool Utama' }); }
-      }
+      // Buat jadwal Round-Robin untuk Sistem Pool Utama
+      allMatches = createRoundRobin(teams, 'Pool Utama');
     }
 
     let finalSchedule = []; 
@@ -724,24 +755,31 @@ export default function App() {
             <div key={pIndex} className={`bg-white border ${theme.border} rounded-2xl relative shadow-sm ${isProjectorMode ? 'p-6' : 'p-3'}`}>
                {match.parties.length > 1 && ( <div className={`font-bold text-center text-gray-400 mb-3 uppercase tracking-widest border-b border-gray-100 pb-2 ${isProjectorMode ? 'text-sm' : 'text-[10px]'}`}> {party.label} {party.winner && <span className={`${theme.textPrimary} ml-1`}>(W: {party.winner})</span>} </div> )}
                <div className="flex justify-center gap-4 sm:gap-8">
-                 {[0, 1, 2].map((setIndex) => (
+                 {[0, 1, 2].map((setIndex) => {
+                    // MENGUBAH STRING MENJADI ANGKA AGAR PERBANDINGAN MATEMATIKA AKURAT
+                    const scoreA = party.sets[setIndex].scoreA;
+                    const scoreB = party.sets[setIndex].scoreB;
+                    const isAWinner = scoreA !== '' && scoreB !== '' && Number(scoreA) > Number(scoreB);
+                    const isBWinner = scoreA !== '' && scoreB !== '' && Number(scoreB) > Number(scoreA);
+
+                    return (
                     <div key={setIndex} className="flex flex-col items-center">
                       <span className={`font-black text-gray-300 mb-2 ${isProjectorMode ? 'text-xs' : 'text-[9px]'}`}>SET {setIndex + 1}</span>
                       
                       {isProjectorMode ? (
                          <div className="flex items-center gap-4 text-3xl font-black">
-                            <span className={party.sets[setIndex].scoreA > party.sets[setIndex].scoreB ? theme.textPrimary : 'text-gray-400'}>{party.sets[setIndex].scoreA !== '' ? party.sets[setIndex].scoreA : '-'}</span>
+                            <span className={isAWinner ? theme.textPrimary : 'text-gray-400'}>{scoreA !== '' ? scoreA : '-'}</span>
                             <span className="text-gray-200 text-xl">-</span>
-                            <span className={party.sets[setIndex].scoreB > party.sets[setIndex].scoreA ? theme.textPrimary : 'text-gray-400'}>{party.sets[setIndex].scoreB !== '' ? party.sets[setIndex].scoreB : '-'}</span>
+                            <span className={isBWinner ? theme.textPrimary : 'text-gray-400'}>{scoreB !== '' ? scoreB : '-'}</span>
                          </div>
                       ) : (
                          <div className="flex items-center gap-1.5">
-                           <input type="number" min="0" max="17" value={party.sets[setIndex].scoreA} onChange={(e) => { isKnockout ? handleKnockoutScoreChange(match.roundIndex, match.matchIndex, pIndex, setIndex, 'scoreA', e.target.value) : handleScoreChange(match.id, pIndex, setIndex, 'scoreA', e.target.value) }} className={`w-10 h-10 text-center text-sm font-black border-2 rounded-xl focus:ring-4 focus:outline-none transition-colors print:bg-transparent print:border-gray-300 print:appearance-none ${party.sets[setIndex].scoreA > party.sets[setIndex].scoreB ? `${theme.primary} text-white border-transparent` : 'border-gray-200 text-gray-700 focus:border-gray-400 focus:ring-gray-100'}`} />
-                           <input type="number" min="0" max="17" value={party.sets[setIndex].scoreB} onChange={(e) => { isKnockout ? handleKnockoutScoreChange(match.roundIndex, match.matchIndex, pIndex, setIndex, 'scoreB', e.target.value) : handleScoreChange(match.id, pIndex, setIndex, 'scoreB', e.target.value) }} className={`w-10 h-10 text-center text-sm font-black border-2 rounded-xl focus:ring-4 focus:outline-none transition-colors print:bg-transparent print:border-gray-300 print:appearance-none ${party.sets[setIndex].scoreB > party.sets[setIndex].scoreA ? `${theme.primary} text-white border-transparent` : 'border-gray-200 text-gray-700 focus:border-gray-400 focus:ring-gray-100'}`} />
+                           <input type="number" min="0" max="17" value={scoreA} onChange={(e) => { isKnockout ? handleKnockoutScoreChange(match.roundIndex, match.matchIndex, pIndex, setIndex, 'scoreA', e.target.value) : handleScoreChange(match.id, pIndex, setIndex, 'scoreA', e.target.value) }} className={`w-10 h-10 text-center text-sm font-black border-2 rounded-xl focus:ring-4 focus:outline-none transition-colors print:bg-transparent print:border-gray-300 print:appearance-none hide-arrows ${isAWinner ? `${theme.primary} text-white border-transparent` : 'border-gray-200 text-gray-700 focus:border-gray-400 focus:ring-gray-100'}`} />
+                           <input type="number" min="0" max="17" value={scoreB} onChange={(e) => { isKnockout ? handleKnockoutScoreChange(match.roundIndex, match.matchIndex, pIndex, setIndex, 'scoreB', e.target.value) : handleScoreChange(match.id, pIndex, setIndex, 'scoreB', e.target.value) }} className={`w-10 h-10 text-center text-sm font-black border-2 rounded-xl focus:ring-4 focus:outline-none transition-colors print:bg-transparent print:border-gray-300 print:appearance-none hide-arrows ${isBWinner ? `${theme.primary} text-white border-transparent` : 'border-gray-200 text-gray-700 focus:border-gray-400 focus:ring-gray-100'}`} />
                          </div>
                       )}
                     </div>
-                 ))}
+                 )})}
                </div>
             </div>
           )) : (
@@ -758,7 +796,19 @@ export default function App() {
     <div className={`min-h-screen ${theme.bgApp} font-sans text-gray-800 pb-20 transition-all duration-500 ${isProjectorMode ? 'px-2 md:px-8' : ''}`}>
       
       <style>
-        {`@media print { @page { size: landscape; margin: 10mm; } body { background-color: white !important; -webkit-print-color-adjust: exact; print-color-adjust: exact; } .no-print { display: none !important; } .print-break-inside-avoid { page-break-inside: avoid; } .print-border { border: 1px solid #e5e7eb !important; } input[type="number"] { -moz-appearance: textfield; } input[type="number"]::-webkit-outer-spin-button, input[type="number"]::-webkit-inner-spin-button { -webkit-appearance: none; margin: 0; } }`}
+        {`
+        /* Sembunyikan tanda panah (spinner) pada input number untuk desain yang lebih bersih */
+        .hide-arrows::-webkit-outer-spin-button,
+        .hide-arrows::-webkit-inner-spin-button {
+          -webkit-appearance: none;
+          margin: 0;
+        }
+        .hide-arrows {
+          -moz-appearance: textfield;
+        }
+        
+        @media print { @page { size: landscape; margin: 10mm; } body { background-color: white !important; -webkit-print-color-adjust: exact; print-color-adjust: exact; } .no-print { display: none !important; } .print-break-inside-avoid { page-break-inside: avoid; } .print-border { border: 1px solid #e5e7eb !important; } input[type="number"] { -moz-appearance: textfield; } input[type="number"]::-webkit-outer-spin-button, input[type="number"]::-webkit-inner-spin-button { -webkit-appearance: none; margin: 0; } }
+        `}
       </style>
 
       {/* FLOAT BUTTON: PROJECTOR EXIT */}
