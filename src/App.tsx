@@ -238,10 +238,17 @@ export default function App() {
     setIsExportingPng(true);
     try {
       if (!window.html2canvas) {
-        const script = document.createElement('script');
-        script.src = "https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js";
-        document.head.appendChild(script);
-        await new Promise(resolve => script.onload = resolve);
+        // Cek dulu apakah script sedang dalam proses di-load
+        if (!document.getElementById('html2canvas-script')) {
+            const script = document.createElement('script');
+            script.id = 'html2canvas-script';
+            script.src = "https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js";
+            document.head.appendChild(script);
+            await new Promise(resolve => script.onload = resolve);
+        } else {
+            // Tunggu sebentar jika script sedang loading
+            await new Promise(r => setTimeout(r, 1000)); 
+        }
       }
       const element = document.getElementById('capture-area');
       const canvas = await window.html2canvas(element, { scale: 2, useCORS: true, backgroundColor: "#ffffff" });
@@ -990,8 +997,8 @@ export default function App() {
                 
                 <div className="flex flex-col gap-3 overflow-y-auto pr-2 pb-2 flex-1">
                   {teams.length === 0 && <div className="h-32 flex items-center justify-center border-2 border-dashed border-gray-100 rounded-2xl text-gray-400 font-bold text-sm">Belum ada tim didaftarkan.</div>}
-                  {teams.map((team, index) => (
-                    <div key={index} className="bg-white p-3 pr-4 rounded-2xl flex items-center justify-between border border-gray-200 shadow-sm hover:border-gray-300 transition-colors">
+                  {teams.map((team) => (
+                    <div key={team} className="bg-white p-3 pr-4 rounded-2xl flex items-center justify-between border border-gray-200 shadow-sm hover:border-gray-300 transition-colors">
                       <div className="flex items-center gap-4">
                         <label className={`cursor-pointer w-12 h-12 rounded-2xl bg-gray-50 border-2 border-gray-100 flex items-center justify-center overflow-hidden hover:border-gray-300 group relative`}>
                           {teamLogos[team] ? <img src={teamLogos[team]} className="w-full h-full object-cover" alt="Logo" /> : <IconImage className="w-5 h-5 text-gray-300 group-hover:text-gray-500" />}
