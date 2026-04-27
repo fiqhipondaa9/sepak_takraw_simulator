@@ -56,7 +56,7 @@ export default function App() {
   const [tournamentType, setTournamentType] = useState(savedData.tournamentType || 'group'); 
   const [eventCategory, setEventCategory] = useState(savedData.eventCategory || 'single'); 
   const [eventDiscipline, setEventDiscipline] = useState(savedData.eventDiscipline || 'Regu'); 
-  const [mixDisciplines, setMixDisciplines] = useState(savedData.mixDisciplines || ['Double', 'Regu', 'Quadrant']); // STATE BARU: Untuk format Mix
+  const [mixDisciplines, setMixDisciplines] = useState(savedData.mixDisciplines || ['Double', 'Regu', 'Quadrant']); 
   const [numGroups, setNumGroups] = useState(savedData.numGroups || 2); 
   const [groupAssignments, setGroupAssignments] = useState(savedData.groupAssignments || {}); 
   const [courts, setCourts] = useState(savedData.courts || ['Lapangan Utama', 'Lapangan B']);
@@ -76,7 +76,6 @@ export default function App() {
   const handleEnterProjectorMode = () => {
     setIsProjectorMode(true);
     const elem = document.documentElement;
-    // Perintah untuk memaksa browser masuk ke mode fullscreen
     if (elem.requestFullscreen) {
       elem.requestFullscreen().catch(err => console.log(err));
     } else if (elem.webkitRequestFullscreen) { /* Safari */
@@ -88,7 +87,6 @@ export default function App() {
 
   const handleExitProjectorMode = () => {
     setIsProjectorMode(false);
-    // Perintah untuk keluar dari mode fullscreen
     if (document.fullscreenElement || document.webkitFullscreenElement || document.msFullscreenElement) {
       if (document.exitFullscreen) {
         document.exitFullscreen().catch(err => console.log(err));
@@ -100,7 +98,7 @@ export default function App() {
     }
   };
 
-  // Sensor pintar: Jika user menekan tombol 'ESC' di keyboard, aplikasi otomatis keluar dari Mode Proyektor
+  // Sensor pintar: Jika user menekan tombol 'ESC'
   React.useEffect(() => {
     const handleFullscreenChange = () => {
       if (!document.fullscreenElement && !document.webkitFullscreenElement && !document.msFullscreenElement) {
@@ -126,22 +124,19 @@ export default function App() {
     try {
       localStorage.setItem('takrawBentoData', JSON.stringify(dataToSave));
     } catch (e) {
-      console.warn("Gagal auto-save: Memori local storage penuh (mungkin gambar logo terlalu besar).");
+      console.warn("Gagal auto-save: Memori local storage penuh.");
     }
   }, [activeTheme, teams, schedule, tournamentType, eventCategory, eventDiscipline, mixDisciplines, numGroups, groupAssignments, courts, teamLogos, sponsorLogos, championshipTitles, knockoutData]);
 
-  // --- EFEK PERINGATAN TUTUP TAB (CEGAH KELUAR TIDAK SENGAJA) ---
+  // --- EFEK PERINGATAN TUTUP TAB ---
   React.useEffect(() => {
     const handleBeforeUnload = (e) => {
-      // Munculkan peringatan browser hanya jika panitia sudah memasukkan tim atau jadwal
       if (teams.length > 0 || schedule.length > 0) {
         e.preventDefault();
-        e.returnValue = ''; // Syarat wajib untuk memunculkan pop-up di Chrome & browser modern
+        e.returnValue = ''; 
       }
     };
-
     window.addEventListener('beforeunload', handleBeforeUnload);
-    
     return () => {
       window.removeEventListener('beforeunload', handleBeforeUnload);
     };
@@ -174,7 +169,7 @@ export default function App() {
         setTournamentType(data.tournamentType || 'group');
         setEventCategory(data.eventCategory || 'single');
         setEventDiscipline(data.eventDiscipline || 'Regu'); 
-        if (data.mixDisciplines) setMixDisciplines(data.mixDisciplines); // MUAT STATE BARU
+        if (data.mixDisciplines) setMixDisciplines(data.mixDisciplines);
         setNumGroups(data.numGroups || 2);
         setGroupAssignments(data.groupAssignments || {});
         setTeamLogos(data.teamLogos || {});
@@ -191,7 +186,7 @@ export default function App() {
     e.target.value = null; 
   };
 
-  // --- FUNGSI EKSPOR: EXCEL (CSV), PDF, & PNG ---
+  // --- FUNGSI EKSPOR: EXCEL, PDF, & PNG ---
   const handleExportPDF = () => window.print();
 
   const handleExportExcel = () => {
@@ -238,7 +233,6 @@ export default function App() {
     setIsExportingPng(true);
     try {
       if (!window.html2canvas) {
-        // Cek dulu apakah script sedang dalam proses di-load
         if (!document.getElementById('html2canvas-script')) {
             const script = document.createElement('script');
             script.id = 'html2canvas-script';
@@ -246,7 +240,6 @@ export default function App() {
             document.head.appendChild(script);
             await new Promise(resolve => script.onload = resolve);
         } else {
-            // Tunggu sebentar jika script sedang loading
             await new Promise(r => setTimeout(r, 1000)); 
         }
       }
@@ -288,7 +281,6 @@ export default function App() {
 
     waText += `_Update via Sepak Takraw Tournament Management System_\n`;
 
-    // Menggunakan textarea fallback untuk bypass keamanan iframe
     const textArea = document.createElement("textarea");
     textArea.value = waText;
     document.body.appendChild(textArea);
@@ -375,6 +367,59 @@ export default function App() {
     const groupLetters = Array.from({length: activeNumGroups}, (_, i) => String.fromCharCode(65 + i)); 
     shuffledTeams.forEach((team, index) => { assignments[team] = groupLetters[index % activeNumGroups]; });
     setGroupAssignments(assignments);
+  };
+
+  // --- FUNGSI BARU: SISTEM GUGUR LANGSUNG ---
+  const generateDirectKnockout = () => {
+    if (teams.length < 2) return alert("Butuh minimal 2 tim untuk bertanding!");
+
+    // 1. Cari ukuran bagan (kelipatan 2 terdekat: 2, 4, 8, 16, 32)
+    const size = Math.pow(2, Math.ceil(Math.log2(teams.length))); 
+    
+    // 2. Susun tim biar adil
+    let shuffledTeams = [...teams].sort(() => 0.5 - Math.random());
+    
+    // 3. Distribusikan tim dan sisipkan "BYE" untuk slot yang kosong
+    let orderedTeams = Array(size).fill('BYE');
+    let fillOrder = [];
+    for(let i=0; i < size; i+=2) fillOrder.push(i); // Isi slot kiri dulu (0, 2, 4...)
+    for(let i=1; i < size; i+=2) fillOrder.push(i); // Baru isi slot lawannya (1, 3, 5...)
+    
+    shuffledTeams.forEach((team, index) => {
+       orderedTeams[fillOrder[index]] = team;
+    });
+
+    // 4. Buat struktur ronde seperti babak final biasa
+    const numRounds = Math.log2(size); let rounds = [];
+    const numParties = eventCategory === 'team' ? 3 : 1;
+    const partyLabels = eventDiscipline === 'Mix' ? mixDisciplines : [`${eventDiscipline} 1`, `${eventDiscipline} 2`, `${eventDiscipline} 3`];
+
+    for(let r = 0; r < numRounds; r++) {
+       let matchesInRound = size / Math.pow(2, r + 1); let roundMatches = [];
+       for(let m = 0; m < matchesInRound; m++) {
+          let tA = '?'; let tB = '?';
+          if (r === 0) { tA = orderedTeams[m * 2]; tB = orderedTeams[m * 2 + 1]; }
+          
+          let initialParties = [];
+          for(let p = 0; p < numParties; p++) { 
+             initialParties.push({ id: `k_dir_p${p}`, label: eventCategory === 'team' ? partyLabels[p] : `Pertandingan ${eventDiscipline === 'Mix' ? 'Campuran' : eventDiscipline}`, sets: [{ scoreA: '', scoreB: '' }, { scoreA: '', scoreB: '' }, { scoreA: '', scoreB: '' }], winner: null }); 
+          }
+          
+          let nextR = r + 1; let nextM = Math.floor(m / 2); let nextSlot = m % 2 === 0 ? 'teamA' : 'teamB';
+          
+          // Penamaan Babak
+          let roundTitle = 'BABAK PENYISIHAN';
+          if (r === numRounds - 1) roundTitle = 'BABAK FINAL';
+          else if (r === numRounds - 2) roundTitle = 'SEMI FINAL';
+          else if (r === numRounds - 3) roundTitle = 'PEREMPAT FINAL';
+
+          roundMatches.push({ id: `k_dir_${r}_${m}`, roundIndex: r, matchIndex: m, title: roundTitle, teamA: tA, teamB: tB, parties: initialParties, winner: null, winsA: 0, winsB: 0, nextMatchRef: nextR < numRounds ? { r: nextR, m: nextM, slot: nextSlot } : null });
+       }
+       rounds.push(roundMatches);
+    }
+    
+    setKnockoutData(rounds);
+    setSchedule([]); // Kosongkan jadwal grup agar halaman grup disembunyikan
   };
 
   const generateSchedule = () => {
@@ -830,7 +875,6 @@ export default function App() {
                {match.parties.length > 1 && ( <div className={`font-bold text-center text-gray-400 mb-3 uppercase tracking-widest border-b border-gray-100 pb-2 ${isProjectorMode ? 'text-sm' : 'text-[10px]'}`}> {party.label} {party.winner && <span className={`${party.winner === 'SERI' ? 'text-gray-400' : theme.textPrimary} ml-1`}>{party.winner === 'SERI' ? '(W.O Ganda)' : `(W: ${party.winner})`}</span>} </div> )}
                <div className="flex justify-center gap-4 sm:gap-8">
                  {[0, 1, 2].map((setIndex) => {
-                    // MENGUBAH STRING MENJADI ANGKA AGAR PERBANDINGAN MATEMATIKA AKURAT
                     const scoreA = party.sets[setIndex].scoreA;
                     const scoreB = party.sets[setIndex].scoreB;
                     const isAWinner = scoreA !== '' && scoreB !== '' && Number(scoreA) > Number(scoreB);
@@ -929,7 +973,7 @@ export default function App() {
         <main className={`${isProjectorMode ? 'w-full max-w-full mt-4' : 'max-w-7xl mx-auto mt-6'} px-4 space-y-6 transition-all`}>
           
           {/* BENTO: EXPORT & TOOLS */}
-          {!isProjectorMode && schedule.length > 0 && (
+          {!isProjectorMode && (schedule.length > 0 || knockoutData.length > 0) && (
             <div className="no-print bg-white rounded-3xl shadow-sm p-4 flex flex-col md:flex-row justify-between items-center gap-4 border border-gray-100">
               <div className="flex items-center gap-3">
                  <div className={`p-3 rounded-2xl ${theme.soft} ${theme.textPrimary}`}><IconTable /></div>
@@ -976,7 +1020,7 @@ export default function App() {
           </div>
 
           {/* BENTO GRID: SETUP PHASE */}
-          {!isProjectorMode && schedule.length === 0 && (
+          {!isProjectorMode && schedule.length === 0 && knockoutData.length === 0 && (
             <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 no-print">
               
               {/* CARD 1: TEAM REGISTRATION (Wider) */}
@@ -1106,6 +1150,7 @@ export default function App() {
                   <div className="flex bg-gray-50 p-1 rounded-2xl border border-gray-100 mb-4">
                     <button onClick={() => setTournamentType('group')} className={`flex-1 py-3 text-xs font-black rounded-xl transition-all ${tournamentType === 'group' ? 'bg-white shadow-sm text-gray-800' : 'text-gray-400 hover:text-gray-600'}`}>Grup</button>
                     <button onClick={() => setTournamentType('half-robin')} className={`flex-1 py-3 text-xs font-black rounded-xl transition-all ${tournamentType === 'half-robin' ? 'bg-white shadow-sm text-gray-800' : 'text-gray-400 hover:text-gray-600'}`}>Satu Pool</button>
+                    <button onClick={() => setTournamentType('knockout')} className={`flex-1 py-3 text-xs font-black rounded-xl transition-all ${tournamentType === 'knockout' ? 'bg-white shadow-sm text-gray-800' : 'text-gray-400 hover:text-gray-600'}`}>Sistem Gugur</button>
                   </div>
 
                   {tournamentType === 'group' && (
@@ -1113,14 +1158,14 @@ export default function App() {
                        <div className="font-black text-gray-700 text-xs uppercase tracking-wider">Jumlah Grup</div>
                        <div className="flex items-center gap-2">
                          <input type="number" min="2" max="26" value={numGroups} onChange={handleNumGroupsChange} onBlur={() => !numGroups && setNumGroups(2)} className="w-12 h-10 text-center font-black bg-white border border-gray-200 rounded-xl outline-none focus:border-gray-400" />
-                         <button onClick={handleAutoAssign} className="bg-white border border-gray-200 text-gray-700 font-black text-[10px] px-3 h-10 rounded-xl hover:bg-gray-50 transition-colors uppercase tracking-widest shadow-sm">Acak</button>
+                         <button onClick={handleAutoAssign} className="bg-white border border-gray-200 text-gray-700 font-black text-[10px] px-3 h-10 rounded-xl hover:bg-gray-50 transition-colors uppercase tracking-widest shadow-sm">Susun</button>
                        </div>
                     </div>
                   )}
 
                   {/* GENERATE BUTTON */}
                   <div className="mt-auto pt-4">
-                    <button onClick={generateSchedule} disabled={teams.length < 2} className={`w-full ${theme.accent} ${theme.accentHover} ${theme.accentText} disabled:bg-gray-100 disabled:text-gray-300 font-black py-5 rounded-2xl shadow-md transition-all flex justify-center items-center gap-3 text-lg uppercase tracking-wider`}>
+                  <button onClick={tournamentType === 'knockout' ? generateDirectKnockout : generateSchedule} disabled={teams.length < 2} className={`w-full ${theme.accent} ${theme.accentHover} ${theme.accentText} disabled:bg-gray-100 disabled:text-gray-300 font-black py-5 rounded-2xl shadow-md transition-all flex justify-center items-center gap-3 text-lg uppercase tracking-wider`}>
                       <IconCalendar /> {teams.length < 2 ? "Min. 2 Tim" : "Buat Jadwal"}
                     </button>
                   </div>
@@ -1130,7 +1175,7 @@ export default function App() {
             </div>
           )}
 
-          {/* BENTO GRID: TOURNAMENT ACTIVE PHASE */}
+          {/* BENTO GRID: TOURNAMENT ACTIVE PHASE (Group Stage / Satu Pool) */}
           {schedule.length > 0 && knockoutData.length === 0 && (
             <div className={`space-y-6 animate-in fade-in duration-500 print:space-y-4 ${isProjectorMode ? 'space-y-10' : ''}`}>
               
@@ -1244,7 +1289,15 @@ export default function App() {
                    <div className={`p-3 rounded-2xl ${theme.primary} text-white`}><IconTrophy /></div>
                    Bagan Turnamen Utama
                  </h2>
-                 {!isProjectorMode && <button onClick={() => setKnockoutData([])} className="no-print mt-6 text-xs text-gray-400 hover:text-red-600 bg-gray-50 hover:bg-red-50 px-4 py-2 rounded-xl font-bold uppercase tracking-widest transition-colors">Batal & Kembali</button>}
+                 
+                 {/* TOMBOL BATAL & RESET UNTUK SISTEM GUGUR */}
+                 {!isProjectorMode && (
+                   <div className="no-print mt-6 flex justify-center gap-3">
+                      {tournamentType === 'knockout' && <button onClick={handleClearScores} className="text-xs bg-amber-50 hover:bg-amber-100 text-amber-700 px-4 py-2.5 rounded-xl font-bold uppercase tracking-widest border border-amber-200 shadow-sm">Bersihkan Skor</button>}
+                      {tournamentType === 'knockout' && <button onClick={handleReset} className="text-xs bg-red-50 hover:bg-red-100 text-red-600 px-4 py-2.5 rounded-xl font-bold uppercase tracking-widest border border-red-200 shadow-sm">Reset Ulang</button>}
+                      {tournamentType !== 'knockout' && <button onClick={() => setKnockoutData([])} className="text-xs text-gray-400 hover:text-red-600 bg-gray-50 hover:bg-red-50 px-4 py-2 rounded-xl font-bold uppercase tracking-widest transition-colors">Batal & Kembali</button>}
+                   </div>
+                 )}
               </div>
 
               {knockoutData.map((round, rIndex) => (
