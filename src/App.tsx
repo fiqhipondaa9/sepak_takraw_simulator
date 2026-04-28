@@ -64,9 +64,9 @@ export default function App() {
   const [teamLogos, setTeamLogos] = useState(savedData.teamLogos || {}); 
   const [sponsorLogos, setSponsorLogos] = useState(savedData.sponsorLogos || []); 
   const [championshipTitles, setChampionshipTitles] = useState(savedData.championshipTitles || [
-    "KEJUARAAN SEPAK TAKRAW",
-    "KATEGORI UMUM TINGKAT NASIONAL",
-    "LOKASI & TANGGAL PELAKSANAAN"
+    "EDIT NAMA KEJUARAAN",
+    "EDIT KETERANGAN DAN LAIN-LAIN",
+    "EDIT LOKASI & TANGGAL PELAKSANAAN"
   ]);
   const [knockoutData, setKnockoutData] = useState(savedData.knockoutData || []);
   const [isExportingPng, setIsExportingPng] = useState(false);
