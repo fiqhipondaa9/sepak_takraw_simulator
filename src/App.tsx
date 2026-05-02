@@ -32,7 +32,7 @@ const themes = {
 };
 
 export default function App() {
-  // --- STATE MANAGEMENT (Mulai Bersih Tanpa Local Storage) ---
+  // --- STATE MANAGEMENT ---
   const [activeTheme, setActiveTheme] = useState('emerald');
   const theme = themes[activeTheme];
 
@@ -58,6 +58,10 @@ export default function App() {
   const [isExportingPng, setIsExportingPng] = useState(false);
   const [isProjectorMode, setIsProjectorMode] = useState(false);
   const [showMasterModal, setShowMasterModal] = useState(false);
+
+  // State Kontrol Konfigurasi Fase 2 (Untuk 3 Grup / 6 Tim)
+  const [phase2Format, setPhase2Format] = useState('group'); // 'group' atau 'knockout'
+  const [phase2ByeSystem, setPhase2ByeSystem] = useState('standard'); // 'standard' atau 'seeding'
 
   // --- CEK STATUS FASE 1 ---
   const isPhase1Finished = schedule.length > 0 && schedule.every(match => match.winner !== null);
@@ -338,7 +342,7 @@ export default function App() {
              initialParties.push({ id: `k_dir_p${p}`, label: eventCategory === 'team' ? partyLabels[p] : `Pertandingan ${eventDiscipline === 'Mix' ? 'Campuran' : eventDiscipline}`, sets: [{ scoreA: '', scoreB: '' }, { scoreA: '', scoreB: '' }, { scoreA: '', scoreB: '' }], winner: null }); 
           }
           let nextR = r + 1; let nextM = Math.floor(m / 2); let nextSlot = m % 2 === 0 ? 'teamA' : 'teamB';
-          let roundTitle = r === numRounds - 1 ? 'BABAK FINAL' : r === numRounds - 2 ? 'SEMI FINAL' : r === numRounds - 3 ? 'PEREMPAT FINAL' : 'BABAK 16 BESAR';
+          let roundTitle = r === numRounds - 1 ? 'FINAL' : r === numRounds - 2 ? 'SEMI FINAL' : r === numRounds - 3 ? 'PEREMPAT FINAL' : 'BABAK 16 BESAR';
           roundMatches.push({ id: `k_dir_${r}_${m}`, roundIndex: r, matchIndex: m, title: roundTitle, teamA: tA, teamB: tB, parties: initialParties, winner: null, winsA: 0, winsB: 0, nextMatchRef: nextR < numRounds ? { r: nextR, m: nextM, slot: nextSlot } : null });
        }
        rounds.push(roundMatches);
@@ -384,6 +388,7 @@ export default function App() {
         matchesByGroup[groupId] = gMatches;
         if (gMatches.length > maxMatchesInAGroup) maxMatchesInAGroup = gMatches.length;
       });
+      // LOGIKA SELANG-SELING: Ambil pertandingan 1 dari tiap grup, lalu pertandingan 2, dst.
       for (let i = 0; i < maxMatchesInAGroup; i++) {
         groupLetters.forEach(groupId => { if (matchesByGroup[groupId][i]) allMatches.push(matchesByGroup[groupId][i]); });
       }
@@ -478,6 +483,7 @@ export default function App() {
   const handleReset = () => {
     if (window.confirm("Hapus semua tim & jadwal? (Sponsor, Lapangan & Judul aman)")) {
       setTeams([]); setSchedule([]); setGroupAssignments({}); setTeamLogos({}); setKnockoutData([]);
+      setTournamentType('group'); setNumGroups(2);
     }
   };
 
@@ -566,88 +572,110 @@ export default function App() {
     return groupedStandings;
   };
 
-  // --- FUNGSI TRANSISI OTOMATIS: FASE 2 ---
-  const handleTransitionToPhase2Group = () => {
-    const standings = getStandings();
-    let qualifiers = [];
-    Object.values(standings).forEach(groupTeams => {
-      if (groupTeams[0]) qualifiers.push(groupTeams[0].team);
-      if (groupTeams[1]) qualifiers.push(groupTeams[1].team);
+  // --- FUNGSI EKSEKUSI FASE 2: GRUP D&E atau LANGSUNG GUGUR ---
+  const handleExecutePhase2 = () => {
+    const std = getStandings();
+    let q = [];
+    Object.values(std).forEach(groupTeams => {
+      if (groupTeams[0]) q.push(groupTeams[0]);
+      if (groupTeams[1]) q.push(groupTeams[1]);
     });
 
-    if (qualifiers.length < 2) return alert("Tim tidak cukup untuk lanjut ke Fase 2!");
-    if (window.confirm("Apakah Anda yakin ingin lanjut ke Grup Fase 2? Jadwal Fase 1 akan ditutup.")) {
-        setTeams(qualifiers);
-        setTournamentType('group');
-        setNumGroups(2); 
-        setSchedule([]);
-        setGroupAssignments({});
-        setKnockoutData([]);
-        alert("Tim terpilih telah dipindahkan ke Fase 2. Silakan atur pembagian grup silang dan tekan 'Buat Jadwal'.");
-        window.scrollTo({ top: 0, behavior: 'smooth' });
-    }
-  };
+    if (q.length < 2) return alert("Tim tidak cukup!");
 
-  const generateKnockoutPhase2 = (type) => {
-    const standings = getStandings();
-    let qualifiers = [];
-    
-    Object.values(standings).forEach(groupTeams => {
-      if (groupTeams[0]) qualifiers.push(groupTeams[0]); 
-      if (groupTeams[1]) qualifiers.push(groupTeams[1]);
-    });
+    if (phase2Format === 'group') {
+      // LOGIKA LANJUT GRUP FASE 2 (Grup A jadi representasi Grup D, B jadi Grup E)
+      if (numGroups === 3 && q.length >= 6) {
+         const gA = std['Grup A'] || []; const gB = std['Grup B'] || []; const gC = std['Grup C'] || [];
+         const tA1 = gA[0]?.team; const tA2 = gA[1]?.team;
+         const tB1 = gB[0]?.team; const tB2 = gB[1]?.team;
+         const tC1 = gC[0]?.team; const tC2 = gC[1]?.team;
 
-    if (qualifiers.length < 2) return alert("Tim tidak cukup untuk babak gugur!");
+         if (!tA1 || !tB1 || !tC1 || !tA2 || !tB2 || !tC2) return alert("Beberapa juara atau runner-up grup belum ditentukan. Lengkapi skor!");
 
-    const size = Math.pow(2, Math.ceil(Math.log2(qualifiers.length)));
-    let orderedTeams = Array(size).fill('BYE');
-
-    if (type === 'seeding') {
-      qualifiers.sort((a, b) => b.totalPoints - a.totalPoints || b.win - a.win || (b.pointWin - b.pointLose) - (a.pointWin - a.pointLose));
-      let fillOrder = [];
-      for(let i=0; i < size; i+=2) fillOrder.push(i);
-      for(let i=1; i < size; i+=2) fillOrder.push(i);
-      qualifiers.forEach((q, index) => { orderedTeams[fillOrder[index]] = q.team; });
-    } else {
-      let tNames = qualifiers.map(q => q.team);
-      let standardOrder = [];
-      const nG = Number(numGroups);
-      if (nG === 2 && qualifiers.length <= 4) {
-         const gA = standings['Grup A'] || []; const gB = standings['Grup B'] || [];
-         standardOrder = [gA[0]?.team || 'BYE', gB[1]?.team || 'BYE', gB[0]?.team || 'BYE', gA[1]?.team || 'BYE'];
-      } else if (nG === 4 && qualifiers.length <= 8) {
-         const gA = standings['Grup A'] || []; const gB = standings['Grup B'] || [];
-         const gC = standings['Grup C'] || []; const gD = standings['Grup D'] || [];
-         standardOrder = [gA[0]?.team || 'BYE', gB[1]?.team || 'BYE', gC[0]?.team || 'BYE', gD[1]?.team || 'BYE', gB[0]?.team || 'BYE', gA[1]?.team || 'BYE', gD[0]?.team || 'BYE', gC[1]?.team || 'BYE'];
+         if (window.confirm("Lanjut ke Fase 2 Format Grup?\n\n6 Tim akan disilang ke dalam Grup A & B baru. Jadwal sebelumnya akan ditutup.")) {
+            setTeams([tA1, tB2, tC1, tB1, tA2, tC2]);
+            setTournamentType('group');
+            setNumGroups(2); // Set menjadi 2 grup untuk Fase 2
+            setGroupAssignments({
+               [tA1]: 'A', [tB2]: 'A', [tC1]: 'A', // Grup D equivalent
+               [tB1]: 'B', [tA2]: 'B', [tC2]: 'B'  // Grup E equivalent
+            });
+            setSchedule([]);
+            setKnockoutData([]);
+            alert("Berhasil! Tim telah disilang ke Grup Fase 2. Silakan tekan 'Buat Jadwal' untuk memulai persilangan (Interleaved).");
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+         }
       } else {
-         let fillOrder = [];
-         for(let i=0; i < size; i+=2) fillOrder.push(i);
-         for(let i=1; i < size; i+=2) fillOrder.push(i);
-         tNames.forEach((t, index) => { orderedTeams[fillOrder[index]] = t; });
-         standardOrder = orderedTeams;
+         // Fallback jika tidak 3 grup
+         const teamNames = q.map(team => team.team);
+         if (window.confirm("Lanjut Grup Fase 2 (Skenario Standar)?")) {
+            setTeams(teamNames); setTournamentType('group'); setNumGroups(2); setSchedule([]); setGroupAssignments({}); setKnockoutData([]);
+            alert("Tim dipindahkan. Atur persilangan lalu Buat Jadwal.");
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+         }
       }
-      for (let i = 0; i < size; i++) orderedTeams[i] = standardOrder[i] || 'BYE';
-    }
+    } else {
+      // LOGIKA LANGSUNG SISTEM GUGUR
+      if (!window.confirm("Lanjut ke Sistem Gugur otomatis?")) return;
+      const size = Math.pow(2, Math.ceil(Math.log2(q.length)));
+      let orderedTeams = Array(size).fill('BYE');
 
-    const numRounds = Math.log2(size); let rounds = [];
-    const numParties = eventCategory === 'team' ? 3 : 1; 
-    const partyLabels = eventDiscipline === 'Mix' ? mixDisciplines : [`${eventDiscipline} 1`, `${eventDiscipline} 2`, `${eventDiscipline} 3`];
+      if (phase2ByeSystem === 'seeding') {
+        q.sort((a,b) => b.totalPoints - a.totalPoints || (b.setWin - b.setLose) - (a.setWin - a.setLose) || (b.pointWin - b.pointLose) - (a.pointWin - a.pointLose));
+        
+        if (size === 8 && q.length === 6) {
+           orderedTeams[0] = q[0].team; // Rank 1 (BYE ke SF)
+           orderedTeams[4] = q[1].team; // Rank 2 (BYE ke SF)
+           orderedTeams[2] = q[3].team; // Rank 4
+           orderedTeams[3] = q[4].team; // Rank 5
+           orderedTeams[6] = q[2].team; // Rank 3
+           orderedTeams[7] = q[5].team; // Rank 6
+        } else {
+           let fillOrder = [];
+           for(let i=0; i < size; i+=2) fillOrder.push(i);
+           for(let i=1; i < size; i+=2) fillOrder.push(i);
+           q.forEach((t, i) => { orderedTeams[fillOrder[i]] = t.team; });
+        }
+      } else {
+        // BYE Posisi Standar
+        if (size === 8 && q.length === 6) {
+           const gA = std['Grup A'] || []; const gB = std['Grup B'] || []; const gC = std['Grup C'] || [];
+           orderedTeams[0] = gA[0]?.team || 'BYE'; // Juara A
+           orderedTeams[4] = gB[0]?.team || 'BYE'; // Juara B
+           orderedTeams[2] = gC[0]?.team || '?';   // Juara C
+           orderedTeams[3] = gB[1]?.team || '?';   // Runner B
+           orderedTeams[6] = gC[1]?.team || '?';   // Runner C
+           orderedTeams[7] = gA[1]?.team || '?';   // Runner A
+        } else {
+           let tNames = q.map(t => t.team);
+           let fillOrder = [];
+           for(let i=0; i < size; i+=2) fillOrder.push(i);
+           for(let i=1; i < size; i+=2) fillOrder.push(i);
+           tNames.forEach((t, i) => { orderedTeams[fillOrder[i]] = t; });
+        }
+      }
 
-    for(let r = 0; r < numRounds; r++) {
-       let matchesInRound = size / Math.pow(2, r + 1); let roundMatches = [];
-       for(let m = 0; m < matchesInRound; m++) {
-          let tA = '?'; let tB = '?';
-          if (r === 0) { tA = orderedTeams[m * 2]; tB = orderedTeams[m * 2 + 1]; }
-          let initialParties = [];
-          for(let p = 0; p < numParties; p++) { initialParties.push({ id: `k2_p${p}`, label: eventCategory === 'team' ? partyLabels[p] : `Pertandingan ${eventDiscipline === 'Mix' ? 'Campuran' : eventDiscipline}`, sets: [{ scoreA: '', scoreB: '' }, { scoreA: '', scoreB: '' }, { scoreA: '', scoreB: '' }], winner: null }); }
-          let nextR = r + 1; let nextM = Math.floor(m / 2); let nextSlot = m % 2 === 0 ? 'teamA' : 'teamB';
-          let roundTitle = r === numRounds - 1 ? 'BABAK FINAL' : r === numRounds - 2 ? 'SEMI FINAL' : r === numRounds - 3 ? 'PEREMPAT FINAL' : 'BABAK 16 BESAR';
-          roundMatches.push({ id: `k2_${r}_${m}`, roundIndex: r, matchIndex: m, title: roundTitle, teamA: tA, teamB: tB, parties: initialParties, winner: null, winsA: 0, winsB: 0, nextMatchRef: nextR < numRounds ? { r: nextR, m: nextM, slot: nextSlot } : null });
-       }
-       rounds.push(roundMatches);
+      const numRounds = Math.log2(size); let rounds = [];
+      const numParties = eventCategory === 'team' ? 3 : 1; 
+      const partyLabels = eventDiscipline === 'Mix' ? mixDisciplines : [`${eventDiscipline} 1`, `${eventDiscipline} 2`, `${eventDiscipline} 3`];
+
+      for(let r = 0; r < numRounds; r++) {
+         let matchesInRound = size / Math.pow(2, r + 1); let roundMatches = [];
+         for(let m = 0; m < matchesInRound; m++) {
+            let tA = '?'; let tB = '?';
+            if (r === 0) { tA = orderedTeams[m * 2]; tB = orderedTeams[m * 2 + 1]; }
+            let initialParties = [];
+            for(let p = 0; p < numParties; p++) { initialParties.push({ id: `k2_p${p}`, label: eventCategory === 'team' ? partyLabels[p] : `Pertandingan ${eventDiscipline === 'Mix' ? 'Campuran' : eventDiscipline}`, sets: [{ scoreA: '', scoreB: '' }, { scoreA: '', scoreB: '' }, { scoreA: '', scoreB: '' }], winner: null }); }
+            let nextR = r + 1; let nextM = Math.floor(m / 2); let nextSlot = m % 2 === 0 ? 'teamA' : 'teamB';
+            let roundTitle = r === numRounds - 1 ? 'FINAL' : r === numRounds - 2 ? 'SEMI FINAL' : r === numRounds - 3 ? 'PLAY-OFF' : 'BABAK 16 BESAR';
+            roundMatches.push({ id: `k2_${r}_${m}`, roundIndex: r, matchIndex: m, title: roundTitle, teamA: tA, teamB: tB, parties: initialParties, winner: null, winsA: 0, winsB: 0, nextMatchRef: nextR < numRounds ? { r: nextR, m: nextM, slot: nextSlot } : null });
+         }
+         rounds.push(roundMatches);
+      }
+      setKnockoutData(rounds); setSchedule([]);
+      setTimeout(() => window.scrollTo({ top: document.body.scrollHeight, behavior: 'smooth' }), 300);
     }
-    setKnockoutData(rounds);
-    setTimeout(() => window.scrollTo({ top: document.body.scrollHeight, behavior: 'smooth' }), 300);
   };
 
   const handleKnockoutScoreChange = (rIndex, mIndex, pIndex, sIndex, side, newScore) => {
@@ -695,31 +723,53 @@ export default function App() {
     }
   }
 
-  // --- FUNGSI MASTER SCHEDULE PLANNER (JADWAL INDUK DINAMIS) ---
+  // --- FUNGSI MASTER SCHEDULE PLANNER DINAMIS ---
   const generateMasterPlan = () => {
     let masterPlan = [];
     let matchId = 1;
 
-    // 1. Data Riwayat Pertandingan (dengan skor/pemenang)
+    // 1. Data Pertandingan Aktif
     if (schedule.length > 0) {
       schedule.forEach(m => {
         masterPlan.push({ id: m.id, teamA: m.teamA, teamB: m.teamB, winner: m.winner, label: m.groupLabel, phase: "Penyisihan", court: m.court, time: m.time });
         matchId++;
       });
     } else {
-      masterPlan.push({ id: `TBD`, teamA: "TBD", teamB: "TBD", winner: null, label: "Fase Penyisihan Belum Disusun", phase: "Penyisihan", court: "-", time: "-" });
+      masterPlan.push({ id: `TBD`, teamA: "TBD", teamB: "TBD", winner: null, label: "Penyisihan Belum Disusun", phase: "Penyisihan", court: "-", time: "-" });
     }
 
-    // 2. Proyeksi Fase Selanjutnya
+    // 2. Proyeksi Berdasarkan Konfigurasi
     if (tournamentType === 'group' || knockoutData.length > 0) {
       const n = Number(numGroups);
       
       if (n === 3) {
-        const gD = [{ tA: "Juara A", tB: "Runner B" }, { tA: "Runner B", tB: "Juara C" }, { tA: "Juara A", tB: "Juara C" }];
-        const gE = [{ tA: "Juara B", tB: "Runner A" }, { tA: "Runner A", tB: "Runner C" }, { tA: "Juara B", tB: "Runner C" }];
-        gD.forEach(m => masterPlan.push({ id: `K-${matchId++}`, teamA: m.tA, teamB: m.tB, winner: null, label: "Grup D (Fase 2)", phase: "Penyisihan 2", court: "TBD", time: "TBD" }));
-        gE.forEach(m => masterPlan.push({ id: `K-${matchId++}`, teamA: m.tA, teamB: m.tB, winner: null, label: "Grup E (Fase 2)", phase: "Penyisihan 2", court: "TBD", time: "TBD" }));
-        masterPlan.push({ id: `F-${matchId++}`, teamA: "Juara Grup D", teamB: "Juara Grup E", winner: null, label: "FINAL", phase: "Final Stage", court: "TBD", time: "TBD" });
+        if (phase2Format === 'group') {
+           // Interleaved Projection (Grup D & E selang seling)
+           masterPlan.push({ id: `K-${matchId++}`, teamA: "Juara A", teamB: "Runner B", winner: null, label: "Grup D (Fase 2)", phase: "Penyisihan 2", court: "TBD", time: "TBD" });
+           masterPlan.push({ id: `K-${matchId++}`, teamA: "Juara B", teamB: "Runner A", winner: null, label: "Grup E (Fase 2)", phase: "Penyisihan 2", court: "TBD", time: "TBD" });
+           masterPlan.push({ id: `K-${matchId++}`, teamA: "Runner B", teamB: "Juara C", winner: null, label: "Grup D (Fase 2)", phase: "Penyisihan 2", court: "TBD", time: "TBD" });
+           masterPlan.push({ id: `K-${matchId++}`, teamA: "Runner A", teamB: "Runner C", winner: null, label: "Grup E (Fase 2)", phase: "Penyisihan 2", court: "TBD", time: "TBD" });
+           masterPlan.push({ id: `K-${matchId++}`, teamA: "Juara A", teamB: "Juara C", winner: null, label: "Grup D (Fase 2)", phase: "Penyisihan 2", court: "TBD", time: "TBD" });
+           masterPlan.push({ id: `K-${matchId++}`, teamA: "Juara B", teamB: "Runner C", winner: null, label: "Grup E (Fase 2)", phase: "Penyisihan 2", court: "TBD", time: "TBD" });
+           // Semi final dari fase grup
+           masterPlan.push({ id: `K-${matchId++}`, teamA: "Juara Grup D", teamB: "Runner Grup E", winner: null, label: "Semi Final 1", phase: "Knockout", court: "TBD", time: "TBD" });
+           masterPlan.push({ id: `K-${matchId++}`, teamA: "Juara Grup E", teamB: "Runner Grup D", winner: null, label: "Semi Final 2", phase: "Knockout", court: "TBD", time: "TBD" });
+           masterPlan.push({ id: `F-${matchId++}`, teamA: "Pemenang SF 1", teamB: "Pemenang SF 2", winner: null, label: "FINAL", phase: "Final Stage", court: "TBD", time: "TBD" });
+        } else {
+           // Proyeksi Langsung Gugur 6 Tim
+           if (phase2ByeSystem === 'seeding') {
+              masterPlan.push({ id: `K-${matchId++}`, teamA: "Rank 4 Terbaik", teamB: "Rank 5 Terbaik", winner: null, label: "Play-off 1", phase: "Knockout", court: "TBD", time: "TBD" });
+              masterPlan.push({ id: `K-${matchId++}`, teamA: "Rank 3 Terbaik", teamB: "Rank 6 Terbaik", winner: null, label: "Play-off 2", phase: "Knockout", court: "TBD", time: "TBD" });
+              masterPlan.push({ id: `K-${matchId++}`, teamA: "Rank 1 (BYE)", teamB: "Pemenang Play-off 1", winner: null, label: "Semi Final 1", phase: "Knockout", court: "TBD", time: "TBD" });
+              masterPlan.push({ id: `K-${matchId++}`, teamA: "Rank 2 (BYE)", teamB: "Pemenang Play-off 2", winner: null, label: "Semi Final 2", phase: "Knockout", court: "TBD", time: "TBD" });
+           } else {
+              masterPlan.push({ id: `K-${matchId++}`, teamA: "Juara C", teamB: "Runner B", winner: null, label: "Play-off 1", phase: "Knockout", court: "TBD", time: "TBD" });
+              masterPlan.push({ id: `K-${matchId++}`, teamA: "Runner A", teamB: "Runner C", winner: null, label: "Play-off 2", phase: "Knockout", court: "TBD", time: "TBD" });
+              masterPlan.push({ id: `K-${matchId++}`, teamA: "Juara A (BYE)", teamB: "Pemenang Play-off 1", winner: null, label: "Semi Final 1", phase: "Knockout", court: "TBD", time: "TBD" });
+              masterPlan.push({ id: `K-${matchId++}`, teamA: "Juara B (BYE)", teamB: "Pemenang Play-off 2", winner: null, label: "Semi Final 2", phase: "Knockout", court: "TBD", time: "TBD" });
+           }
+           masterPlan.push({ id: `F-${matchId++}`, teamA: "Pemenang SF 1", teamB: "Pemenang SF 2", winner: null, label: "FINAL", phase: "Final Stage", court: "TBD", time: "TBD" });
+        }
       } else if (n === 2) {
         masterPlan.push({ id: `K-${matchId++}`, teamA: "Juara Grup A", teamB: "Runner-up Grup B", winner: null, label: "Semi Final 1", phase: "Knockout", court: "TBD", time: "TBD" });
         masterPlan.push({ id: `K-${matchId++}`, teamA: "Juara Grup B", teamB: "Runner-up Grup A", winner: null, label: "Semi Final 2", phase: "Knockout", court: "TBD", time: "TBD" });
@@ -730,9 +780,6 @@ export default function App() {
         masterPlan.push({ id: `K-${matchId++}`, teamA: "Pemenang PF 1", teamB: "Pemenang PF 2", winner: null, label: "Semi Final 1", phase: "Knockout", court: "TBD", time: "TBD" });
         masterPlan.push({ id: `K-${matchId++}`, teamA: "Pemenang PF 3", teamB: "Pemenang PF 4", winner: null, label: "Semi Final 2", phase: "Knockout", court: "TBD", time: "TBD" });
         masterPlan.push({ id: `F-${matchId++}`, teamA: "Pemenang SF 1", teamB: "Pemenang SF 2", winner: null, label: "FINAL", phase: "Final Stage", court: "TBD", time: "TBD" });
-      } else if (n === 8) {
-        masterPlan.push({ id: `K-${matchId++}`, teamA: "16 Tim Terbaik", teamB: "...", winner: null, label: "Babak 16 Besar", phase: "Knockout", court: "TBD", time: "TBD" });
-        masterPlan.push({ id: `K-${matchId++}`, teamA: "8 Tim Tersisa", teamB: "...", winner: null, label: "Perempat Final s/d Final", phase: "Knockout", court: "TBD", time: "TBD" });
       } else {
         masterPlan.push({ id: `K-${matchId++}`, teamA: "Tim Top Grup", teamB: "Tim Top Grup", winner: null, label: `Sistem Gugur (${n} Grup)`, phase: "Knockout", court: "TBD", time: "TBD" });
       }
@@ -1101,24 +1148,78 @@ export default function App() {
                 </div>
               </div>
 
-              {/* TRANSISI OTOMATIS KE FASE 2 */}
+              {/* TRANSISI OTOMATIS KE FASE 2 DENGAN PANEL KONFIGURASI */}
               {!isProjectorMode && (
                 <div className="no-print bg-gray-900 text-white rounded-3xl p-8 sm:p-12 text-center shadow-xl border border-gray-800 relative overflow-hidden mt-8">
                    <div className="absolute -top-10 -right-10 opacity-5 text-gray-100"><svg className="w-64 h-64" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M3 3v18"/><path d="M3 12h5"/><path d="M8 7v10"/><path d="M8 7h5"/><path d="M8 17h5"/><path d="M13 12h5"/><path d="M18 7v10"/><path d="M18 12h3"/></svg></div>
-                   <div className="relative z-10">
-                     <h2 className="text-3xl font-black text-white mb-3 tracking-tight">Menuju Babak Selanjutnya</h2>
+                   <div className="relative z-10 max-w-4xl mx-auto">
+                     <h2 className="text-3xl font-black text-white mb-3 tracking-tight">Fase Berikutnya</h2>
                      {isPhase1Finished ? (
                        <>
-                         <p className="text-emerald-400 mb-10 max-w-xl mx-auto font-medium">✨ Fase 1 telah selesai! Silakan pilih format untuk melanjutkan turnamen:</p>
-                         <div className="flex flex-wrap justify-center gap-4">
-                            <button onClick={handleTransitionToPhase2Group} className="bg-blue-600 hover:bg-blue-700 text-white font-black py-4 px-8 rounded-2xl shadow-md transition-all border border-blue-500">Lanjut Grup Fase 2</button>
-                            <button onClick={() => generateKnockoutPhase2('seeding')} className="bg-emerald-600 hover:bg-emerald-700 text-white font-black py-4 px-8 rounded-2xl shadow-md transition-all border border-emerald-500">Gugur (Sistem Seeding)</button>
-                            <button onClick={() => generateKnockoutPhase2('standard')} className="bg-gray-800 hover:bg-gray-700 text-white font-black py-4 px-8 rounded-2xl shadow-md transition-all border border-gray-700">Gugur (Sistem Standar)</button>
-                         </div>
+                         <p className="text-emerald-400 mb-8 font-medium">✨ Fase 1 telah selesai! Silakan atur konfigurasi untuk babak selanjutnya:</p>
+                         
+                         {Number(numGroups) === 3 ? (
+                           <div className="bg-gray-800/80 p-6 md:p-8 rounded-2xl border border-gray-700 text-left backdrop-blur-sm">
+                             <div className="flex flex-col md:flex-row gap-8">
+                                <div className="flex-1 space-y-4">
+                                   <label className="text-sm font-black text-gray-300 uppercase tracking-widest">Pilih Format Fase 2</label>
+                                   <div className="flex flex-col gap-2">
+                                      <label className={`p-4 rounded-xl border-2 cursor-pointer flex items-center transition-all ${phase2Format === 'group' ? 'border-blue-500 bg-blue-900/20' : 'border-gray-700 hover:bg-gray-700'}`}>
+                                         <input type="radio" value="group" checked={phase2Format === 'group'} onChange={(e) => setPhase2Format(e.target.value)} className="hidden" />
+                                         <div className={`w-5 h-5 rounded-full border-2 mr-3 flex items-center justify-center ${phase2Format === 'group' ? 'border-blue-400' : 'border-gray-500'}`}>{phase2Format === 'group' && <div className="w-2.5 h-2.5 bg-blue-400 rounded-full"></div>}</div>
+                                         <span className="font-bold text-gray-100">Grup Fase 2 (Grup D & E)</span>
+                                      </label>
+                                      <label className={`p-4 rounded-xl border-2 cursor-pointer flex items-center transition-all ${phase2Format === 'knockout' ? 'border-emerald-500 bg-emerald-900/20' : 'border-gray-700 hover:bg-gray-700'}`}>
+                                         <input type="radio" value="knockout" checked={phase2Format === 'knockout'} onChange={(e) => setPhase2Format(e.target.value)} className="hidden" />
+                                         <div className={`w-5 h-5 rounded-full border-2 mr-3 flex items-center justify-center ${phase2Format === 'knockout' ? 'border-emerald-400' : 'border-gray-500'}`}>{phase2Format === 'knockout' && <div className="w-2.5 h-2.5 bg-emerald-400 rounded-full"></div>}</div>
+                                         <span className="font-bold text-gray-100">Langsung Gugur (6 Tim)</span>
+                                      </label>
+                                   </div>
+                                </div>
+
+                                {phase2Format === 'knockout' && (
+                                   <div className="flex-1 space-y-4 animate-in fade-in slide-in-from-right-4 duration-300">
+                                      <label className="text-sm font-black text-emerald-400 uppercase tracking-widest">Sistem BYE</label>
+                                      <div className="flex flex-col gap-2">
+                                         <label className={`p-4 rounded-xl border-2 cursor-pointer flex items-center transition-all ${phase2ByeSystem === 'standard' ? 'border-emerald-500 bg-emerald-900/20' : 'border-gray-700 hover:bg-gray-700'}`}>
+                                            <input type="radio" value="standard" checked={phase2ByeSystem === 'standard'} onChange={(e) => setPhase2ByeSystem(e.target.value)} className="hidden" />
+                                            <div className={`w-5 h-5 rounded-full border-2 mr-3 flex items-center justify-center ${phase2ByeSystem === 'standard' ? 'border-emerald-400' : 'border-gray-500'}`}>{phase2ByeSystem === 'standard' && <div className="w-2.5 h-2.5 bg-emerald-400 rounded-full"></div>}</div>
+                                            <div>
+                                              <div className="font-bold text-gray-100">Posisi Standar</div>
+                                              <div className="text-[10px] text-gray-400 mt-1">Sesuai slot bagan baku</div>
+                                            </div>
+                                         </label>
+                                         <label className={`p-4 rounded-xl border-2 cursor-pointer flex items-center transition-all ${phase2ByeSystem === 'seeding' ? 'border-emerald-500 bg-emerald-900/20' : 'border-gray-700 hover:bg-gray-700'}`}>
+                                            <input type="radio" value="seeding" checked={phase2ByeSystem === 'seeding'} onChange={(e) => setPhase2ByeSystem(e.target.value)} className="hidden" />
+                                            <div className={`w-5 h-5 rounded-full border-2 mr-3 flex items-center justify-center ${phase2ByeSystem === 'seeding' ? 'border-emerald-400' : 'border-gray-500'}`}>{phase2ByeSystem === 'seeding' && <div className="w-2.5 h-2.5 bg-emerald-400 rounded-full"></div>}</div>
+                                            <div>
+                                              <div className="font-bold text-gray-100">Tim Terbaik (Seeding)</div>
+                                              <div className="text-[10px] text-gray-400 mt-1">2 tim statistik teratas dapat BYE</div>
+                                            </div>
+                                         </label>
+                                      </div>
+                                   </div>
+                                )}
+                             </div>
+                             
+                             <div className="mt-8 border-t border-gray-700 pt-6 flex justify-end">
+                                <button onClick={handleExecutePhase2} className="bg-white text-gray-900 px-8 py-4 rounded-xl font-black flex items-center gap-2 hover:bg-gray-200 transition-colors shadow-lg">
+                                  Kunci & Buat Jadwal Fase 2 <IconCalendar />
+                                </button>
+                             </div>
+                           </div>
+                         ) : (
+                           // Tombol Transisi Default (Jika bukan 3 Grup)
+                           <div className="flex flex-wrap justify-center gap-4">
+                              <button onClick={() => { setPhase2Format('group'); handleExecutePhase2(); }} className="bg-blue-600 hover:bg-blue-700 text-white font-black py-4 px-8 rounded-2xl shadow-md transition-all border border-blue-500">Lanjut Grup Fase 2</button>
+                              <button onClick={() => { setPhase2Format('knockout'); setPhase2ByeSystem('seeding'); handleExecutePhase2(); }} className="bg-emerald-600 hover:bg-emerald-700 text-white font-black py-4 px-8 rounded-2xl shadow-md transition-all border border-emerald-500">Gugur (Sistem Seeding)</button>
+                              <button onClick={() => { setPhase2Format('knockout'); setPhase2ByeSystem('standard'); handleExecutePhase2(); }} className="bg-gray-800 hover:bg-gray-700 text-white font-black py-4 px-8 rounded-2xl shadow-md transition-all border border-gray-700">Gugur (Sistem Standar)</button>
+                           </div>
+                         )}
                        </>
                      ) : (
                        <>
-                         <p className="text-gray-400 mb-10 max-w-xl mx-auto font-medium">Harap lengkapi semua skor pertandingan di Fase Grup terlebih dahulu untuk membuka kunci babak selanjutnya.</p>
+                         <p className="text-gray-400 mb-10 font-medium">Harap lengkapi semua skor pertandingan di Fase Grup terlebih dahulu untuk membuka konfigurasi babak selanjutnya.</p>
                          <div className="flex justify-center"><div className="bg-gray-800 text-gray-500 font-black py-4 px-8 rounded-2xl border border-gray-700 cursor-not-allowed">Menunggu Hasil...</div></div>
                        </>
                      )}
