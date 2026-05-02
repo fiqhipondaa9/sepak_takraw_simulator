@@ -700,34 +700,41 @@ export default function App() {
     let masterPlan = [];
     let matchId = 1;
 
+    // 1. Data Riwayat Pertandingan (dengan skor/pemenang)
     if (schedule.length > 0) {
       schedule.forEach(m => {
-        masterPlan.push({ id: m.id, teamA: m.teamA, teamB: m.teamB, groupLabel: m.groupLabel, phase: "Penyisihan", court: m.court, time: m.time });
+        masterPlan.push({ id: m.id, teamA: m.teamA, teamB: m.teamB, winner: m.winner, label: m.groupLabel, phase: "Penyisihan", court: m.court, time: m.time });
         matchId++;
       });
     } else {
-      masterPlan.push({ id: `TBD`, teamA: "TBD", teamB: "TBD", groupLabel: "Fase Penyisihan Belum Disusun", phase: "Penyisihan", court: "-", time: "-" });
+      masterPlan.push({ id: `TBD`, teamA: "TBD", teamB: "TBD", winner: null, label: "Fase Penyisihan Belum Disusun", phase: "Penyisihan", court: "-", time: "-" });
     }
 
+    // 2. Proyeksi Fase Selanjutnya
     if (tournamentType === 'group' || knockoutData.length > 0) {
       const n = Number(numGroups);
-      let knockoutSlots = [];
       
-      if (n === 2) {
-        knockoutSlots = [{ tA: "Juara Grup A", tB: "Runner-up Grup B", title: "Semi Final 1" }, { tA: "Juara Grup B", tB: "Runner-up Grup A", title: "Semi Final 2" }];
-        knockoutSlots.forEach(s => masterPlan.push({ id: `K-${matchId++}`, teamA: s.tA, teamB: s.tB, groupLabel: s.title, phase: "Knockout", court: "TBD", time: "TBD" }));
-        masterPlan.push({ id: `F-${matchId++}`, teamA: "Pemenang SF 1", teamB: "Pemenang SF 2", groupLabel: "GRAND FINAL", phase: "Final", court: "TBD", time: "TBD" });
+      if (n === 3) {
+        const gD = [{ tA: "Juara A", tB: "Runner B" }, { tA: "Runner B", tB: "Juara C" }, { tA: "Juara A", tB: "Juara C" }];
+        const gE = [{ tA: "Juara B", tB: "Runner A" }, { tA: "Runner A", tB: "Runner C" }, { tA: "Juara B", tB: "Runner C" }];
+        gD.forEach(m => masterPlan.push({ id: `K-${matchId++}`, teamA: m.tA, teamB: m.tB, winner: null, label: "Grup D (Fase 2)", phase: "Penyisihan 2", court: "TBD", time: "TBD" }));
+        gE.forEach(m => masterPlan.push({ id: `K-${matchId++}`, teamA: m.tA, teamB: m.tB, winner: null, label: "Grup E (Fase 2)", phase: "Penyisihan 2", court: "TBD", time: "TBD" }));
+        masterPlan.push({ id: `F-${matchId++}`, teamA: "Juara Grup D", teamB: "Juara Grup E", winner: null, label: "FINAL", phase: "Final Stage", court: "TBD", time: "TBD" });
+      } else if (n === 2) {
+        masterPlan.push({ id: `K-${matchId++}`, teamA: "Juara Grup A", teamB: "Runner-up Grup B", winner: null, label: "Semi Final 1", phase: "Knockout", court: "TBD", time: "TBD" });
+        masterPlan.push({ id: `K-${matchId++}`, teamA: "Juara Grup B", teamB: "Runner-up Grup A", winner: null, label: "Semi Final 2", phase: "Knockout", court: "TBD", time: "TBD" });
+        masterPlan.push({ id: `F-${matchId++}`, teamA: "Pemenang SF 1", teamB: "Pemenang SF 2", winner: null, label: "FINAL", phase: "Final Stage", court: "TBD", time: "TBD" });
       } else if (n === 4) {
-        knockoutSlots = [{ tA: "Juara Grup A", tB: "Runner-up Grup B", title: "Perempat Final 1" }, { tA: "Juara Grup C", tB: "Runner-up Grup D", title: "Perempat Final 2" }, { tA: "Juara Grup B", tB: "Runner-up Grup A", title: "Perempat Final 3" }, { tA: "Juara Grup D", tB: "Runner-up Grup C", title: "Perempat Final 4" }];
-        knockoutSlots.forEach(s => masterPlan.push({ id: `K-${matchId++}`, teamA: s.tA, teamB: s.tB, groupLabel: s.title, phase: "Knockout", court: "TBD", time: "TBD" }));
-        masterPlan.push({ id: `K-${matchId++}`, teamA: "Pemenang PF 1", teamB: "Pemenang PF 2", groupLabel: "Semi Final 1", phase: "Knockout", court: "TBD", time: "TBD" });
-        masterPlan.push({ id: `K-${matchId++}`, teamA: "Pemenang PF 3", teamB: "Pemenang PF 4", groupLabel: "Semi Final 2", phase: "Knockout", court: "TBD", time: "TBD" });
-        masterPlan.push({ id: `F-${matchId++}`, teamA: "Pemenang SF 1", teamB: "Pemenang SF 2", groupLabel: "GRAND FINAL", phase: "Final", court: "TBD", time: "TBD" });
+        const slots = [{ tA: "Juara A", tB: "Runner B", l: "PF 1" }, { tA: "Juara C", tB: "Runner D", l: "PF 2" }, { tA: "Juara B", tB: "Runner A", l: "PF 3" }, { tA: "Juara D", tB: "Runner C", l: "PF 4" }];
+        slots.forEach(s => masterPlan.push({ id: `K-${matchId++}`, teamA: s.tA, teamB: s.tB, winner: null, label: s.l, phase: "Knockout", court: "TBD", time: "TBD" }));
+        masterPlan.push({ id: `K-${matchId++}`, teamA: "Pemenang PF 1", teamB: "Pemenang PF 2", winner: null, label: "Semi Final 1", phase: "Knockout", court: "TBD", time: "TBD" });
+        masterPlan.push({ id: `K-${matchId++}`, teamA: "Pemenang PF 3", teamB: "Pemenang PF 4", winner: null, label: "Semi Final 2", phase: "Knockout", court: "TBD", time: "TBD" });
+        masterPlan.push({ id: `F-${matchId++}`, teamA: "Pemenang SF 1", teamB: "Pemenang SF 2", winner: null, label: "FINAL", phase: "Final Stage", court: "TBD", time: "TBD" });
       } else if (n === 8) {
-        masterPlan.push({ id: `K-${matchId++}`, teamA: "16 Tim Terbaik", teamB: "...", groupLabel: "Babak 16 Besar", phase: "Knockout", court: "TBD", time: "TBD" });
-        masterPlan.push({ id: `K-${matchId++}`, teamA: "8 Tim Tersisa", teamB: "...", groupLabel: "Perempat Final s/d Final", phase: "Knockout", court: "TBD", time: "TBD" });
+        masterPlan.push({ id: `K-${matchId++}`, teamA: "16 Tim Terbaik", teamB: "...", winner: null, label: "Babak 16 Besar", phase: "Knockout", court: "TBD", time: "TBD" });
+        masterPlan.push({ id: `K-${matchId++}`, teamA: "8 Tim Tersisa", teamB: "...", winner: null, label: "Perempat Final s/d Final", phase: "Knockout", court: "TBD", time: "TBD" });
       } else {
-        masterPlan.push({ id: `K-${matchId++}`, teamA: "Tim Top Grup", teamB: "Tim Top Grup", groupLabel: `Sistem Gugur (${n} Grup)`, phase: "Knockout", court: "TBD", time: "TBD" });
+        masterPlan.push({ id: `K-${matchId++}`, teamA: "Tim Top Grup", teamB: "Tim Top Grup", winner: null, label: `Sistem Gugur (${n} Grup)`, phase: "Knockout", court: "TBD", time: "TBD" });
       }
     }
     return masterPlan;
@@ -1184,77 +1191,82 @@ export default function App() {
         </main>
       </div>
 
-      {/* MODAL JADWAL INDUK (MASTER PLANNER) */}
+      {/* MODAL JADWAL INDUK (MASTER REPORT TERPADU) */}
       {showMasterModal && (
         <div className="fixed inset-0 z-[60] bg-black/60 backdrop-blur-sm flex items-center justify-center p-4 animate-in fade-in duration-300">
-          <div className="bg-white w-full max-w-5xl max-h-[90vh] rounded-3xl shadow-2xl overflow-hidden flex flex-col">
-            <div className={`p-6 border-b flex justify-between items-center ${theme.header} text-white`}>
-              <div>
-                <h2 className="text-2xl font-black uppercase tracking-tight">Jadwal Induk</h2>
-                <p className="text-xs opacity-70 font-bold tracking-widest uppercase">Proyeksi jadwal lengkap dari Penyisihan hingga Final</p>
-              </div>
-              <button onClick={() => setShowMasterModal(false)} className="bg-white/20 hover:bg-white/40 p-2 rounded-xl transition-colors">
-                <IconX />
-              </button>
-            </div>
+          <div className="bg-white w-full max-w-5xl max-h-[90vh] rounded-3xl shadow-2xl flex flex-col overflow-hidden">
+             <div className={`p-6 flex justify-between items-center ${theme.header} text-white`}>
+                <div>
+                   <h2 className="text-2xl font-black uppercase tracking-tight">Master Schedule & Results</h2>
+                   <p className="text-xs opacity-70 font-bold tracking-widest uppercase">Laporan Klasemen & Jadwal Induk</p>
+                </div>
+                <button onClick={() => setShowMasterModal(false)} className="bg-white/20 hover:bg-white/40 p-2 rounded-xl transition-colors"><IconX /></button>
+             </div>
 
-            <div id="master-print-area" className="p-8 overflow-y-auto bg-white flex-1">
-              <div className="text-center mb-8">
-                 <h1 className="text-3xl font-black uppercase text-gray-900 tracking-tight">{championshipTitles[0] || "NAMA KEJUARAAN"}</h1>
-                 <p className="font-bold text-gray-500 uppercase">{championshipTitles[1] || "KETERANGAN"}</p>
-                 <p className="text-xs font-bold text-gray-400 mt-2 uppercase">{championshipTitles[2]}</p>
-              </div>
-              
-              <table className="w-full border-collapse text-sm">
-                <thead>
-                  <tr className="bg-gray-100 border-b-2 border-gray-200">
-                    <th className="p-4 text-left font-black text-gray-700">ID</th>
-                    <th className="p-4 text-left font-black text-gray-700">FASE / GRUP</th>
-                    <th className="p-4 text-center font-black text-gray-700">PERTANDINGAN</th>
-                    <th className="p-4 text-center font-black text-gray-700">LAPANGAN & WAKTU</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {generateMasterPlan().map((match, idx) => (
-                    <tr key={idx} className="border-b border-gray-50 hover:bg-gray-50/50 transition-colors">
-                      <td className="p-4 font-bold text-gray-400">#{match.id}</td>
-                      <td className="p-4">
-                        <span className={`px-3 py-1.5 rounded-full text-[10px] font-black uppercase tracking-widest ${match.phase === 'Final' ? 'bg-amber-100 text-amber-700 border border-amber-200' : 'bg-gray-100 text-gray-600 border border-gray-200'}`}>
-                          {match.groupLabel}
-                        </span>
-                      </td>
-                      <td className="p-4 font-black">
-                        <div className="flex items-center justify-center gap-3">
-                          <span className="w-1/2 text-right truncate text-gray-800">{match.teamA}</span>
-                          <span className="text-gray-300 font-bold text-xs bg-gray-50 px-2 py-1 rounded-md">VS</span>
-                          <span className="w-1/2 text-left truncate text-gray-800">{match.teamB}</span>
+             <div id="master-print-area" className="p-10 overflow-y-auto bg-white flex-1">
+                <div className="text-center mb-10 border-b pb-8">
+                   <h1 className="text-4xl font-black uppercase text-gray-900 tracking-tight mb-2">{championshipTitles[0] || "NAMA KEJUARAAN"}</h1>
+                   <p className="text-xl font-bold text-gray-500 uppercase">{championshipTitles[1] || "KETERANGAN"}</p>
+                   <p className="text-xs font-bold text-gray-400 mt-2 uppercase">{championshipTitles[2]}</p>
+                </div>
+
+                {/* MODAL SECTION: STANDINGS */}
+                <div className="mb-12">
+                   <h3 className="text-lg font-black uppercase mb-6 border-l-4 border-amber-400 pl-4 text-gray-800">Klasemen Sementara</h3>
+                   <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+                      {Object.entries(getStandings()).map(([gn, gt]) => (
+                        <div key={gn} className="bg-gray-50 p-4 rounded-2xl border border-gray-100 shadow-sm">
+                           <div className="text-center font-black text-xs mb-3 text-gray-400 uppercase tracking-widest">{gn}</div>
+                           <table className="w-full text-xs font-bold">
+                              <thead><tr className="text-gray-400 border-b border-gray-200"><th className="p-2 text-left">POS</th><th className="p-2 text-left">TIM</th><th className="p-2">W-L</th><th className="p-2 text-right">PTS</th></tr></thead>
+                              <tbody>{gt.map((s,i)=><tr key={i} className="border-b border-gray-100"><td className="p-2 text-gray-400">{i+1}</td><td className="p-2 text-gray-800">{s.team}</td><td className="p-2 text-center text-gray-500">{s.win}-{s.lose}</td><td className="p-2 text-right text-lg font-black text-gray-800">{s.totalPoints}</td></tr>)}</tbody>
+                           </table>
                         </div>
-                      </td>
-                      <td className="p-4 text-center">
-                        <div className="font-bold text-gray-600 text-xs">{match.court || "-"}</div>
-                        <div className="font-bold text-gray-400 text-[10px]">{match.time || "-"}</div>
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
+                      ))}
+                   </div>
+                </div>
 
-            <div className="p-6 border-t bg-gray-50 flex justify-end gap-3 shrink-0">
-              <button onClick={() => handleExportPNG('master-print-area', 'Master_Schedule')} className="bg-white border border-gray-200 text-gray-700 px-6 py-3 rounded-2xl font-black text-sm hover:bg-gray-100 transition-colors shadow-sm">
-                Export PNG
-              </button>
-              <button onClick={() => {
-                const printContents = document.getElementById('master-print-area').innerHTML;
-                const originalContents = document.body.innerHTML;
-                document.body.innerHTML = printContents;
-                window.print();
-                document.body.innerHTML = originalContents;
-                window.location.reload(); 
-              }} className="bg-gray-800 hover:bg-black text-white px-6 py-3 rounded-2xl font-black text-sm flex items-center gap-2 shadow-lg transition-colors">
-                <IconPrinter /> Cetak PDF
-              </button>
-            </div>
+                {/* MODAL SECTION: MATCHES */}
+                <div className="mb-12">
+                   <h3 className="text-lg font-black uppercase mb-6 border-l-4 border-blue-500 pl-4 text-gray-800">Seluruh Jadwal & Hasil</h3>
+                   <table className="w-full border-collapse">
+                      <thead><tr className="bg-gray-100 text-[10px] font-black uppercase tracking-widest text-gray-500"><th className="p-4 text-left rounded-tl-xl">ID</th><th className="p-4 text-left">FASE / GRUP</th><th className="p-4 text-center">PERTANDINGAN</th><th className="p-4 text-right rounded-tr-xl">PEMENANG / STATUS</th></tr></thead>
+                      <tbody>
+                        {generateMasterPlan().map((m, idx) => (
+                          <tr key={idx} className="border-b border-gray-50 hover:bg-gray-50/50 transition-colors">
+                            <td className="p-4 font-black text-gray-300">#{m.id}</td>
+                            <td className="p-4"><span className="bg-white border border-gray-200 px-3 py-1.5 rounded-full text-[10px] font-black uppercase tracking-widest text-gray-600 shadow-sm">{m.label}</span></td>
+                            <td className="p-4 font-black text-center">
+                              <div className="flex justify-center items-center gap-4">
+                                 <span className="w-1/2 text-right text-gray-800">{m.teamA}</span><span className="text-[10px] text-gray-300 bg-gray-50 px-2 py-1 rounded-md">VS</span><span className="w-1/2 text-left text-gray-800">{m.teamB}</span>
+                              </div>
+                            </td>
+                            <td className="p-4 text-right">
+                               {m.winner ? <span className={`text-[10px] font-black px-3 py-1.5 rounded-full shadow-sm ${m.winner==='SERI'?'bg-gray-100 text-gray-500 border border-gray-200':'bg-green-100 text-green-700 border border-green-200'}`}>WIN: {m.winner}</span> : <span className="text-[10px] font-bold text-gray-400 bg-gray-50 px-3 py-1.5 rounded-full border border-gray-100">TBD</span>}
+                            </td>
+                          </tr>
+                        ))}
+                      </tbody>
+                   </table>
+                </div>
+
+                {/* MODAL SECTION: BRACKET PLACEHOLDER */}
+                <div className="bg-gray-50 p-8 rounded-3xl text-center border-2 border-dashed border-gray-200 flex flex-col items-center justify-center">
+                   <div className="text-gray-300 mb-3"><IconTrophy /></div>
+                   <p className="text-xs font-black text-gray-400 uppercase tracking-widest">Alur FINAL: Juara Tahap Akhir Akan Bertemu Disini</p>
+                </div>
+             </div>
+
+             <div className="p-6 bg-gray-50 border-t flex justify-end gap-3 shrink-0">
+                <button onClick={() => handleExportPNG('master-print-area', 'Master_Report')} className="bg-white border border-gray-200 text-gray-700 px-6 py-3 rounded-2xl font-black text-sm hover:bg-gray-100 transition-colors shadow-sm">
+                   Export PNG
+                </button>
+                <button onClick={() => {
+                   const c = document.getElementById('master-print-area').innerHTML;
+                   const o = document.body.innerHTML;
+                   document.body.innerHTML = c; window.print(); document.body.innerHTML = o; window.location.reload();
+                }} className="bg-gray-800 hover:bg-black text-white px-8 py-3 rounded-2xl font-black text-sm flex items-center gap-2 shadow-lg transition-colors"><IconPrinter /> Cetak PDF / Laporan</button>
+             </div>
           </div>
         </div>
       )}
