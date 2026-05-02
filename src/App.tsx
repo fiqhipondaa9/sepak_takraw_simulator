@@ -796,7 +796,7 @@ export default function App() {
                   <div className="mb-4">
                     <label className="text-[10px] font-black uppercase tracking-widest text-gray-400 block mb-2 px-1">Tipe Turnamen</label>
                     <select value={tournamentType} onChange={(e) => setTournamentType(e.target.value)} className="w-full bg-white border border-gray-200 text-gray-800 font-bold text-sm rounded-xl px-4 py-3 outline-none focus:border-blue-400 shadow-sm cursor-pointer mb-3 uppercase">
-                       <option value="Group">Group (Satu Pool)</option>
+                       <option value="Group">Group (Satu Grup)</option>
                        <option value="Groups">Groups (Banyak Grup)</option>
                        <option value="Knocked Out Round">Knocked Out Round (Sistem Gugur)</option>
                     </select>
