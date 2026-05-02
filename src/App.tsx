@@ -299,7 +299,7 @@ export default function App() {
   };
 
   const handleAddCourt = (e) => {
-    e.preventDefault();
+    if (e) e.preventDefault(); // Mencegah reload halaman secara aman
     const newCourt = courtInputValue.trim();
     if (!newCourt) return;
     if (courts.includes(newCourt)) return alert("Lapangan ini sudah terdaftar!");
@@ -1144,10 +1144,12 @@ export default function App() {
                   
                   {/* Courts */}
                   <div className="mb-6">
-                    <form onSubmit={handleAddCourt} className="flex gap-2 mb-3">
-                      <input type="text" value={courtInputValue} onChange={(e) => setCourtInputValue(e.target.value)} placeholder="Tambah lapangan (misal: Lap 2)" className="flex-1 px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl focus:outline-none focus:bg-white transition-all text-xs font-bold" />
-                      <button type="submit" className="bg-gray-800 hover:bg-black text-white px-4 py-3 rounded-xl font-bold transition-colors"><IconPlus /></button>
-                    </form>
+                  <form onSubmit={handleAddCourt} className="flex gap-2 mb-3">
+  <input type="text" value={courtInputValue} onChange={(e) => setCourtInputValue(e.target.value)} placeholder="Tambah lapangan (misal: Lap 2)" className="flex-1 px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl focus:outline-none focus:bg-white transition-all text-xs font-bold" />
+  <button type="button" onClick={handleAddCourt} className="bg-gray-800 hover:bg-black text-white px-4 py-3 rounded-xl font-bold transition-colors">
+    <IconPlus />
+  </button>
+</form>
                     <div className="flex flex-wrap gap-2">
                       {courts.map((court, index) => (
                         <div key={index} className="bg-gray-100 text-gray-700 px-3 py-2 rounded-xl text-[10px] font-black flex items-center gap-2 border border-gray-200">
