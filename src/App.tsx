@@ -57,7 +57,7 @@ export default function App() {
   const [phase2Format, setPhase2Format] = useState('group'); 
   const [phase2ByeSystem, setPhase2ByeSystem] = useState('seeding'); 
 
-  // Penambahan variabel state yang hilang
+  // Variabel state 
   const [isProjectorMode, setIsProjectorMode] = useState(false);
   const [isExportingPng, setIsExportingPng] = useState(false);
 
@@ -170,6 +170,23 @@ export default function App() {
   const handleRemoveTeam = (teamToRemove) => { setTeams(teams.filter(team => team !== teamToRemove)); const newAssignments = { ...groupAssignments }; delete newAssignments[teamToRemove]; setGroupAssignments(newAssignments); const newLogos = { ...teamLogos }; delete newLogos[teamToRemove]; setTeamLogos(newLogos); };
   const handleNumGroupsChange = (e) => { const val = e.target.value; if (val === '') { setNumGroups(''); return; } const num = Number(val); if (num >= 1 && num <= 26) { setNumGroups(num); setGroupAssignments({}); } };
   const handleAutoAssign = () => { if (teams.length === 0) return; const activeNG = Number(numGroups) || 2; const shf = [...teams].sort(() => 0.5 - Math.random()); const assignments = {}; const gl = Array.from({length: activeNG}, (_, i) => String.fromCharCode(65 + i)); shf.forEach((t, i) => { assignments[t] = gl[i % activeNG]; }); setGroupAssignments(assignments); };
+
+  const getDetailedScore = (match) => {
+    if (!match || !match.winner) return "TBD";
+    if (match.winner === '?') return "TBD";
+    if (match.winner === 'SERI' && match.winsA === 0 && match.winsB === 0) return "DOUBLE W.O";
+    const setScores = [];
+    match.parties.forEach(p => {
+      let wA = 0, wB = 0;
+      p.sets.forEach(s => {
+        const a = parseInt(s.scoreA), b = parseInt(s.scoreB);
+        if (!isNaN(a) && !isNaN(b)) { if (a > b) wA++; else if (b > a) wB++; }
+      });
+      if (wA > 0 || wB > 0) setScores.push(`${wA}-${wB}`);
+    });
+    if (isTeamEvent) return `${match.winsA}-${match.winsB} (${setScores.join(', ')})`;
+    return setScores[0] || `${match.winsA}-${match.winsB}`;
+  };
 
   const getStandings = (specificSchedule = schedule, specificAssignments = groupAssignments) => {
     let standings = {};
@@ -499,8 +516,6 @@ export default function App() {
   };
 
   const renderProjectedBracket = () => {
-    if (knockoutData.length > 0) return null; 
-    
     const n = Number(numGroups);
     if (tournamentType === 'Groups' && n === 4) {
        return (
@@ -964,7 +979,7 @@ export default function App() {
         </main>
       </div>
 
-      {/* MODAL JADWAL INDUK (MASTER REPORT) */}
+      {/* MODAL JADWAL INDUK (MASTER REPORT TERPADU DENGAN EKSPOR SAJA) */}
       {showMasterModal && (
         <div className="fixed inset-0 z-[60] bg-black/60 backdrop-blur-sm flex items-center justify-center p-4 animate-in fade-in duration-300">
           <div className="bg-white w-full max-w-5xl max-h-[90vh] rounded-3xl shadow-2xl flex flex-col overflow-hidden">
@@ -1002,9 +1017,52 @@ export default function App() {
                 )}
 
                 {/* LAYER 2: KNOCKOUT BRACKET (BAGAN VISUAL HORIZONTAL) */}
-                {renderProjectedBracket()}
+                {knockoutData.length === 0 ? renderProjectedBracket() : (
+                   <div className="mb-12">
+                     <h3 className="text-lg font-black uppercase mb-6 border-l-4 border-emerald-500 pl-4 text-gray-800">Bagan Sistem Gugur</h3>
+                     <div className="overflow-x-auto pb-4">
+                       <div className="flex gap-8 min-w-max items-center justify-start p-4 bg-gray-50/30 rounded-[40px] border border-gray-50">
+                          {knockoutData.map((round, rIdx) => (
+                            <div key={rIdx} className="flex flex-col gap-6 justify-around w-64 h-full">
+                               <div className="text-center font-black text-gray-400 text-[10px] uppercase tracking-widest">{round[0].title}</div>
+                               <div className="flex flex-col justify-around flex-1 gap-4">
+                               {round.map(match => (
+                                 <div key={match.id} className="bg-white border border-gray-200 rounded-xl p-3 shadow-sm flex flex-col gap-1">
+                                    <div className={`flex justify-between items-center text-xs font-bold px-2 py-1 rounded-md ${match.winner === match.teamA && match.winner !== 'SERI' && match.winner !== '?' ? 'bg-emerald-50 text-emerald-700' : 'text-gray-700'}`}>
+                                      <span className="truncate w-3/4">{match.teamA}</span>
+                                      <span>{match.winner && match.winsA !== undefined ? match.winsA : ''}</span>
+                                    </div>
+                                    <div className="h-px bg-gray-100 mx-2"></div>
+                                    <div className={`flex justify-between items-center text-xs font-bold px-2 py-1 rounded-md ${match.winner === match.teamB && match.winner !== 'SERI' && match.winner !== '?' ? 'bg-emerald-50 text-emerald-700' : 'text-gray-700'}`}>
+                                      <span className="truncate w-3/4">{match.teamB}</span>
+                                      <span>{match.winner && match.winsB !== undefined ? match.winsB : ''}</span>
+                                    </div>
+                                 </div>
+                               ))}
+                               </div>
+                            </div>
+                          ))}
+                          
+                          {/* JUARA 3 BERSAMA INFO CARD IN BRACKET */}
+                          {jointThirdTeams.length === 2 && (
+                            <div className="flex flex-col gap-6 w-64 items-center self-stretch justify-end">
+                               <div className="mt-auto text-center">
+                                  <div className="text-amber-500 font-black text-xs flex flex-col items-center gap-2"><IconTrophy /><span className="tracking-widest">JUARA 3 BERSAMA</span></div>
+                                  <p className="text-[8px] text-gray-400 mt-2 font-bold opacity-50 uppercase">(KALAH DI BABAK SEMI FINAL)</p>
+                                  <div className="mt-3 bg-amber-50/50 border border-amber-100 rounded-xl p-2 shadow-sm text-[10px] font-black text-amber-800">
+                                    <div>{jointThirdTeams[0]}</div>
+                                    <div className="h-px bg-amber-200/50 my-1"></div>
+                                    <div>{jointThirdTeams[1]}</div>
+                                  </div>
+                               </div>
+                            </div>
+                          )}
+                       </div>
+                     </div>
+                   </div>
+                )}
 
-                {/* LAYER 3: MATCH LOG HISTORY */}
+                {/* LAYER 3: MATCH LOG HISTORY (WITH DETAIL SCORE FORMATTER) */}
                 <div className="mb-12">
                    <h3 className="text-lg font-black uppercase mb-6 border-l-4 border-blue-500 pl-4 text-gray-800">Seluruh Jadwal & Hasil</h3>
                    <table className="w-full border-collapse">
