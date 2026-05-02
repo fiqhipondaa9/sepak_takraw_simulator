@@ -711,7 +711,7 @@ export default function App() {
           { tA: "Juara Grup B", tB: "Runner-up Grup A", title: "Semi Final 2" }
         ];
         knockoutSlots.forEach(s => masterPlan.push({ id: `K-${matchId++}`, teamA: s.tA, teamB: s.tB, groupLabel: s.title, phase: "Knockout", court: "TBD", time: "TBD" }));
-        masterPlan.push({ id: `F-${matchId++}`, teamA: "Pemenang SF 1", teamB: "Pemenang SF 2", groupLabel: "GRAND FINAL", phase: "Final", court: "TBD", time: "TBD" });
+        masterPlan.push({ id: `F-${matchId++}`, teamA: "Pemenang SF 1", teamB: "Pemenang SF 2", groupLabel: "FINAL", phase: "Final", court: "TBD", time: "TBD" });
       } else if (n === 4) {
         knockoutSlots = [
           { tA: "Juara Grup A", tB: "Runner-up Grup B", title: "Perempat Final 1" },
@@ -722,7 +722,7 @@ export default function App() {
         knockoutSlots.forEach(s => masterPlan.push({ id: `K-${matchId++}`, teamA: s.tA, teamB: s.tB, groupLabel: s.title, phase: "Knockout", court: "TBD", time: "TBD" }));
         masterPlan.push({ id: `K-${matchId++}`, teamA: "Pemenang PF 1", teamB: "Pemenang PF 2", groupLabel: "Semi Final 1", phase: "Knockout", court: "TBD", time: "TBD" });
         masterPlan.push({ id: `K-${matchId++}`, teamA: "Pemenang PF 3", teamB: "Pemenang PF 4", groupLabel: "Semi Final 2", phase: "Knockout", court: "TBD", time: "TBD" });
-        masterPlan.push({ id: `F-${matchId++}`, teamA: "Pemenang SF 1", teamB: "Pemenang SF 2", groupLabel: "GRAND FINAL", phase: "Final", court: "TBD", time: "TBD" });
+        masterPlan.push({ id: `F-${matchId++}`, teamA: "Pemenang SF 1", teamB: "Pemenang SF 2", groupLabel: "FINAL", phase: "Final", court: "TBD", time: "TBD" });
       } else if (n === 8) {
         masterPlan.push({ id: `K-${matchId++}`, teamA: "16 Tim Terbaik", teamB: "...", groupLabel: "Babak 16 Besar", phase: "Knockout", court: "TBD", time: "TBD" });
         masterPlan.push({ id: `K-${matchId++}`, teamA: "8 Tim Tersisa", teamB: "...", groupLabel: "Perempat Final s/d Final", phase: "Knockout", court: "TBD", time: "TBD" });
