@@ -32,45 +32,35 @@ const themes = {
   slate: { name: 'Slate', bgApp: 'bg-slate-100', primary: 'bg-slate-800', primaryHover: 'hover:bg-slate-900', textPrimary: 'text-slate-900', border: 'border-slate-200', accent: 'bg-indigo-500', accentText: 'text-indigo-50', accentHover: 'hover:bg-indigo-600', ring: 'focus:ring-slate-400', soft: 'bg-slate-100', header: 'bg-slate-950' }
 };
 
-// --- FUNGSI BANTUAN UNTUK AUTO-SAVE ---
-const getLocalData = () => {
-  try {
-    const item = localStorage.getItem('takrawBentoData');
-    return item ? JSON.parse(item) : null;
-  } catch (e) {
-    return null;
-  }
-};
-
 export default function App() {
-  // Mengambil data dari memori browser jika ada
-  const savedData = getLocalData() || {};
-
-  // --- STATE MANAGEMENT ---
-  const [activeTheme, setActiveTheme] = useState(savedData.activeTheme || 'emerald');
+  // --- STATE MANAGEMENT (Tanpa Local Storage) ---
+  const [activeTheme, setActiveTheme] = useState('emerald');
   const theme = themes[activeTheme];
 
-  const [teams, setTeams] = useState(savedData.teams || []);
+  const [teams, setTeams] = useState([]);
   const [inputValue, setInputValue] = useState('');
-  const [schedule, setSchedule] = useState(savedData.schedule || []);
-  const [tournamentType, setTournamentType] = useState(savedData.tournamentType || 'group'); 
-  const [eventCategory, setEventCategory] = useState(savedData.eventCategory || 'single'); 
-  const [eventDiscipline, setEventDiscipline] = useState(savedData.eventDiscipline || 'Regu'); 
-  const [mixDisciplines, setMixDisciplines] = useState(savedData.mixDisciplines || ['Double', 'Regu', 'Quadrant']); 
-  const [numGroups, setNumGroups] = useState(savedData.numGroups || 2); 
-  const [groupAssignments, setGroupAssignments] = useState(savedData.groupAssignments || {}); 
-  const [courts, setCourts] = useState(savedData.courts || ['Lapangan Utama', 'Lapangan B']);
+  const [schedule, setSchedule] = useState([]);
+  const [tournamentType, setTournamentType] = useState('group'); 
+  const [eventCategory, setEventCategory] = useState('single'); 
+  const [eventDiscipline, setEventDiscipline] = useState('Regu'); 
+  const [mixDisciplines, setMixDisciplines] = useState(['Double', 'Regu', 'Quadrant']); 
+  const [numGroups, setNumGroups] = useState(2); 
+  const [groupAssignments, setGroupAssignments] = useState({}); 
+  const [courts, setCourts] = useState(['Lapangan Utama', 'Lapangan B']);
   const [courtInputValue, setCourtInputValue] = useState('');
-  const [teamLogos, setTeamLogos] = useState(savedData.teamLogos || {}); 
-  const [sponsorLogos, setSponsorLogos] = useState(savedData.sponsorLogos || []); 
-  const [championshipTitles, setChampionshipTitles] = useState(savedData.championshipTitles || [
+  const [teamLogos, setTeamLogos] = useState({}); 
+  const [sponsorLogos, setSponsorLogos] = useState([]); 
+  const [championshipTitles, setChampionshipTitles] = useState([
     "EDIT NAMA KEJUARAAN",
     "EDIT KETERANGAN DAN LAIN-LAIN",
     "EDIT LOKASI & TANGGAL PELAKSANAAN"
   ]);
-  const [knockoutData, setKnockoutData] = useState(savedData.knockoutData || []);
+  const [knockoutData, setKnockoutData] = useState([]);
   const [isExportingPng, setIsExportingPng] = useState(false);
   const [isProjectorMode, setIsProjectorMode] = useState(false);
+
+  // --- CEK STATUS FASE 1 ---
+  const isPhase1Finished = schedule.length > 0 && schedule.every(match => match.winner !== null);
 
   // --- FUNGSI MODE LAYAR PENUH (FULLSCREEN) ---
   const handleEnterProjectorMode = () => {
@@ -114,19 +104,6 @@ export default function App() {
       document.removeEventListener('msfullscreenchange', handleFullscreenChange);
     };
   }, []);
-
-  // --- EFEK AUTO-SAVE (SISTEM ANTI-MATI LAMPU) ---
-  React.useEffect(() => {
-    const dataToSave = {
-      activeTheme, teams, schedule, tournamentType, eventCategory, eventDiscipline, mixDisciplines, numGroups, 
-      groupAssignments, courts, teamLogos, sponsorLogos, championshipTitles, knockoutData
-    };
-    try {
-      localStorage.setItem('takrawBentoData', JSON.stringify(dataToSave));
-    } catch (e) {
-      console.warn("Gagal auto-save: Memori local storage penuh.");
-    }
-  }, [activeTheme, teams, schedule, tournamentType, eventCategory, eventDiscipline, mixDisciplines, numGroups, groupAssignments, courts, teamLogos, sponsorLogos, championshipTitles, knockoutData]);
 
   // --- EFEK PERINGATAN TUTUP TAB ---
   React.useEffect(() => {
@@ -654,7 +631,7 @@ export default function App() {
     }
   };
 
-  // --- LOGIKA KLASEMEN OTOMATIS ---
+  // --- LOGIKA KLASEMEN OTOMATIS (DENGAN HEAD-TO-HEAD) ---
   const getStandings = () => {
     let standings = {};
     teams.forEach(t => {
@@ -699,7 +676,19 @@ export default function App() {
     });
 
     const sortedTeams = Object.values(standings).sort((a, b) => {
+      // 1. KRITERIA TOTAL POIN
       if (b.totalPoints !== a.totalPoints) return b.totalPoints - a.totalPoints;
+      
+      // 2. KRITERIA HEAD-TO-HEAD
+      const h2hMatch = schedule.find(m => 
+        ((m.teamA === a.team && m.teamB === b.team) || (m.teamA === b.team && m.teamB === a.team)) && m.winner
+      );
+      if (h2hMatch && h2hMatch.winner !== 'SERI') {
+        if (h2hMatch.winner === a.team) return -1;
+        if (h2hMatch.winner === b.team) return 1;
+      }
+
+      // 3. KRITERIA LANJUTAN (Kemenangan, Partai, Set, Poin)
       if (b.win !== a.win) return b.win - a.win;
       if (eventCategory === 'team') {
         const aPartyDiff = a.partyWin - a.partyLose; const bPartyDiff = b.partyWin - b.partyLose;
@@ -716,6 +705,29 @@ export default function App() {
       groupedStandings[stat.group].push(stat);
     });
     return groupedStandings;
+  };
+
+  // --- FUNGSI TRANSISI OTOMATIS (DARI FASE 1 KE FASE 2) ---
+  const handleTransitionToPhase2Group = () => {
+    const standings = getStandings();
+    let qualifiers = [];
+    Object.values(standings).forEach(groupTeams => {
+      if (groupTeams[0]) qualifiers.push(groupTeams[0].team);
+      if (groupTeams[1]) qualifiers.push(groupTeams[1].team);
+    });
+
+    if (qualifiers.length < 2) return alert("Tim tidak cukup untuk lanjut ke Fase 2!");
+    
+    if (window.confirm("Apakah Anda yakin ingin lanjut ke Grup Fase 2? Jadwal Fase 1 akan ditutup.")) {
+        setTeams(qualifiers);
+        setTournamentType('group');
+        setNumGroups(2); // Otomatis dibagi 2 grup di fase 2
+        setSchedule([]);
+        setGroupAssignments({});
+        setKnockoutData([]);
+        alert("Tim terpilih telah dipindahkan ke Fase 2. Silakan atur pembagian grup silang dan tekan 'Buat Jadwal'.");
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
   };
 
   // --- FUNGSI SISTEM GUGUR (KNOCKOUT BRACKET) ---
@@ -979,7 +991,7 @@ export default function App() {
                  <div className={`p-3 rounded-2xl ${theme.soft} ${theme.textPrimary}`}><IconTable /></div>
                  <div><h3 className="font-black text-gray-800">Tournament Dashboard</h3><p className="text-xs text-gray-500 font-medium">Export reports or enter live mode.</p></div>
               </div>
-              <div className="flex flex-wrap gap-2">
+              <div className="flex flex-wrap gap-2 items-center">
                 <button onClick={handleExportExcel} className="bg-white border border-gray-200 text-gray-700 hover:bg-gray-50 px-4 py-2.5 rounded-2xl flex items-center gap-2 text-sm font-black transition-colors"><IconFileSpreadsheet /> CSV</button>
                 <button onClick={handleExportPNG} disabled={isExportingPng} className="bg-white border border-gray-200 text-gray-700 hover:bg-gray-50 px-4 py-2.5 rounded-2xl flex items-center gap-2 text-sm font-black transition-colors"><IconDownloadImg /> {isExportingPng ? '...' : 'PNG'}</button>
                 <button onClick={handleExportPDF} className="bg-gray-800 text-white hover:bg-black px-4 py-2.5 rounded-2xl flex items-center gap-2 text-sm font-black transition-colors shadow-md"><IconPrinter /> PRINT</button>
@@ -1262,19 +1274,32 @@ export default function App() {
                 </div>
               </div>
 
-              {/* KNOCKOUT TRANSITION BTN */}
+              {/* KNOCKOUT TRANSITION BTN (Otomatis muncul jika isPhase1Finished) */}
               {!isProjectorMode && (
                 <div className="no-print bg-gray-900 text-white rounded-3xl p-8 sm:p-12 text-center shadow-xl border border-gray-800 relative overflow-hidden mt-8">
                    <div className="absolute -top-10 -right-10 opacity-5 text-gray-100"><svg className="w-64 h-64" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M3 3v18"/><path d="M3 12h5"/><path d="M8 7v10"/><path d="M8 7h5"/><path d="M8 17h5"/><path d="M13 12h5"/><path d="M18 7v10"/><path d="M18 12h3"/></svg></div>
                    
                    <div className="relative z-10">
-                     <h2 className="text-3xl font-black text-white mb-3 tracking-tight">Menuju Babak Gugur</h2>
-                     <p className="text-gray-400 mb-10 max-w-xl mx-auto font-medium">Bagan turnamen akan otomatis menarik data dari peringkat teratas Klasemen. Pilih format yang sesuai:</p>
-                     <div className="flex flex-wrap justify-center gap-4">
-                        <button onClick={() => generateKnockout(8)} className="bg-gray-800 hover:bg-gray-700 text-white font-black py-4 px-8 rounded-2xl shadow-md transition-all border border-gray-700">Top 8 (Perempat)</button>
-                        <button onClick={() => generateKnockout(4)} className={`${theme.primary} ${theme.primaryHover} text-white font-black py-4 px-8 rounded-2xl shadow-xl transition-all scale-105`}>Top 4 (Semi Final)</button>
-                        <button onClick={() => generateKnockout(2)} className="bg-gray-800 hover:bg-gray-700 text-white font-black py-4 px-8 rounded-2xl shadow-md transition-all border border-gray-700">Top 2 (Final)</button>
-                     </div>
+                     <h2 className="text-3xl font-black text-white mb-3 tracking-tight">Menuju Babak Selanjutnya</h2>
+                     
+                     {isPhase1Finished ? (
+                       <>
+                         <p className="text-emerald-400 mb-10 max-w-xl mx-auto font-medium">✨ Fase 1 telah selesai! Silakan pilih format untuk melanjutkan turnamen:</p>
+                         <div className="flex flex-wrap justify-center gap-4">
+                            <button onClick={handleTransitionToPhase2Group} className="bg-blue-600 hover:bg-blue-700 text-white font-black py-4 px-8 rounded-2xl shadow-md transition-all border border-blue-500">Lanjut Grup Fase 2</button>
+                            <button onClick={() => generateKnockout(8)} className="bg-gray-800 hover:bg-gray-700 text-white font-black py-4 px-8 rounded-2xl shadow-md transition-all border border-gray-700">Gugur (Top 8)</button>
+                            <button onClick={() => generateKnockout(4)} className={`${theme.primary} ${theme.primaryHover} text-white font-black py-4 px-8 rounded-2xl shadow-xl transition-all scale-105`}>Gugur (Top 4)</button>
+                            <button onClick={() => generateKnockout(2)} className="bg-gray-800 hover:bg-gray-700 text-white font-black py-4 px-8 rounded-2xl shadow-md transition-all border border-gray-700">Gugur (Top 2)</button>
+                         </div>
+                       </>
+                     ) : (
+                       <>
+                         <p className="text-gray-400 mb-10 max-w-xl mx-auto font-medium">Harap lengkapi semua skor pertandingan di Fase Grup terlebih dahulu untuk membuka kunci babak selanjutnya.</p>
+                         <div className="flex justify-center">
+                            <div className="bg-gray-800 text-gray-500 font-black py-4 px-8 rounded-2xl border border-gray-700 cursor-not-allowed">Menunggu Hasil...</div>
+                         </div>
+                       </>
+                     )}
                    </div>
                 </div>
               )}
