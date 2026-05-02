@@ -19,7 +19,7 @@ const IconArrowDown = () => <svg className="w-4 h-4" xmlns="http://www.w3.org/20
 const IconCopy = () => <svg className="w-4 h-4" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>;
 const IconList = () => <svg className="w-5 h-5" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><line x1="8" y1="6" x2="21" y2="6"/><line x1="8" y1="12" x2="21" y2="12"/><line x1="8" y1="18" x2="21" y2="18"/><line x1="3" y1="6" x2="3.01" y2="6"/><line x1="3" y1="12" x2="3.01" y2="12"/><line x1="3" y1="18" x2="3.01" y2="18"/></svg>;
 
-// --- KONFIGURASI TEMA (9 Warna) ---
+// --- KONFIGURASI TEMA ---
 const themes = {
   emerald: { name: 'Emerald', bgApp: 'bg-emerald-50/50', primary: 'bg-emerald-600', primaryHover: 'hover:bg-emerald-700', textPrimary: 'text-emerald-900', border: 'border-emerald-100', accent: 'bg-amber-400', accentText: 'text-amber-900', accentHover: 'hover:bg-amber-500', soft: 'bg-emerald-50', header: 'bg-emerald-800' },
   ocean: { name: 'Ocean', bgApp: 'bg-blue-50/50', primary: 'bg-blue-600', primaryHover: 'hover:bg-blue-700', textPrimary: 'text-blue-900', border: 'border-blue-100', accent: 'bg-orange-400', accentText: 'text-orange-900', accentHover: 'hover:bg-orange-500', soft: 'bg-blue-50', header: 'bg-blue-900' },
@@ -57,7 +57,6 @@ export default function App() {
   const [phase2Format, setPhase2Format] = useState('group'); 
   const [phase2ByeSystem, setPhase2ByeSystem] = useState('seeding'); 
 
-  // Variabel state 
   const [isProjectorMode, setIsProjectorMode] = useState(false);
   const [isExportingPng, setIsExportingPng] = useState(false);
 
@@ -128,6 +127,7 @@ export default function App() {
      window.location.reload();
   };
 
+  // --- PERBAIKAN LOGIKA EKSPOR PNG ---
   const handleExportPNG = async (elementId = 'master-print-area', filename = 'Jadwal_Induk') => {
     setIsExportingPng(true);
     try {
@@ -138,9 +138,35 @@ export default function App() {
         } else { await new Promise(r => setTimeout(r, 1000)); }
       }
       const element = document.getElementById(elementId);
-      const canvas = await window.html2canvas(element, { scale: 2, useCORS: true, backgroundColor: "#ffffff" });
-      const link = document.createElement("a"); link.download = `${filename}_${new Date().toISOString().slice(0,10)}.png`; link.href = canvas.toDataURL("image/png"); link.click();
-    } catch (error) { alert("Gagal membuat gambar PNG."); } finally { setIsExportingPng(false); }
+      
+      // Trik CSS: Hapus batasan tinggi sementara agar terfoto full
+      const originalMaxHeight = element.style.maxHeight;
+      const originalOverflow = element.style.overflow;
+      element.style.maxHeight = 'none';
+      element.style.overflow = 'visible';
+
+      const canvas = await window.html2canvas(element, { 
+          scale: 2, 
+          useCORS: true, 
+          allowTaint: true, // Bantu atasi logo luar
+          backgroundColor: "#ffffff",
+          windowHeight: element.scrollHeight
+      });
+
+      // Kembalikan batasan tinggi seperti semula
+      element.style.maxHeight = originalMaxHeight;
+      element.style.overflow = originalOverflow;
+
+      const link = document.createElement("a"); 
+      link.download = `${filename}_${new Date().toISOString().slice(0,10)}.png`; 
+      link.href = canvas.toDataURL("image/png"); 
+      link.click();
+    } catch (error) { 
+      console.error(error);
+      alert("Gagal membuat gambar PNG. Pastikan logo yang diunggah valid."); 
+    } finally { 
+      setIsExportingPng(false); 
+    }
   };
 
   const handleCopyWhatsApp = () => {
@@ -170,23 +196,6 @@ export default function App() {
   const handleRemoveTeam = (teamToRemove) => { setTeams(teams.filter(team => team !== teamToRemove)); const newAssignments = { ...groupAssignments }; delete newAssignments[teamToRemove]; setGroupAssignments(newAssignments); const newLogos = { ...teamLogos }; delete newLogos[teamToRemove]; setTeamLogos(newLogos); };
   const handleNumGroupsChange = (e) => { const val = e.target.value; if (val === '') { setNumGroups(''); return; } const num = Number(val); if (num >= 1 && num <= 26) { setNumGroups(num); setGroupAssignments({}); } };
   const handleAutoAssign = () => { if (teams.length === 0) return; const activeNG = Number(numGroups) || 2; const shf = [...teams].sort(() => 0.5 - Math.random()); const assignments = {}; const gl = Array.from({length: activeNG}, (_, i) => String.fromCharCode(65 + i)); shf.forEach((t, i) => { assignments[t] = gl[i % activeNG]; }); setGroupAssignments(assignments); };
-
-  const getDetailedScore = (match) => {
-    if (!match || !match.winner) return "TBD";
-    if (match.winner === '?') return "TBD";
-    if (match.winner === 'SERI' && match.winsA === 0 && match.winsB === 0) return "DOUBLE W.O";
-    const setScores = [];
-    match.parties.forEach(p => {
-      let wA = 0, wB = 0;
-      p.sets.forEach(s => {
-        const a = parseInt(s.scoreA), b = parseInt(s.scoreB);
-        if (!isNaN(a) && !isNaN(b)) { if (a > b) wA++; else if (b > a) wB++; }
-      });
-      if (wA > 0 || wB > 0) setScores.push(`${wA}-${wB}`);
-    });
-    if (isTeamEvent) return `${match.winsA}-${match.winsB} (${setScores.join(', ')})`;
-    return setScores[0] || `${match.winsA}-${match.winsB}`;
-  };
 
   const getStandings = (specificSchedule = schedule, specificAssignments = groupAssignments) => {
     let standings = {};
@@ -515,70 +524,109 @@ export default function App() {
     }
   };
 
-  const renderProjectedBracket = () => {
+  // --- JURU GAMBAR ESTETIK UNTUK BAGAN PROYEKSI MAUPUN RIIL ---
+  const renderAestheticBracket = () => {
     const n = Number(numGroups);
+    // Tentukan apakah kita menggunakan data Riil atau Proyeksi Dummy
+    const isRealData = knockoutData.length > 0;
+    
+    // Fungsi pembantu untuk merender kotak pertandingan yang seragam
+    const BracketBox = ({ matchInfo }) => {
+        const tA = matchInfo.teamA || "?";
+        const tB = matchInfo.teamB || "?";
+        const sA = matchInfo.winsA !== undefined ? matchInfo.winsA : "-";
+        const sB = matchInfo.winsB !== undefined ? matchInfo.winsB : "-";
+        const w = matchInfo.winner;
+
+        return (
+            <div className="bg-white border border-gray-100 rounded-2xl p-4 shadow-sm flex flex-col gap-1 w-full relative">
+                <div className={`text-[9px] font-black flex justify-between ${w === tA && w !== '?' ? 'text-emerald-600' : 'opacity-60 text-gray-700'}`}>
+                    <span className="truncate w-3/4">{tA}</span><span>{sA}</span>
+                </div>
+                <div className="h-px bg-gray-50 my-1"></div>
+                <div className={`text-[9px] font-black flex justify-between ${w === tB && w !== '?' ? 'text-emerald-600' : 'opacity-60 text-gray-700'}`}>
+                    <span className="truncate w-3/4">{tB}</span><span>{sB}</span>
+                </div>
+            </div>
+        )
+    };
+
     if (tournamentType === 'Groups' && n === 4) {
+       // Siapkan Data Perempat Final (QF), Semi Final (SF), dan Final (F)
+       const qfMatches = isRealData && knockoutData.length === 3 ? knockoutData[0] : [
+           { teamA: "[JUARA A]", teamB: "[RUNNER B]" }, { teamA: "[JUARA C]", teamB: "[RUNNER D]" },
+           { teamA: "[JUARA B]", teamB: "[RUNNER A]" }, { teamA: "[JUARA D]", teamB: "[RUNNER C]" }
+       ];
+       const sfMatches = isRealData && knockoutData.length === 3 ? knockoutData[1] : [
+           { teamA: "[MENANG PF 1]", teamB: "[MENANG PF 2]" }, { teamA: "[MENANG PF 3]", teamB: "[MENANG PF 4]" }
+       ];
+       const fMatch = isRealData && knockoutData.length === 3 ? knockoutData[2][0] : { teamA: "[MENANG SF 1]", teamB: "[MENANG SF 2]" };
+
        return (
-         <div className="flex gap-8 min-w-max items-center justify-start p-4 bg-gray-50/30 rounded-[40px] border border-gray-50">
+         <div className="flex gap-8 min-w-max items-center justify-start p-6 bg-gray-50/30 rounded-[40px] border border-gray-50">
             <div className="flex flex-col gap-6 w-56">
                <div className="text-[9px] font-black text-gray-400 text-center mb-2 tracking-widest">PEREMPAT FINAL</div>
-               {[["JUARA A", "RUNNER B"], ["JUARA C", "RUNNER D"], ["JUARA B", "RUNNER A"], ["JUARA D", "RUNNER C"]].map((pair, i) => (
-                 <div key={i} className="bg-white border border-gray-100 rounded-2xl p-4 shadow-sm flex flex-col gap-1">
-                    <div className="text-[9px] font-black flex justify-between opacity-50"><span>{pair[0]}</span><span>-</span></div>
-                    <div className="h-px bg-gray-50 my-1"></div>
-                    <div className="text-[9px] font-black flex justify-between opacity-50"><span>{pair[1]}</span><span>-</span></div>
-                 </div>
-               ))}
+               {qfMatches.map((m, i) => <BracketBox key={i} matchInfo={m} />)}
             </div>
             <div className="flex flex-col gap-12 w-56 justify-around h-full">
                <div className="text-[9px] font-black text-gray-400 text-center mb-2 tracking-widest -mt-8">SEMI FINAL</div>
-               {[["MENANG PF 1", "MENANG PF 2"], ["MENANG PF 3", "MENANG PF 4"]].map((pair, i) => (
-                 <div key={i} className="bg-white border border-gray-100 rounded-2xl p-4 shadow-sm flex flex-col gap-1 mt-4">
-                    <div className="text-[9px] font-black flex justify-between opacity-50"><span>{pair[0]}</span><span>-</span></div>
-                    <div className="h-px bg-gray-50 my-1"></div>
-                    <div className="text-[9px] font-black flex justify-between opacity-50"><span>{pair[1]}</span><span>-</span></div>
-                 </div>
-               ))}
+               {sfMatches.map((m, i) => <BracketBox key={i} matchInfo={m} />)}
             </div>
             <div className="flex flex-col gap-6 w-64 items-center">
                <div className="text-[9px] font-black text-emerald-600 text-center mb-4 tracking-[0.3em]">PARTAI PUNCAK</div>
                <div className="bg-emerald-50 border-2 border-emerald-200 rounded-[32px] p-8 shadow-xl flex flex-col gap-3 w-full text-center relative">
                   <div className="absolute -top-4 left-1/2 -translate-x-1/2 bg-emerald-500 text-white text-[8px] font-black px-4 py-1 rounded-full shadow-lg">FINALIS</div>
-                  <div className="text-xs font-black text-emerald-900 opacity-40">MENANG SF 1</div>
+                  <div className={`text-xs font-black ${fMatch.winner === fMatch.teamA && fMatch.winner !== '?' ? 'text-emerald-700' : 'text-emerald-900 opacity-40'}`}>{fMatch.teamA}</div>
                   <div className="text-xs font-black text-emerald-500">VS</div>
-                  <div className="text-xs font-black text-emerald-900 opacity-40">MENANG SF 2</div>
+                  <div className={`text-xs font-black ${fMatch.winner === fMatch.teamB && fMatch.winner !== '?' ? 'text-emerald-700' : 'text-emerald-900 opacity-40'}`}>{fMatch.teamB}</div>
                </div>
+               
                <div className="mt-8 text-center">
                   <div className="text-amber-500 font-black text-xs flex flex-col items-center gap-2"><IconTrophy /><span className="tracking-widest">JUARA 3 BERSAMA</span></div>
                   <p className="text-[8px] text-gray-400 mt-2 font-bold opacity-50 uppercase">(KALAH DI BABAK SEMI FINAL)</p>
+                  {isRealData && jointThirdTeams.length === 2 && (
+                    <div className="mt-3 bg-amber-50/50 border border-amber-100 rounded-xl p-2 shadow-sm text-[10px] font-black text-amber-800">
+                        <div>{jointThirdTeams[0]}</div>
+                        <div className="h-px bg-amber-200/50 my-1"></div>
+                        <div>{jointThirdTeams[1]}</div>
+                    </div>
+                  )}
                </div>
             </div>
          </div>
        );
     } else if (tournamentType === 'Groups' && n === 2) {
+       // Siapkan Data Semi Final (SF) dan Final (F)
+       const sfMatches = isRealData && knockoutData.length === 2 ? knockoutData[0] : [
+           { teamA: "[JUARA A]", teamB: "[RUNNER B]" }, { teamA: "[JUARA B]", teamB: "[RUNNER A]" }
+       ];
+       const fMatch = isRealData && knockoutData.length === 2 ? knockoutData[1][0] : { teamA: "[MENANG SF 1]", teamB: "[MENANG SF 2]" };
+
        return (
-         <div className="flex gap-10 min-w-max items-center justify-start p-4 bg-gray-50/30 rounded-[40px] border border-gray-50">
+         <div className="flex gap-10 min-w-max items-center justify-start p-6 bg-gray-50/30 rounded-[40px] border border-gray-50">
             <div className="flex flex-col gap-6 w-56">
                <div className="text-[9px] font-black text-gray-400 text-center mb-2 tracking-widest">SEMI FINAL</div>
-               {[["JUARA A", "RUNNER B"], ["JUARA B", "RUNNER A"]].map((pair, i) => (
-                 <div key={i} className="bg-white border border-gray-100 rounded-2xl p-4 shadow-sm flex flex-col gap-1">
-                    <div className="text-[9px] font-black flex justify-between opacity-50"><span>{pair[0]}</span><span>-</span></div>
-                    <div className="h-px bg-gray-50 my-1"></div>
-                    <div className="text-[9px] font-black flex justify-between opacity-50"><span>{pair[1]}</span><span>-</span></div>
-                 </div>
-               ))}
+               {sfMatches.map((m, i) => <BracketBox key={i} matchInfo={m} />)}
             </div>
             <div className="flex flex-col gap-6 w-64 items-center">
                <div className="text-[9px] font-black text-emerald-600 text-center mb-4 tracking-[0.3em]">PARTAI PUNCAK</div>
                <div className="bg-emerald-50 border-2 border-emerald-200 rounded-[32px] p-8 shadow-xl flex flex-col gap-3 w-full text-center relative">
                   <div className="absolute -top-4 left-1/2 -translate-x-1/2 bg-emerald-500 text-white text-[8px] font-black px-4 py-1 rounded-full shadow-lg">FINALIS</div>
-                  <div className="text-xs font-black text-emerald-900 opacity-40">MENANG SF 1</div>
+                  <div className={`text-xs font-black ${fMatch.winner === fMatch.teamA && fMatch.winner !== '?' ? 'text-emerald-700' : 'text-emerald-900 opacity-40'}`}>{fMatch.teamA}</div>
                   <div className="text-xs font-black text-emerald-500">VS</div>
-                  <div className="text-xs font-black text-emerald-900 opacity-40">MENANG SF 2</div>
+                  <div className={`text-xs font-black ${fMatch.winner === fMatch.teamB && fMatch.winner !== '?' ? 'text-emerald-700' : 'text-emerald-900 opacity-40'}`}>{fMatch.teamB}</div>
                </div>
+               
                <div className="mt-8 text-center">
                   <div className="text-amber-500 font-black text-xs flex flex-col items-center gap-2"><IconTrophy /><span className="tracking-widest">JUARA 3 BERSAMA</span></div>
                   <p className="text-[8px] text-gray-400 mt-2 font-bold opacity-50 uppercase">(KALAH DI BABAK SEMI FINAL)</p>
+                  {isRealData && jointThirdTeams.length === 2 && (
+                    <div className="mt-3 bg-amber-50/50 border border-amber-100 rounded-xl p-2 shadow-sm text-[10px] font-black text-amber-800">
+                        <div>{jointThirdTeams[0]}</div>
+                        <div className="h-px bg-amber-200/50 my-1"></div>
+                        <div>{jointThirdTeams[1]}</div>
+                    </div>
+                  )}
                </div>
             </div>
          </div>
@@ -696,7 +744,7 @@ export default function App() {
       <div id="capture-area" className={`${isProjectorMode ? 'bg-transparent' : 'bg-transparent'} min-h-screen pb-10`}>
         <main className={`${isProjectorMode ? 'w-full max-w-full mt-4' : 'max-w-7xl mx-auto mt-6'} px-4 space-y-6 transition-all`}>
           
-          {/* DASHBOARD TOOLS (Stage > 0) */}
+          {/* DASHBOARD TOOLS */}
           {!isProjectorMode && stage > 0 && (
             <div className="no-print bg-white rounded-3xl shadow-sm p-4 flex flex-col md:flex-row justify-between items-center gap-4 border border-gray-100">
               <div className="flex items-center gap-3">
@@ -796,7 +844,7 @@ export default function App() {
                   <div className="mb-4">
                     <label className="text-[10px] font-black uppercase tracking-widest text-gray-400 block mb-2 px-1">Tipe Turnamen</label>
                     <select value={tournamentType} onChange={(e) => setTournamentType(e.target.value)} className="w-full bg-white border border-gray-200 text-gray-800 font-bold text-sm rounded-xl px-4 py-3 outline-none focus:border-blue-400 shadow-sm cursor-pointer mb-3 uppercase">
-                       <option value="Group">Group (Satu Grup)</option>
+                       <option value="Group">Group (Satu Pool)</option>
                        <option value="Groups">Groups (Banyak Grup)</option>
                        <option value="Knocked Out Round">Knocked Out Round (Sistem Gugur)</option>
                     </select>
@@ -934,11 +982,11 @@ export default function App() {
             </div>
           )}
 
-          {/* STAGE 3: FASE AKTIF (GUGUR) */}
+          {/* STAGE 3: FASE AKTIF (GUGUR) - (Untuk render Card yang dapat di-edit di dashboard bawah) */}
           {((stage === 3) || (stage === 1 && tournamentType === 'Knocked Out Round')) && knockoutData.length > 0 && (
             <div className={`space-y-8 animate-in fade-in duration-500 ${isProjectorMode ? 'space-y-12' : ''}`}>
               <div className={`text-center bg-white rounded-3xl shadow-sm border border-gray-100 print:border-none print:shadow-none print:p-2 ${isProjectorMode ? 'p-12 shadow-2xl border-none' : 'p-8'}`}>
-                 <h2 className={`font-black text-gray-900 flex items-center justify-center gap-4 ${isProjectorMode ? 'text-5xl tracking-tight' : 'text-3xl'}`}><div className={`p-3 rounded-2xl ${theme.primary} text-white`}><IconTrophy /></div>Bagan Turnamen Utama</h2>
+                 <h2 className={`font-black text-gray-900 flex items-center justify-center gap-4 ${isProjectorMode ? 'text-5xl tracking-tight' : 'text-3xl'}`}><div className={`p-3 rounded-2xl ${theme.primary} text-white`}><IconTrophy /></div>Penginputan Skor Bagan Utama</h2>
                  {!isProjectorMode && (
                    <div className="no-print mt-6 flex justify-center gap-3">
                       <button onClick={handleClearScores} className="text-xs bg-amber-50 hover:bg-amber-100 text-amber-700 px-4 py-2.5 rounded-xl font-bold uppercase tracking-widest border border-amber-200 shadow-sm">Bersihkan Skor</button>
@@ -955,21 +1003,6 @@ export default function App() {
                    </div>
                 </div>
               ))}
-
-              {jointThirdTeams.length === 2 && (
-                <div className={`bg-amber-50/50 rounded-3xl border border-amber-200 print-break-inside-avoid print:bg-white print:border-none print:p-0 ${isProjectorMode ? 'p-12 shadow-inner' : 'p-8 shadow-sm'}`}>
-                   <h3 className={`font-black text-center text-amber-800 mb-10 uppercase tracking-widest bg-amber-200 w-fit mx-auto rounded-2xl shadow-sm print:bg-gray-200 print:text-black border border-amber-300 ${isProjectorMode ? 'text-2xl px-10 py-4' : 'text-sm px-6 py-3'}`}>JUARA 3 BERSAMA</h3>
-                   <div className={`flex flex-wrap justify-center print:gap-4 ${isProjectorMode ? 'gap-10' : 'gap-6'}`}>
-                      {jointThirdTeams.map((team, idx) => (
-                         <div key={idx} className={`w-full sm:w-[48%] xl:w-[45%] bg-white rounded-3xl shadow-sm border border-amber-200 overflow-hidden flex flex-col items-center justify-center ${isProjectorMode ? 'p-10' : 'p-6'}`}>
-                            {teamLogos[team] ? ( <img src={teamLogos[team]} className={`${isProjectorMode ? 'w-32 h-32 border-4' : 'w-20 h-20 border-2'} rounded-2xl object-cover border-amber-200 shadow-sm mb-4`} alt="" /> ) : ( <div className={`${isProjectorMode ? 'w-32 h-32 rounded-3xl' : 'w-20 h-20 rounded-2xl'} bg-amber-50 border-2 border-amber-100 flex items-center justify-center mb-4 text-amber-500`}><IconTrophy /></div> )}
-                            <span className={`font-black text-center ${isProjectorMode ? 'text-4xl' : 'text-2xl'} text-amber-900`}>{team}</span>
-                            <div className={`mt-4 bg-amber-500 text-white px-4 py-1.5 rounded-full font-bold ${isProjectorMode ? 'text-sm' : 'text-xs'} uppercase tracking-widest shadow-sm`}>MEDALI PERUNGGU</div>
-                         </div>
-                      ))}
-                   </div>
-                </div>
-              )}
             </div>
           )}
 
@@ -991,7 +1024,7 @@ export default function App() {
                 <button onClick={() => setShowMasterModal(false)} className="bg-white/20 hover:bg-white/40 p-2 rounded-xl transition-colors"><IconX /></button>
              </div>
 
-             <div id="master-print-area" className="p-10 overflow-y-auto bg-white flex-1 uppercase">
+             <div id="master-print-area" className="p-10 overflow-y-auto bg-white flex-1 uppercase relative">
                 <div className="text-center mb-10 border-b pb-8">
                    <h1 className="text-4xl font-black uppercase text-gray-900 tracking-tight mb-2">{championshipTitles[0] || "NAMA KEJUARAAN"}</h1>
                    <p className="text-xl font-bold text-gray-500 uppercase">{championshipTitles[1] || "KETERANGAN"}</p>
@@ -1016,53 +1049,15 @@ export default function App() {
                   </div>
                 )}
 
-                {/* LAYER 2: KNOCKOUT BRACKET (BAGAN VISUAL HORIZONTAL) */}
-                {knockoutData.length === 0 ? renderProjectedBracket() : (
-                   <div className="mb-12">
-                     <h3 className="text-lg font-black uppercase mb-6 border-l-4 border-emerald-500 pl-4 text-gray-800">Bagan Sistem Gugur</h3>
-                     <div className="overflow-x-auto pb-4">
-                       <div className="flex gap-8 min-w-max items-center justify-start p-4 bg-gray-50/30 rounded-[40px] border border-gray-50">
-                          {knockoutData.map((round, rIdx) => (
-                            <div key={rIdx} className="flex flex-col gap-6 justify-around w-64 h-full">
-                               <div className="text-center font-black text-gray-400 text-[10px] uppercase tracking-widest">{round[0].title}</div>
-                               <div className="flex flex-col justify-around flex-1 gap-4">
-                               {round.map(match => (
-                                 <div key={match.id} className="bg-white border border-gray-200 rounded-xl p-3 shadow-sm flex flex-col gap-1">
-                                    <div className={`flex justify-between items-center text-xs font-bold px-2 py-1 rounded-md ${match.winner === match.teamA && match.winner !== 'SERI' && match.winner !== '?' ? 'bg-emerald-50 text-emerald-700' : 'text-gray-700'}`}>
-                                      <span className="truncate w-3/4">{match.teamA}</span>
-                                      <span>{match.winner && match.winsA !== undefined ? match.winsA : ''}</span>
-                                    </div>
-                                    <div className="h-px bg-gray-100 mx-2"></div>
-                                    <div className={`flex justify-between items-center text-xs font-bold px-2 py-1 rounded-md ${match.winner === match.teamB && match.winner !== 'SERI' && match.winner !== '?' ? 'bg-emerald-50 text-emerald-700' : 'text-gray-700'}`}>
-                                      <span className="truncate w-3/4">{match.teamB}</span>
-                                      <span>{match.winner && match.winsB !== undefined ? match.winsB : ''}</span>
-                                    </div>
-                                 </div>
-                               ))}
-                               </div>
-                            </div>
-                          ))}
-                          
-                          {/* JUARA 3 BERSAMA INFO CARD IN BRACKET */}
-                          {jointThirdTeams.length === 2 && (
-                            <div className="flex flex-col gap-6 w-64 items-center self-stretch justify-end">
-                               <div className="mt-auto text-center">
-                                  <div className="text-amber-500 font-black text-xs flex flex-col items-center gap-2"><IconTrophy /><span className="tracking-widest">JUARA 3 BERSAMA</span></div>
-                                  <p className="text-[8px] text-gray-400 mt-2 font-bold opacity-50 uppercase">(KALAH DI BABAK SEMI FINAL)</p>
-                                  <div className="mt-3 bg-amber-50/50 border border-amber-100 rounded-xl p-2 shadow-sm text-[10px] font-black text-amber-800">
-                                    <div>{jointThirdTeams[0]}</div>
-                                    <div className="h-px bg-amber-200/50 my-1"></div>
-                                    <div>{jointThirdTeams[1]}</div>
-                                  </div>
-                               </div>
-                            </div>
-                          )}
-                       </div>
-                     </div>
-                   </div>
-                )}
+                {/* LAYER 2: KNOCKOUT BRACKET ESTETIK (BISA PROYEKSI MAUPUN RIIL) */}
+                <div className="mb-12">
+                    <h3 className="text-lg font-black uppercase mb-6 border-l-4 border-emerald-500 pl-4 text-gray-800">Bagan Sistem Gugur</h3>
+                    <div className="overflow-x-auto pb-4">
+                        {renderAestheticBracket()}
+                    </div>
+                </div>
 
-                {/* LAYER 3: MATCH LOG HISTORY (WITH DETAIL SCORE FORMATTER) */}
+                {/* LAYER 3: MATCH LOG HISTORY */}
                 <div className="mb-12">
                    <h3 className="text-lg font-black uppercase mb-6 border-l-4 border-blue-500 pl-4 text-gray-800">Seluruh Jadwal & Hasil</h3>
                    <table className="w-full border-collapse">
@@ -1094,7 +1089,9 @@ export default function App() {
              </div>
 
              <div className="p-6 bg-gray-50 border-t flex justify-end gap-3 shrink-0">
-                <button onClick={() => handleExportPNG('master-print-area', 'Laporan_Turnamen')} className="bg-white border border-gray-200 text-gray-700 px-6 py-3 rounded-2xl font-black text-sm hover:bg-gray-100 transition-colors shadow-sm">Export Gambar (PNG)</button>
+                <button onClick={() => handleExportPNG('master-print-area', 'Laporan_Turnamen')} disabled={isExportingPng} className="bg-white border border-gray-200 text-gray-700 px-6 py-3 rounded-2xl font-black text-sm hover:bg-gray-100 transition-colors shadow-sm disabled:opacity-50 flex items-center gap-2">
+                    {isExportingPng ? <span className="animate-spin w-4 h-4 border-2 border-gray-400 border-t-transparent rounded-full"></span> : <IconImage />} Export Gambar (PNG)
+                </button>
                 <button onClick={handleExportPDF} className="bg-gray-800 hover:bg-black text-white px-8 py-3 rounded-2xl font-black text-sm flex items-center gap-2 shadow-lg transition-colors"><IconPrinter /> Cetak PDF Laporan Resmi</button>
              </div>
           </div>
