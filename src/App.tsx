@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import './index.css';
 
 // --- KOMPONEN IKON SVG ---
@@ -12,16 +12,15 @@ const IconTable = () => <svg className="w-5 h-5" xmlns="http://www.w3.org/2000/s
 const IconSave = () => <svg className="w-4 h-4" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/></svg>;
 const IconFolder = () => <svg className="w-4 h-4" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"/></svg>;
 const IconImage = () => <svg className="w-4 h-4" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>;
-const IconBracket = () => <svg className="w-5 h-5" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M3 3v18"/><path d="M3 12h5"/><path d="M8 7v10"/><path d="M8 7h5"/><path d="M8 17h5"/><path d="M13 12h5"/><path d="M18 7v10"/><path d="M18 12h3"/></svg>;
 const IconPrinter = () => <svg className="w-4 h-4" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="6 9 6 2 18 2 18 9"/><path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"/><rect x="6" y="14" width="12" height="8"/></svg>;
 const IconFileSpreadsheet = () => <svg className="w-4 h-4" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><path d="M8 13h8"/><path d="M8 17h8"/><path d="M12 13v4"/></svg>;
 const IconDownloadImg = () => <svg className="w-4 h-4" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>;
 const IconMonitor = () => <svg className="w-4 h-4" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="2" y="3" width="20" height="14" rx="2" ry="2"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/></svg>;
 const IconX = () => <svg className="w-5 h-5" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>;
-const IconPalette = () => <svg className="w-5 h-5" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="13.5" cy="6.5" r=".5" fill="currentColor"/><circle cx="17.5" cy="10.5" r=".5" fill="currentColor"/><circle cx="8.5" cy="7.5" r=".5" fill="currentColor"/><circle cx="6.5" cy="12.5" r=".5" fill="currentColor"/><path d="M12 2C6.5 2 2 6.5 2 12s4.5 10 10 10c.926 0 1.648-.746 1.648-1.688 0-.437-.18-.835-.437-1.125-.29-.289-.438-.652-.438-1.125a1.64 1.64 0 0 1 1.668-1.668h1.996c3.051 0 5.555-2.503 5.555-5.554C21.965 6.012 17.461 2 12 2z"/></svg>;
 const IconArrowUp = () => <svg className="w-4 h-4" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><line x1="12" y1="19" x2="12" y2="5"/><polyline points="5 12 12 5 19 12"/></svg>;
 const IconArrowDown = () => <svg className="w-4 h-4" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><polyline points="19 12 12 19 5 12"/></svg>;
 const IconCopy = () => <svg className="w-4 h-4" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>;
+const IconList = () => <svg className="w-5 h-5" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><line x1="8" y1="6" x2="21" y2="6"/><line x1="8" y1="12" x2="21" y2="12"/><line x1="8" y1="18" x2="21" y2="18"/><line x1="3" y1="6" x2="3.01" y2="6"/><line x1="3" y1="12" x2="3.01" y2="12"/><line x1="3" y1="18" x2="3.01" y2="18"/></svg>;
 
 // --- KONFIGURASI TEMA BENTO 2026 ---
 const themes = {
@@ -33,7 +32,7 @@ const themes = {
 };
 
 export default function App() {
-  // --- STATE MANAGEMENT (Tanpa Local Storage) ---
+  // --- STATE MANAGEMENT (Tanpa Local Storage - Selalu mulai baru) ---
   const [activeTheme, setActiveTheme] = useState('emerald');
   const theme = themes[activeTheme];
 
@@ -58,6 +57,7 @@ export default function App() {
   const [knockoutData, setKnockoutData] = useState([]);
   const [isExportingPng, setIsExportingPng] = useState(false);
   const [isProjectorMode, setIsProjectorMode] = useState(false);
+  const [showMasterModal, setShowMasterModal] = useState(false); // State Modal Master Schedule
 
   // --- CEK STATUS FASE 1 ---
   const isPhase1Finished = schedule.length > 0 && schedule.every(match => match.winner !== null);
@@ -68,45 +68,26 @@ export default function App() {
     const elem = document.documentElement;
     if (elem.requestFullscreen) {
       elem.requestFullscreen().catch(err => console.log(err));
-    } else if (elem.webkitRequestFullscreen) { /* Safari */
-      elem.webkitRequestFullscreen().catch(err => console.log(err));
-    } else if (elem.msRequestFullscreen) { /* IE11 */
-      elem.msRequestFullscreen().catch(err => console.log(err));
     }
   };
 
   const handleExitProjectorMode = () => {
     setIsProjectorMode(false);
-    if (document.fullscreenElement || document.webkitFullscreenElement || document.msFullscreenElement) {
-      if (document.exitFullscreen) {
-        document.exitFullscreen().catch(err => console.log(err));
-      } else if (document.webkitExitFullscreen) { /* Safari */
-        document.webkitExitFullscreen().catch(err => console.log(err));
-      } else if (document.msExitFullscreen) { /* IE11 */
-        document.msExitFullscreen().catch(err => console.log(err));
-      }
+    if (document.fullscreenElement) {
+      document.exitFullscreen().catch(err => console.log(err));
     }
   };
 
-  // Sensor pintar: Jika user menekan tombol 'ESC'
-  React.useEffect(() => {
+  useEffect(() => {
     const handleFullscreenChange = () => {
-      if (!document.fullscreenElement && !document.webkitFullscreenElement && !document.msFullscreenElement) {
-        setIsProjectorMode(false);
-      }
+      if (!document.fullscreenElement) setIsProjectorMode(false);
     };
     document.addEventListener('fullscreenchange', handleFullscreenChange);
-    document.addEventListener('webkitfullscreenchange', handleFullscreenChange);
-    document.addEventListener('msfullscreenchange', handleFullscreenChange);
-    return () => {
-      document.removeEventListener('fullscreenchange', handleFullscreenChange);
-      document.removeEventListener('webkitfullscreenchange', handleFullscreenChange);
-      document.removeEventListener('msfullscreenchange', handleFullscreenChange);
-    };
+    return () => document.removeEventListener('fullscreenchange', handleFullscreenChange);
   }, []);
 
   // --- EFEK PERINGATAN TUTUP TAB ---
-  React.useEffect(() => {
+  useEffect(() => {
     const handleBeforeUnload = (e) => {
       if (teams.length > 0 || schedule.length > 0) {
         e.preventDefault();
@@ -114,9 +95,7 @@ export default function App() {
       }
     };
     window.addEventListener('beforeunload', handleBeforeUnload);
-    return () => {
-      window.removeEventListener('beforeunload', handleBeforeUnload);
-    };
+    return () => window.removeEventListener('beforeunload', handleBeforeUnload);
   }, [teams.length, schedule.length]);
 
   // --- FUNGSI FITUR FILE (SAVE & OPEN JSON) ---
@@ -206,7 +185,7 @@ export default function App() {
     document.body.removeChild(link);
   };
 
-  const handleExportPNG = async () => {
+  const handleExportPNG = async (elementId = 'capture-area', filename = 'Takraw_Board') => {
     setIsExportingPng(true);
     try {
       if (!window.html2canvas) {
@@ -220,10 +199,10 @@ export default function App() {
             await new Promise(r => setTimeout(r, 1000)); 
         }
       }
-      const element = document.getElementById('capture-area');
+      const element = document.getElementById(elementId);
       const canvas = await window.html2canvas(element, { scale: 2, useCORS: true, backgroundColor: "#ffffff" });
       const link = document.createElement("a");
-      link.download = `Takraw_Board_${new Date().toISOString().slice(0,10)}.png`;
+      link.download = `${filename}_${new Date().toISOString().slice(0,10)}.png`;
       link.href = canvas.toDataURL("image/png");
       link.click();
     } catch (error) {
@@ -233,7 +212,6 @@ export default function App() {
     }
   };
 
-  // --- FUNGSI SALIN KLASEMEN KE WHATSAPP ---
   const handleCopyWhatsApp = () => {
     const standings = getStandings();
     let waText = `🏆 *KLASEMEN SEMENTARA* 🏆\n`;
@@ -244,12 +222,7 @@ export default function App() {
     Object.entries(standings).forEach(([groupName, groupTeams]) => {
       waText += `*${groupName}*\n`;
       groupTeams.forEach((stat, index) => {
-        let medal = '';
-        if (index === 0) medal = '🥇 ';
-        else if (index === 1) medal = '🥈 ';
-        else if (index === 2) medal = '🥉 ';
-        else medal = '▪️ ';
-
+        let medal = index === 0 ? '🥇 ' : index === 1 ? '🥈 ' : index === 2 ? '🥉 ' : '▪️ ';
         waText += `${index + 1}. ${medal}*${stat.team}* - *${stat.totalPoints} PTS*\n`;
         waText += `   (Main: ${stat.play} | Menang: ${stat.win} | Set: ${stat.setWin}-${stat.setLose})\n`;
       });
@@ -271,7 +244,7 @@ export default function App() {
     document.body.removeChild(textArea);
   };
 
-  // --- FUNGSI MANAJEMEN MEDIA & LAPANGAN ---
+  // --- MANAJEMEN MEDIA & LAPANGAN ---
   const handleAddSponsor = (e) => {
     const file = e.target.files[0];
     if (file) {
@@ -298,8 +271,9 @@ export default function App() {
     const newTitles = [...championshipTitles]; newTitles[index] = value; setChampionshipTitles(newTitles);
   };
 
+  // PERBAIKAN BUG LAPANGAN: Menambahkan e.preventDefault()
   const handleAddCourt = (e) => {
-    if (e) e.preventDefault(); // Mencegah reload halaman secara aman
+    if (e) e.preventDefault();
     const newCourt = courtInputValue.trim();
     if (!newCourt) return;
     if (courts.includes(newCourt)) return alert("Lapangan ini sudah terdaftar!");
@@ -313,7 +287,7 @@ export default function App() {
   };
 
 
-  // --- FUNGSI LOGIKA TURNAMEN (GROUP STAGE) ---
+  // --- LOGIKA TURNAMEN (GROUP STAGE) ---
   const handleAddTeam = (e) => {
     e.preventDefault();
     const newTeam = inputValue.trim();
@@ -346,27 +320,16 @@ export default function App() {
     setGroupAssignments(assignments);
   };
 
-  // --- FUNGSI BARU: SISTEM GUGUR LANGSUNG ---
   const generateDirectKnockout = () => {
     if (teams.length < 2) return alert("Butuh minimal 2 tim untuk bertanding!");
-
-    // 1. Cari ukuran bagan (kelipatan 2 terdekat: 2, 4, 8, 16, 32)
     const size = Math.pow(2, Math.ceil(Math.log2(teams.length))); 
-    
-    // 2. Susun tim biar adil
     let shuffledTeams = [...teams].sort(() => 0.5 - Math.random());
-    
-    // 3. Distribusikan tim dan sisipkan "BYE" untuk slot yang kosong
     let orderedTeams = Array(size).fill('BYE');
     let fillOrder = [];
-    for(let i=0; i < size; i+=2) fillOrder.push(i); // Isi slot kiri dulu (0, 2, 4...)
-    for(let i=1; i < size; i+=2) fillOrder.push(i); // Baru isi slot lawannya (1, 3, 5...)
-    
-    shuffledTeams.forEach((team, index) => {
-       orderedTeams[fillOrder[index]] = team;
-    });
+    for(let i=0; i < size; i+=2) fillOrder.push(i); 
+    for(let i=1; i < size; i+=2) fillOrder.push(i); 
+    shuffledTeams.forEach((team, index) => { orderedTeams[fillOrder[index]] = team; });
 
-    // 4. Buat struktur ronde seperti babak final biasa
     const numRounds = Math.log2(size); let rounds = [];
     const numParties = eventCategory === 'team' ? 3 : 1;
     const partyLabels = eventDiscipline === 'Mix' ? mixDisciplines : [`${eventDiscipline} 1`, `${eventDiscipline} 2`, `${eventDiscipline} 3`];
@@ -376,15 +339,11 @@ export default function App() {
        for(let m = 0; m < matchesInRound; m++) {
           let tA = '?'; let tB = '?';
           if (r === 0) { tA = orderedTeams[m * 2]; tB = orderedTeams[m * 2 + 1]; }
-          
           let initialParties = [];
           for(let p = 0; p < numParties; p++) { 
              initialParties.push({ id: `k_dir_p${p}`, label: eventCategory === 'team' ? partyLabels[p] : `Pertandingan ${eventDiscipline === 'Mix' ? 'Campuran' : eventDiscipline}`, sets: [{ scoreA: '', scoreB: '' }, { scoreA: '', scoreB: '' }, { scoreA: '', scoreB: '' }], winner: null }); 
           }
-          
           let nextR = r + 1; let nextM = Math.floor(m / 2); let nextSlot = m % 2 === 0 ? 'teamA' : 'teamB';
-          
-          // Penamaan Babak
           let roundTitle = 'BABAK PENYISIHAN';
           if (r === numRounds - 1) roundTitle = 'BABAK FINAL';
           else if (r === numRounds - 2) roundTitle = 'SEMI FINAL';
@@ -394,9 +353,8 @@ export default function App() {
        }
        rounds.push(roundMatches);
     }
-    
     setKnockoutData(rounds);
-    setSchedule([]); // Kosongkan jadwal grup agar halaman grup disembunyikan
+    setSchedule([]); 
   };
 
   const generateSchedule = () => {
@@ -405,31 +363,20 @@ export default function App() {
       if (!isAllAssigned) return alert("Ada tim yang belum masuk ke dalam grup!");
     }
 
-    // --- ALGORITMA ROUND-ROBIN (JADWAL ADIL STANDAR INTERNASIONAL) ---
     const createRoundRobin = (groupTeams, groupLabel) => {
       if (groupTeams.length < 2) return [];
       let rSchedule = [];
       let currentTeams = [...groupTeams];
-      
-      // Jika jumlah tim ganjil, tambahkan "Dummy" (tim bayangan untuk BYE / Istirahat)
-      if (currentTeams.length % 2 !== 0) {
-        currentTeams.push(null);
-      }
-      
+      if (currentTeams.length % 2 !== 0) currentTeams.push(null);
       const numTeams = currentTeams.length;
       const rounds = numTeams - 1;
       const half = numTeams / 2;
 
       for (let r = 0; r < rounds; r++) {
         for (let i = 0; i < half; i++) {
-          const teamA = currentTeams[i];
-          const teamB = currentTeams[numTeams - 1 - i];
-          // Hanya masukkan ke jadwal jika tidak melawan Dummy (tim mendapat lawan nyata)
-          if (teamA !== null && teamB !== null) {
-            rSchedule.push({ teamA, teamB, groupLabel });
-          }
+          const teamA = currentTeams[i]; const teamB = currentTeams[numTeams - 1 - i];
+          if (teamA !== null && teamB !== null) rSchedule.push({ teamA, teamB, groupLabel });
         }
-        // Rotasi tim searah jarum jam (Tim di index 0 tetap diam sebagai poros)
         currentTeams.splice(1, 0, currentTeams.pop());
       }
       return rSchedule;
@@ -441,40 +388,25 @@ export default function App() {
     if (tournamentType === 'group') {
       const groupLetters = Array.from({length: activeNumGroups}, (_, i) => String.fromCharCode(65 + i));
       let matchesByGroup = {}; let maxMatchesInAGroup = 0;
-      
       groupLetters.forEach(groupId => {
         const groupTeams = teams.filter(t => groupAssignments[t] === groupId);
-        // Buat jadwal Round-Robin per Grup
         const gMatches = createRoundRobin(groupTeams, `Grup ${groupId}`);
         matchesByGroup[groupId] = gMatches;
         if (gMatches.length > maxMatchesInAGroup) maxMatchesInAGroup = gMatches.length;
       });
-      
-      // Menggabungkan jadwal dari grup yang berbeda secara bergantian (Silang Grup)
-      // Contoh: Match 1 dari Grup A, Match 2 dari Grup B, Match 3 dari Grup A, dst.
       for (let i = 0; i < maxMatchesInAGroup; i++) {
-        groupLetters.forEach(groupId => { 
-          if (matchesByGroup[groupId][i]) allMatches.push(matchesByGroup[groupId][i]); 
-        });
+        groupLetters.forEach(groupId => { if (matchesByGroup[groupId][i]) allMatches.push(matchesByGroup[groupId][i]); });
       }
     } else {
-      // Buat jadwal Round-Robin untuk Sistem Pool Utama
       allMatches = createRoundRobin(teams, 'Pool Utama');
     }
 
-    let finalSchedule = []; 
-    let matchCounter = 1;
+    let finalSchedule = []; let matchCounter = 1;
     const numParties = eventCategory === 'team' ? 3 : 1;
-    
-    // LOGIKA LABEL SPESIFIK & MIX FORMAT
-    const partyLabels = eventDiscipline === 'Mix' 
-      ? mixDisciplines // Jika Mix, ambil dari array mix [Double, Regu, Quadrant]
-      : [`${eventDiscipline} 1`, `${eventDiscipline} 2`, `${eventDiscipline} 3`];
+    const partyLabels = eventDiscipline === 'Mix' ? mixDisciplines : [`${eventDiscipline} 1`, `${eventDiscipline} 2`, `${eventDiscipline} 3`];
 
     const activeCourts = courts.length > 0 ? courts : ['Lapangan Utama'];
-    let courtNextAvailableTimes = activeCourts.map(() => {
-        let t = new Date(); t.setHours(8, 0, 0, 0); return t;
-    });
+    let courtNextAvailableTimes = activeCourts.map(() => { let t = new Date(); t.setHours(8, 0, 0, 0); return t; });
     const addMinutes = eventCategory === 'team' ? 120 : 45;
 
     allMatches.forEach(matchInfo => {
@@ -492,11 +424,7 @@ export default function App() {
       const timeString = matchTime.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
       const assignedCourt = activeCourts[earliestTimeIdx];
 
-      finalSchedule.push({ 
-        id: matchCounter, teamA: matchInfo.teamA, teamB: matchInfo.teamB, groupLabel: matchInfo.groupLabel, 
-        parties: initialParties, winner: null, winsA: 0, winsB: 0, time: timeString, court: assignedCourt
-      });
-      
+      finalSchedule.push({ id: matchCounter, teamA: matchInfo.teamA, teamB: matchInfo.teamB, groupLabel: matchInfo.groupLabel, parties: initialParties, winner: null, winsA: 0, winsB: 0, time: timeString, court: assignedCourt });
       courtNextAvailableTimes[earliestTimeIdx].setMinutes(courtNextAvailableTimes[earliestTimeIdx].getMinutes() + addMinutes);
       matchCounter++;
     });
@@ -504,54 +432,35 @@ export default function App() {
     setSchedule(finalSchedule); setKnockoutData([]); 
   };
 
-  // --- FUNGSI PINDAH URUTAN JADWAL (FITUR BARU) ---
   const moveMatchSchedule = (index, direction) => {
     if (direction === 'up' && index === 0) return;
     if (direction === 'down' && index === schedule.length - 1) return;
-
     const newSchedule = [...schedule];
     const swapIndex = direction === 'up' ? index - 1 : index + 1;
-
-    // Kloning data untuk menghindari mutasi langsung pada state React
-    const item1 = { ...newSchedule[index] };
-    const item2 = { ...newSchedule[swapIndex] };
-
-    // Simpan Nomor Match (ID), Waktu, dan Lapangan agar tetap pada posisinya
+    const item1 = { ...newSchedule[index] }; const item2 = { ...newSchedule[swapIndex] };
     const id1 = item1.id; const time1 = item1.time; const court1 = item1.court;
     const id2 = item2.id; const time2 = item2.time; const court2 = item2.court;
-
-    // Tukar jam dan lapangan agar selaras dengan slot urutannya
     item1.id = id2; item1.time = time2; item1.court = court2;
     item2.id = id1; item2.time = time1; item2.court = court1;
-
-    // Letakkan kembali ke array di posisi yang sudah ditukar
-    newSchedule[index] = item2;
-    newSchedule[swapIndex] = item1;
-
+    newSchedule[index] = item2; newSchedule[swapIndex] = item1;
     setSchedule(newSchedule);
   };
 
-  // --- LOGIKA MENGHITUNG PEMENANG PARTAI (DENGAN DUKUNGAN W.O. GANDA) ---
   const calculatePartyWinner = (sets, teamA, teamB) => {
     let winsA = 0; let winsB = 0; let zeros = 0;
     sets.forEach(set => {
       const a = parseInt(set.scoreA); const b = parseInt(set.scoreB);
       if (!isNaN(a) && !isNaN(b)) { 
-         if (a > b) winsA++; 
-         else if (b > a) winsB++; 
-         else if (a === 0 && b === 0) zeros++; // Deteksi input 0-0 (Walk-Over)
+         if (a > b) winsA++; else if (b > a) winsB++; else if (a === 0 && b === 0) zeros++; 
       }
     });
-    
-    if (winsA >= 2) return teamA; 
-    if (winsB >= 2) return teamB;
-    // Jika ada 2 set dengan skor 0-0, otomatis W.O. Ganda (Seri)
+    if (winsA >= 2) return teamA; if (winsB >= 2) return teamB;
     if (zeros >= 2 || (winsA === 1 && winsB === 1 && zeros === 1)) return 'SERI'; 
     return null; 
   };
 
   const handleScoreChange = (matchId, partyIndex, setIndex, side, newScore) => {
-    if (newScore !== '' && (newScore < 0 || newScore > 17)) return;
+    if (newScore !== '' && (newScore < 0 || newScore > 17)) return; // Batas Skor 17
     const updatedSchedule = schedule.map(match => {
       if (match.id === matchId) {
         const updatedParties = [...match.parties]; const targetParty = { ...updatedParties[partyIndex] }; const updatedSets = [...targetParty.sets];
@@ -561,23 +470,15 @@ export default function App() {
         
         let matchWinsA = 0; let matchWinsB = 0; let matchSeri = 0;
         updatedParties.forEach(p => { 
-           if (p.winner === match.teamA) matchWinsA++; 
-           else if (p.winner === match.teamB) matchWinsB++; 
-           else if (p.winner === 'SERI') matchSeri++;
+           if (p.winner === match.teamA) matchWinsA++; else if (p.winner === match.teamB) matchWinsB++; else if (p.winner === 'SERI') matchSeri++;
         });
         
         const requiredWins = Math.ceil(updatedParties.length / 2); let finalWinner = null;
-        
-        if (matchWinsA >= requiredWins) finalWinner = match.teamA; 
-        else if (matchWinsB >= requiredWins) finalWinner = match.teamB;
+        if (matchWinsA >= requiredWins) finalWinner = match.teamA; else if (matchWinsB >= requiredWins) finalWinner = match.teamB;
         else if (matchSeri >= requiredWins) finalWinner = 'SERI';
         else if (matchWinsA + matchWinsB + matchSeri === updatedParties.length) {
-           // Jika seluruh partai selesai tapi tak ada yang capai requiredWins
-           if (matchWinsA > matchWinsB) finalWinner = match.teamA;
-           else if (matchWinsB > matchWinsA) finalWinner = match.teamB;
-           else finalWinner = 'SERI';
+           if (matchWinsA > matchWinsB) finalWinner = match.teamA; else if (matchWinsB > matchWinsA) finalWinner = match.teamB; else finalWinner = 'SERI';
         }
-        
         return { ...match, parties: updatedParties, winner: finalWinner, winsA: matchWinsA, winsB: matchWinsB };
       }
       return match;
@@ -591,39 +492,18 @@ export default function App() {
     }
   };
 
-  // --- FUNGSI MEMBERSIHKAN SKOR (FITUR BARU) ---
   const handleClearScores = () => {
     if (window.confirm("Bersihkan semua skor? (Daftar tim dan jadwal akan tetap aman)")) {
-      // 1. Bersihkan skor di Fase Grup
       const clearedSchedule = schedule.map(match => ({
-        ...match,
-        winner: null,
-        winsA: 0,
-        winsB: 0,
-        parties: match.parties.map(party => ({
-          ...party,
-          winner: null,
-          sets: [{ scoreA: '', scoreB: '' }, { scoreA: '', scoreB: '' }, { scoreA: '', scoreB: '' }]
-        }))
+        ...match, winner: null, winsA: 0, winsB: 0,
+        parties: match.parties.map(party => ({ ...party, winner: null, sets: [{ scoreA: '', scoreB: '' }, { scoreA: '', scoreB: '' }, { scoreA: '', scoreB: '' }] }))
       }));
       setSchedule(clearedSchedule);
-
-      // 2. Bersihkan skor di Fase Gugur (jika ada)
       if (knockoutData.length > 0) {
         const clearedKnockout = knockoutData.map((round, rIndex) =>
           round.map(match => ({
-            ...match,
-            winner: null,
-            winsA: 0,
-            winsB: 0,
-            // Hapus nama tim yang sudah terlanjur maju ke babak selanjutnya
-            teamA: rIndex === 0 ? match.teamA : '?',
-            teamB: rIndex === 0 ? match.teamB : '?',
-            parties: match.parties.map(party => ({
-              ...party,
-              winner: null,
-              sets: [{ scoreA: '', scoreB: '' }, { scoreA: '', scoreB: '' }, { scoreA: '', scoreB: '' }]
-            }))
+            ...match, winner: null, winsA: 0, winsB: 0, teamA: rIndex === 0 ? match.teamA : '?', teamB: rIndex === 0 ? match.teamB : '?',
+            parties: match.parties.map(party => ({ ...party, winner: null, sets: [{ scoreA: '', scoreB: '' }, { scoreA: '', scoreB: '' }, { scoreA: '', scoreB: '' }] }))
           }))
         );
         setKnockoutData(clearedKnockout);
@@ -645,7 +525,7 @@ export default function App() {
       
       if (match.winner === tA) { standings[tA].win += 1; standings[tB].lose += 1; } 
       else if (match.winner === tB) { standings[tB].win += 1; standings[tA].lose += 1; }
-      else if (match.winner === 'SERI') { standings[tA].lose += 1; standings[tB].lose += 1; } // W.O Ganda = Dua-duanya Kalah
+      else if (match.winner === 'SERI') { standings[tA].lose += 1; standings[tB].lose += 1; }
 
       let matchPartyWinsA = 0; let matchPartyWinsB = 0;
       match.parties.forEach(party => {
@@ -656,11 +536,8 @@ export default function App() {
         party.sets.forEach(set => {
           const a = parseInt(set.scoreA); const b = parseInt(set.scoreB);
           if (!isNaN(a) && !isNaN(b)) {
-            if (a > b) { standings[tA].setWin += 1; standings[tB].setLose += 1; } 
-            else if (b > a) { standings[tB].setWin += 1; standings[tA].setLose += 1; }
-            
-            standings[tA].pointWin += a; standings[tA].pointLose += b; 
-            standings[tB].pointWin += b; standings[tB].pointLose += a;
+            if (a > b) { standings[tA].setWin += 1; standings[tB].setLose += 1; } else if (b > a) { standings[tB].setWin += 1; standings[tA].setLose += 1; }
+            standings[tA].pointWin += a; standings[tA].pointLose += b; standings[tB].pointWin += b; standings[tB].pointLose += a;
           }
         });
       });
@@ -668,10 +545,8 @@ export default function App() {
       if (eventCategory === 'team') {
         if (match.winner === tA) { standings[tA].totalPoints += (matchPartyWinsB === 1) ? 2 : 3; standings[tB].totalPoints += (matchPartyWinsB === 1) ? 1 : 0; } 
         else if (match.winner === tB) { standings[tB].totalPoints += (matchPartyWinsA === 1) ? 2 : 3; standings[tA].totalPoints += (matchPartyWinsA === 1) ? 1 : 0; }
-        // Jika SERI, tidak ada yang dapat total point
       } else {
-        if (match.winner === tA) standings[tA].totalPoints += 2; 
-        else if (match.winner === tB) standings[tB].totalPoints += 2;
+        if (match.winner === tA) standings[tA].totalPoints += 2; else if (match.winner === tB) standings[tB].totalPoints += 2;
       }
     });
 
@@ -680,9 +555,7 @@ export default function App() {
       if (b.totalPoints !== a.totalPoints) return b.totalPoints - a.totalPoints;
       
       // 2. KRITERIA HEAD-TO-HEAD
-      const h2hMatch = schedule.find(m => 
-        ((m.teamA === a.team && m.teamB === b.team) || (m.teamA === b.team && m.teamB === a.team)) && m.winner
-      );
+      const h2hMatch = schedule.find(m => ((m.teamA === a.team && m.teamB === b.team) || (m.teamA === b.team && m.teamB === a.team)) && m.winner);
       if (h2hMatch && h2hMatch.winner !== 'SERI') {
         if (h2hMatch.winner === a.team) return -1;
         if (h2hMatch.winner === b.team) return 1;
@@ -717,11 +590,10 @@ export default function App() {
     });
 
     if (qualifiers.length < 2) return alert("Tim tidak cukup untuk lanjut ke Fase 2!");
-    
     if (window.confirm("Apakah Anda yakin ingin lanjut ke Grup Fase 2? Jadwal Fase 1 akan ditutup.")) {
         setTeams(qualifiers);
         setTournamentType('group');
-        setNumGroups(2); // Otomatis dibagi 2 grup di fase 2
+        setNumGroups(2); 
         setSchedule([]);
         setGroupAssignments({});
         setKnockoutData([]);
@@ -734,12 +606,10 @@ export default function App() {
   const generateKnockout = (size) => {
     const standings = getStandings();
     let orderedTeams = [];
-    
     if (tournamentType === 'group' && numGroups === 2 && size === 4) {
       const groupA = standings['Grup A'] || []; const groupB = standings['Grup B'] || [];
       if(groupA.length >= 2 && groupB.length >= 2) { orderedTeams = [groupA[0].team, groupB[1].team, groupB[0].team, groupA[1].team]; }
     } 
-    
     if (orderedTeams.length !== size) {
       let allStats = []; Object.values(standings).forEach(group => allStats.push(...group));
       allStats.sort((a,b) => b.totalPoints - a.totalPoints || b.win - a.win);
@@ -752,11 +622,7 @@ export default function App() {
 
     const numRounds = Math.log2(size); let rounds = [];
     const numParties = eventCategory === 'team' ? 3 : 1; 
-    
-    // LABEL SPESIFIK DI FASE GUGUR
-    const partyLabels = eventDiscipline === 'Mix' 
-      ? mixDisciplines 
-      : [`${eventDiscipline} 1`, `${eventDiscipline} 2`, `${eventDiscipline} 3`];
+    const partyLabels = eventDiscipline === 'Mix' ? mixDisciplines : [`${eventDiscipline} 1`, `${eventDiscipline} 2`, `${eventDiscipline} 3`];
 
     for(let r = 0; r < numRounds; r++) {
        let matchesInRound = size / Math.pow(2, r + 1); let roundMatches = [];
@@ -783,27 +649,20 @@ export default function App() {
       
       let matchWinsA = 0; let matchWinsB = 0; let matchSeri = 0;
       match.parties.forEach(p => { 
-         if (p.winner === match.teamA) matchWinsA++; 
-         else if (p.winner === match.teamB) matchWinsB++; 
-         else if (p.winner === 'SERI') matchSeri++;
+         if (p.winner === match.teamA) matchWinsA++; else if (p.winner === match.teamB) matchWinsB++; else if (p.winner === 'SERI') matchSeri++;
       });
       
       const requiredWins = Math.ceil(match.parties.length / 2); let finalWinner = null;
-      if (matchWinsA >= requiredWins) finalWinner = match.teamA; 
-      else if (matchWinsB >= requiredWins) finalWinner = match.teamB;
+      if (matchWinsA >= requiredWins) finalWinner = match.teamA; else if (matchWinsB >= requiredWins) finalWinner = match.teamB;
       else if (matchSeri >= requiredWins) finalWinner = 'SERI';
       else if (matchWinsA + matchWinsB + matchSeri === match.parties.length) {
-         if (matchWinsA > matchWinsB) finalWinner = match.teamA;
-         else if (matchWinsB > matchWinsA) finalWinner = match.teamB;
-         else finalWinner = 'SERI';
+         if (matchWinsA > matchWinsB) finalWinner = match.teamA; else if (matchWinsB > matchWinsA) finalWinner = match.teamB; else finalWinner = 'SERI';
       }
 
       match.winner = finalWinner; match.winsA = matchWinsA; match.winsB = matchWinsB;
-      // Jangan majukan ke babak selanjutnya jika W.O Ganda
       if (match.nextMatchRef && finalWinner && finalWinner !== 'SERI') { 
          const { r, m, slot } = match.nextMatchRef; newData[r][m][slot] = finalWinner; 
-      } 
-      else if (match.nextMatchRef) { 
+      } else if (match.nextMatchRef) { 
          const { r, m, slot } = match.nextMatchRef; newData[r][m][slot] = '?'; 
       }
       return newData;
@@ -813,39 +672,77 @@ export default function App() {
   const activeNumGroups = Number(numGroups) || 2;
   const groupLetters = Array.from({length: activeNumGroups}, (_, i) => String.fromCharCode(65 + i));
 
-  // --- LOGIKA JUARA 3 BERSAMA (SEPAK TAKRAW) ---
   let jointThirdTeams = [];
   if (knockoutData.length > 0) {
     const semiFinalRound = knockoutData.find(r => r && r[0] && r[0].title === 'SEMI FINAL');
     if (semiFinalRound && semiFinalRound.length === 2) {
-      const match1 = semiFinalRound[0];
-      const match2 = semiFinalRound[1];
+      const match1 = semiFinalRound[0]; const match2 = semiFinalRound[1];
       if (match1.winner && match2.winner) {
          const loser1 = match1.winner === match1.teamA ? match1.teamB : match1.teamA;
          const loser2 = match2.winner === match2.teamA ? match2.teamB : match2.teamA;
-         if (loser1 !== '?' && loser2 !== '?') {
-             jointThirdTeams = [loser1, loser2];
-         }
+         if (loser1 !== '?' && loser2 !== '?') jointThirdTeams = [loser1, loser2];
       }
     }
   }
 
+  // --- FUNGSI MASTER SCHEDULE PLANNER (JADWAL INDUK DINAMIS) ---
+  const generateMasterPlan = () => {
+    let masterPlan = [];
+    let matchId = 1;
+
+    // 1. Fase Penyisihan (Merujuk dari Jadwal Grup)
+    if (schedule.length > 0) {
+      schedule.forEach(m => {
+        masterPlan.push({ id: m.id, teamA: m.teamA, teamB: m.teamB, groupLabel: m.groupLabel, phase: "Penyisihan", court: m.court, time: m.time });
+        matchId++;
+      });
+    } else {
+      masterPlan.push({ id: `TBD`, teamA: "TBD", teamB: "TBD", groupLabel: "Fase Penyisihan Belum Disusun", phase: "Penyisihan", court: "-", time: "-" });
+    }
+
+    // 2. Proyeksi Fase Gugur Berdasarkan Jumlah Grup
+    if (tournamentType === 'group' || knockoutData.length > 0) {
+      const n = Number(numGroups);
+      let knockoutSlots = [];
+      
+      if (n === 2) {
+        knockoutSlots = [
+          { tA: "Juara Grup A", tB: "Runner-up Grup B", title: "Semi Final 1" },
+          { tA: "Juara Grup B", tB: "Runner-up Grup A", title: "Semi Final 2" }
+        ];
+        knockoutSlots.forEach(s => masterPlan.push({ id: `K-${matchId++}`, teamA: s.tA, teamB: s.tB, groupLabel: s.title, phase: "Knockout", court: "TBD", time: "TBD" }));
+        masterPlan.push({ id: `F-${matchId++}`, teamA: "Pemenang SF 1", teamB: "Pemenang SF 2", groupLabel: "GRAND FINAL", phase: "Final", court: "TBD", time: "TBD" });
+      } else if (n === 4) {
+        knockoutSlots = [
+          { tA: "Juara Grup A", tB: "Runner-up Grup B", title: "Perempat Final 1" },
+          { tA: "Juara Grup C", tB: "Runner-up Grup D", title: "Perempat Final 2" },
+          { tA: "Juara Grup B", tB: "Runner-up Grup A", title: "Perempat Final 3" },
+          { tA: "Juara Grup D", tB: "Runner-up Grup C", title: "Perempat Final 4" }
+        ];
+        knockoutSlots.forEach(s => masterPlan.push({ id: `K-${matchId++}`, teamA: s.tA, teamB: s.tB, groupLabel: s.title, phase: "Knockout", court: "TBD", time: "TBD" }));
+        masterPlan.push({ id: `K-${matchId++}`, teamA: "Pemenang PF 1", teamB: "Pemenang PF 2", groupLabel: "Semi Final 1", phase: "Knockout", court: "TBD", time: "TBD" });
+        masterPlan.push({ id: `K-${matchId++}`, teamA: "Pemenang PF 3", teamB: "Pemenang PF 4", groupLabel: "Semi Final 2", phase: "Knockout", court: "TBD", time: "TBD" });
+        masterPlan.push({ id: `F-${matchId++}`, teamA: "Pemenang SF 1", teamB: "Pemenang SF 2", groupLabel: "GRAND FINAL", phase: "Final", court: "TBD", time: "TBD" });
+      } else if (n === 8) {
+        masterPlan.push({ id: `K-${matchId++}`, teamA: "16 Tim Terbaik", teamB: "...", groupLabel: "Babak 16 Besar", phase: "Knockout", court: "TBD", time: "TBD" });
+        masterPlan.push({ id: `K-${matchId++}`, teamA: "8 Tim Tersisa", teamB: "...", groupLabel: "Perempat Final s/d Final", phase: "Knockout", court: "TBD", time: "TBD" });
+      } else {
+        masterPlan.push({ id: `K-${matchId++}`, teamA: "Tim Top Grup", teamB: "Tim Top Grup", groupLabel: `Sistem Gugur (${n} Grup)`, phase: "Knockout", court: "TBD", time: "TBD" });
+      }
+    }
+    return masterPlan;
+  };
+
   // --- KOMPONEN BENTO MATCH CARD ---
   const renderMatchCard = (match, isKnockout = false, index = null) => {
     const isTeamA_TBD = match.teamA === '?'; const isTeamB_TBD = match.teamB === '?';
-    
-    // LOGIKA FITUR LIVE: Cek apakah skor sudah mulai diisi tapi belum ada pemenang
-    const hasStarted = !isTeamA_TBD && !isTeamB_TBD && match.parties.some(party => 
-      party.sets.some(set => set.scoreA !== '' || set.scoreB !== '')
-    );
+    const hasStarted = !isTeamA_TBD && !isTeamB_TBD && match.parties.some(party => party.sets.some(set => set.scoreA !== '' || set.scoreB !== ''));
     const isLive = hasStarted && !match.winner;
 
     return (
       <div key={match.id} className={`bg-white rounded-3xl shadow-sm border ${isLive && !isProjectorMode ? 'border-red-400 shadow-md ring-4 ring-red-50' : theme.border} overflow-hidden flex flex-col transition-all duration-300 hover:shadow-md print:border-gray-300 print:shadow-none print:ring-0 ${isProjectorMode ? (isLive ? 'border-4 border-red-500 shadow-2xl' : 'border-none shadow-xl') : ''}`}>
         
         <div className={`p-4 text-center border-b ${isLive ? 'border-red-200' : theme.border} ${match.winner ? (match.winner === 'SERI' ? 'bg-gray-100 border-transparent print:bg-gray-100' : `${theme.accent} ${theme.accentText} border-transparent print:bg-gray-100`) : isLive ? 'bg-red-50/80 print:bg-white' : `bg-gray-50/50 print:bg-white`} ${isProjectorMode ? 'py-5' : ''} relative`}>
-          
-          {/* INDIKATOR LIVE (FITUR BARU) */}
           {isLive && (
              <div className="no-print absolute left-4 top-1/2 -translate-y-1/2 flex items-center gap-1.5 bg-red-100 px-3 py-1.5 rounded-xl border border-red-200 shadow-sm">
                 <span className="w-2.5 h-2.5 rounded-full bg-red-600 animate-pulse shadow-[0_0_8px_rgba(220,38,38,0.8)]"></span>
@@ -858,11 +755,10 @@ export default function App() {
                <span className={`font-black uppercase tracking-widest ${isLive ? 'text-red-800' : theme.textPrimary} ${isProjectorMode ? 'text-lg' : 'text-xs'}`}>{match.groupLabel}</span>
                <span className={`font-medium mt-1 ${isLive ? 'text-red-600 font-bold opacity-100' : 'opacity-70'} ${isProjectorMode ? 'text-base' : 'text-[10px]'}`}>MATCH #{match.id} &bull; {match.court} &bull; {match.time}</span>
                
-               {/* TOMBOL PANAH GESER (Hanya tampil di mode Admin & Fase Grup) */}
                {!isProjectorMode && index !== null && (
                  <div className="no-print absolute right-4 top-1/2 -translate-y-1/2 flex flex-col gap-1">
-                    <button onClick={() => moveMatchSchedule(index, 'up')} disabled={index === 0} className={`p-1 rounded bg-white border border-gray-200 shadow-sm transition-all ${index === 0 ? 'opacity-30 cursor-not-allowed' : 'hover:bg-gray-100 text-gray-600 hover:scale-110'}`} title="Naikkan Jadwal (Main Lebih Cepat)"><IconArrowUp /></button>
-                    <button onClick={() => moveMatchSchedule(index, 'down')} disabled={index === schedule.length - 1} className={`p-1 rounded bg-white border border-gray-200 shadow-sm transition-all ${index === schedule.length - 1 ? 'opacity-30 cursor-not-allowed' : 'hover:bg-gray-100 text-gray-600 hover:scale-110'}`} title="Turunkan Jadwal (Tunda Main)"><IconArrowDown /></button>
+                    <button onClick={() => moveMatchSchedule(index, 'up')} disabled={index === 0} className={`p-1 rounded bg-white border border-gray-200 shadow-sm transition-all ${index === 0 ? 'opacity-30 cursor-not-allowed' : 'hover:bg-gray-100 text-gray-600 hover:scale-110'}`}><IconArrowUp /></button>
+                    <button onClick={() => moveMatchSchedule(index, 'down')} disabled={index === schedule.length - 1} className={`p-1 rounded bg-white border border-gray-200 shadow-sm transition-all ${index === schedule.length - 1 ? 'opacity-30 cursor-not-allowed' : 'hover:bg-gray-100 text-gray-600 hover:scale-110'}`}><IconArrowDown /></button>
                  </div>
                )}
             </div>
@@ -887,20 +783,16 @@ export default function App() {
                {match.parties.length > 1 && ( <div className={`font-bold text-center text-gray-400 mb-3 uppercase tracking-widest border-b border-gray-100 pb-2 ${isProjectorMode ? 'text-sm' : 'text-[10px]'}`}> {party.label} {party.winner && <span className={`${party.winner === 'SERI' ? 'text-gray-400' : theme.textPrimary} ml-1`}>{party.winner === 'SERI' ? '(W.O Ganda)' : `(W: ${party.winner})`}</span>} </div> )}
                <div className="flex justify-center gap-4 sm:gap-8">
                  {[0, 1, 2].map((setIndex) => {
-                    const scoreA = party.sets[setIndex].scoreA;
-                    const scoreB = party.sets[setIndex].scoreB;
+                    const scoreA = party.sets[setIndex].scoreA; const scoreB = party.sets[setIndex].scoreB;
                     const isAWinner = scoreA !== '' && scoreB !== '' && Number(scoreA) > Number(scoreB);
                     const isBWinner = scoreA !== '' && scoreB !== '' && Number(scoreB) > Number(scoreA);
 
                     return (
                     <div key={setIndex} className="flex flex-col items-center">
                       <span className={`font-black text-gray-300 mb-2 ${isProjectorMode ? 'text-xs' : 'text-[9px]'}`}>SET {setIndex + 1}</span>
-                      
                       {isProjectorMode ? (
                          <div className="flex items-center gap-4 text-3xl font-black">
-                            <span className={isAWinner ? theme.textPrimary : 'text-gray-400'}>{scoreA !== '' ? scoreA : '-'}</span>
-                            <span className="text-gray-200 text-xl">-</span>
-                            <span className={isBWinner ? theme.textPrimary : 'text-gray-400'}>{scoreB !== '' ? scoreB : '-'}</span>
+                            <span className={isAWinner ? theme.textPrimary : 'text-gray-400'}>{scoreA !== '' ? scoreA : '-'}</span><span className="text-gray-200 text-xl">-</span><span className={isBWinner ? theme.textPrimary : 'text-gray-400'}>{scoreB !== '' ? scoreB : '-'}</span>
                          </div>
                       ) : (
                          <div className="flex items-center gap-1.5">
@@ -921,34 +813,21 @@ export default function App() {
     );
   };
 
-  // --- TAMPILAN UTAMA (BENTO RENDER) ---
   return (
     <div className={`min-h-screen ${theme.bgApp} font-sans text-gray-800 pb-20 transition-all duration-500 ${isProjectorMode ? 'px-2 md:px-8' : ''}`}>
       
-      <style>
-        {`
-        /* Sembunyikan tanda panah (spinner) pada input number untuk desain yang lebih bersih */
-        .hide-arrows::-webkit-outer-spin-button,
-        .hide-arrows::-webkit-inner-spin-button {
-          -webkit-appearance: none;
-          margin: 0;
-        }
-        .hide-arrows {
-          -moz-appearance: textfield;
-        }
-        
+      <style>{`
+        .hide-arrows::-webkit-outer-spin-button, .hide-arrows::-webkit-inner-spin-button { -webkit-appearance: none; margin: 0; }
+        .hide-arrows { -moz-appearance: textfield; }
         @media print { @page { size: landscape; margin: 10mm; } body { background-color: white !important; -webkit-print-color-adjust: exact; print-color-adjust: exact; } .no-print { display: none !important; } .print-break-inside-avoid { page-break-inside: avoid; } .print-border { border: 1px solid #e5e7eb !important; } input[type="number"] { -moz-appearance: textfield; } input[type="number"]::-webkit-outer-spin-button, input[type="number"]::-webkit-inner-spin-button { -webkit-appearance: none; margin: 0; } }
-        `}
-      </style>
+      `}</style>
 
-      {/* FLOAT BUTTON: PROJECTOR EXIT */}
       {isProjectorMode && (
         <button onClick={handleExitProjectorMode} className="no-print fixed bottom-8 right-8 bg-white text-red-600 px-6 py-4 rounded-full shadow-2xl font-black z-50 flex items-center gap-3 animate-bounce border-4 border-red-100 hover:bg-red-50 transition-all">
           <IconX /> EXIT PRESENTATION
         </button>
       )}
 
-      {/* TOP NAVIGATION (BENTO STYLE) */}
       {!isProjectorMode && (
         <div className="no-print sticky top-0 z-40 p-4 backdrop-blur-md bg-white/60 border-b border-white/20 shadow-sm flex justify-between items-center">
            <div className="flex items-center gap-3">
@@ -960,12 +839,9 @@ export default function App() {
            </div>
            
            <div className="flex items-center gap-2 sm:gap-4 bg-white p-1.5 rounded-2xl shadow-sm border border-gray-100">
-              {/* THEME SWITCHER */}
               <div className="flex bg-gray-50 rounded-xl p-1 border border-gray-100 mr-2">
                  {Object.keys(themes).map(t => (
-                   <button key={t} onClick={() => setActiveTheme(t)} className={`w-6 h-6 sm:w-8 sm:h-8 rounded-lg flex items-center justify-center transition-all ${activeTheme === t ? 'bg-white shadow-sm scale-110' : 'hover:bg-gray-200'}`} title={themes[t].name}>
-                      <div className={`w-3 h-3 sm:w-4 sm:h-4 rounded-full ${themes[t].primary}`}></div>
-                   </button>
+                   <button key={t} onClick={() => setActiveTheme(t)} className={`w-6 h-6 sm:w-8 sm:h-8 rounded-lg flex items-center justify-center transition-all ${activeTheme === t ? 'bg-white shadow-sm scale-110' : 'hover:bg-gray-200'}`} title={themes[t].name}><div className={`w-3 h-3 sm:w-4 sm:h-4 rounded-full ${themes[t].primary}`}></div></button>
                  ))}
               </div>
               <label className={`cursor-pointer ${theme.soft} ${theme.textPrimary} hover:bg-gray-100 px-4 py-2 rounded-xl flex items-center gap-2 transition-colors font-bold text-xs sm:text-sm`}>
@@ -979,12 +855,10 @@ export default function App() {
         </div>
       )}
 
-      {/* MAIN CAPTURE AREA */}
       <div id="capture-area" className={`${isProjectorMode ? 'bg-transparent' : 'bg-transparent'} min-h-screen pb-10`}>
-        
         <main className={`${isProjectorMode ? 'w-full max-w-full mt-4' : 'max-w-7xl mx-auto mt-6'} px-4 space-y-6 transition-all`}>
           
-          {/* BENTO: EXPORT & TOOLS */}
+          {/* DASHBOARD TOOLS */}
           {!isProjectorMode && (schedule.length > 0 || knockoutData.length > 0) && (
             <div className="no-print bg-white rounded-3xl shadow-sm p-4 flex flex-col md:flex-row justify-between items-center gap-4 border border-gray-100">
               <div className="flex items-center gap-3">
@@ -992,20 +866,19 @@ export default function App() {
                  <div><h3 className="font-black text-gray-800">Tournament Dashboard</h3><p className="text-xs text-gray-500 font-medium">Export reports or enter live mode.</p></div>
               </div>
               <div className="flex flex-wrap gap-2 items-center">
+                <button onClick={() => setShowMasterModal(true)} className={`${theme.soft} ${theme.textPrimary} hover:bg-gray-100 px-4 py-2.5 rounded-2xl flex items-center gap-2 text-sm font-black transition-colors`}><IconList /> JADWAL INDUK</button>
                 <button onClick={handleExportExcel} className="bg-white border border-gray-200 text-gray-700 hover:bg-gray-50 px-4 py-2.5 rounded-2xl flex items-center gap-2 text-sm font-black transition-colors"><IconFileSpreadsheet /> CSV</button>
-                <button onClick={handleExportPNG} disabled={isExportingPng} className="bg-white border border-gray-200 text-gray-700 hover:bg-gray-50 px-4 py-2.5 rounded-2xl flex items-center gap-2 text-sm font-black transition-colors"><IconDownloadImg /> {isExportingPng ? '...' : 'PNG'}</button>
+                <button onClick={() => handleExportPNG('capture-area')} disabled={isExportingPng} className="bg-white border border-gray-200 text-gray-700 hover:bg-gray-50 px-4 py-2.5 rounded-2xl flex items-center gap-2 text-sm font-black transition-colors"><IconDownloadImg /> {isExportingPng ? '...' : 'PNG'}</button>
                 <button onClick={handleExportPDF} className="bg-gray-800 text-white hover:bg-black px-4 py-2.5 rounded-2xl flex items-center gap-2 text-sm font-black transition-colors shadow-md"><IconPrinter /> PRINT</button>
                 <button onClick={handleEnterProjectorMode} className={`${theme.accent} ${theme.accentHover} ${theme.accentText} px-5 py-2.5 rounded-2xl flex items-center gap-2 text-sm font-black transition-colors shadow-md ml-2`}><IconMonitor /> LIVE MODE</button>
               </div>
             </div>
           )}
 
-          {/* BENTO: BRANDING & HEADER */}
+          {/* BRANDING HEADER */}
           <div className={`bg-white rounded-3xl shadow-sm border border-gray-100 relative overflow-hidden print-break-inside-avoid print:shadow-none print:border-none print:p-0 ${isProjectorMode ? 'p-10 md:p-16 mb-8 shadow-xl' : 'p-8'}`}>
             <div className={`absolute top-0 left-0 w-full h-3 ${theme.gradient || theme.primary}`}></div>
-            
             <div className="relative z-10 flex flex-col items-center">
-              {/* Logo Sponsors Area */}
               <div className={`flex justify-center flex-wrap gap-4 min-h-[5rem] ${isProjectorMode ? 'mb-10' : 'mb-8'}`}>
                 {sponsorLogos.map((logo, index) => (
                   <div key={index} className={`relative group border border-gray-100 bg-white rounded-3xl shadow-sm flex items-center justify-center p-3 print:border-none print:shadow-none ${isProjectorMode ? 'w-36 h-36 md:w-48 md:h-48' : 'w-24 h-24 md:w-32 md:h-32'}`}>
@@ -1021,8 +894,6 @@ export default function App() {
                   </label>
                 )}
               </div>
-
-              {/* Title Inputs */}
               <div className={`flex flex-col gap-2 max-w-5xl mx-auto w-full`}>
                 <input value={championshipTitles[0]} onChange={(e) => handleUpdateTitle(0, e.target.value)} readOnly={isProjectorMode} className={`font-black text-gray-900 text-center uppercase focus:outline-none focus:bg-gray-50 rounded-2xl bg-transparent transition-colors placeholder:text-gray-300 w-full px-4 print:p-0 ${isProjectorMode ? 'text-5xl md:text-7xl cursor-default tracking-tight' : 'text-3xl md:text-5xl'}`} placeholder="EDIT NAMA KEJUARAAN" />
                 <input value={championshipTitles[1]} onChange={(e) => handleUpdateTitle(1, e.target.value)} readOnly={isProjectorMode} className={`font-black ${theme.textPrimary} text-center uppercase focus:outline-none focus:bg-gray-50 rounded-xl bg-transparent transition-colors placeholder:text-gray-300 w-full px-4 print:p-0 ${isProjectorMode ? 'text-2xl md:text-4xl mt-3 cursor-default' : 'text-xl md:text-2xl mt-1'}`} placeholder="EDIT KETERANGAN DAN LAIN-LAIN" />
@@ -1031,26 +902,24 @@ export default function App() {
             </div>
           </div>
 
-          {/* BENTO GRID: SETUP PHASE */}
+          {/* FASE PENDAFTARAN */}
           {!isProjectorMode && schedule.length === 0 && knockoutData.length === 0 && (
             <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 no-print">
-              
-              {/* CARD 1: TEAM REGISTRATION (Wider) */}
               <div className="lg:col-span-7 bg-white rounded-3xl shadow-sm border border-gray-100 p-6 md:p-8 flex flex-col h-full">
                 <div className="flex items-center gap-3 mb-6">
                    <div className={`p-2.5 rounded-xl ${theme.soft} ${theme.textPrimary}`}><IconUsers /></div>
                    <h2 className="text-xl font-black text-gray-800">Pendaftaran Peserta</h2>
                 </div>
-                
                 <form onSubmit={handleAddTeam} className="flex gap-3 mb-6">
                   <input type="text" value={inputValue} onChange={(e) => setInputValue(e.target.value)} placeholder="Ketik nama tim baru..." className="flex-1 px-5 py-4 bg-gray-50 border border-gray-200 rounded-2xl focus:outline-none focus:border-gray-300 focus:bg-white transition-all font-bold text-gray-700" />
                   <button type="submit" className={`${theme.primary} ${theme.primaryHover} text-white px-6 py-4 rounded-2xl font-black transition-all shadow-md hover:shadow-lg`}><IconPlus /></button>
                 </form>
-
                 <div className="flex justify-between items-end mb-4 px-1">
                    <h3 className="text-xs font-black text-gray-400 uppercase tracking-widest">Daftar Tim ({teams.length})</h3>
+                   {teams.length > 1 && (
+                     <button onClick={() => setShowMasterModal(true)} className="text-xs font-black text-indigo-600 bg-indigo-50 hover:bg-indigo-100 px-3 py-1.5 rounded-lg transition-colors flex items-center gap-1"><IconList /> LIHAT PROYEKSI JADWAL</button>
+                   )}
                 </div>
-                
                 <div className="flex flex-col gap-3 overflow-y-auto pr-2 pb-2 flex-1">
                   {teams.length === 0 && <div className="h-32 flex items-center justify-center border-2 border-dashed border-gray-100 rounded-2xl text-gray-400 font-bold text-sm">Belum ada tim didaftarkan.</div>}
                   {teams.map((team) => (
@@ -1076,91 +945,56 @@ export default function App() {
                 </div>
               </div>
 
-              {/* RIGHT COLUMN BENTO MODULES */}
               <div className="lg:col-span-5 flex flex-col gap-6">
-                
-                {/* CARD 2: EVENT CATEGORY & DISCIPLINE */}
                 <div className="bg-white rounded-3xl shadow-sm border border-gray-100 p-6">
                   <h2 className="text-sm font-black text-gray-400 mb-4 uppercase tracking-widest">Kategori Nomor Event</h2>
                   <div className="flex flex-col gap-3 mb-6">
                     <label className={`flex items-center p-4 rounded-2xl border-2 cursor-pointer transition-all ${eventCategory === 'single' ? `${theme.border} ${theme.soft}` : 'border-gray-100 hover:border-gray-200'}`}>
                       <input type="radio" value="single" checked={eventCategory === 'single'} onChange={() => { setEventCategory('single'); if(eventDiscipline === 'Mix') setEventDiscipline('Regu'); }} className="hidden" />
-                      <div className={`w-5 h-5 rounded-full border-2 flex items-center justify-center mr-4 flex-shrink-0 ${eventCategory === 'single' ? `border-transparent ${theme.primary}` : 'border-gray-300'}`}>
-                         {eventCategory === 'single' && <div className="w-2 h-2 bg-white rounded-full"></div>}
-                      </div>
-                      <div>
-                         <div className="font-black text-gray-800 text-sm leading-tight">Double Event / Regu Event / Quadrant Event</div>
-                      </div>
+                      <div className={`w-5 h-5 rounded-full border-2 flex items-center justify-center mr-4 flex-shrink-0 ${eventCategory === 'single' ? `border-transparent ${theme.primary}` : 'border-gray-300'}`}>{eventCategory === 'single' && <div className="w-2 h-2 bg-white rounded-full"></div>}</div>
+                      <div><div className="font-black text-gray-800 text-sm leading-tight">Double / Regu / Quadrant Event</div></div>
                     </label>
                     <label className={`flex items-center p-4 rounded-2xl border-2 cursor-pointer transition-all ${eventCategory === 'team' ? `${theme.border} ${theme.soft}` : 'border-gray-100 hover:border-gray-200'}`}>
                       <input type="radio" value="team" checked={eventCategory === 'team'} onChange={() => setEventCategory('team')} className="hidden" />
-                      <div className={`w-5 h-5 rounded-full border-2 flex items-center justify-center mr-4 flex-shrink-0 ${eventCategory === 'team' ? `border-transparent ${theme.primary}` : 'border-gray-300'}`}>
-                         {eventCategory === 'team' && <div className="w-2 h-2 bg-white rounded-full"></div>}
-                      </div>
-                      <div>
-                         <div className="font-black text-gray-800 text-sm leading-tight">Double Event Team / Regu Event Team / Quadrant Event Team</div>
-                      </div>
+                      <div className={`w-5 h-5 rounded-full border-2 flex items-center justify-center mr-4 flex-shrink-0 ${eventCategory === 'team' ? `border-transparent ${theme.primary}` : 'border-gray-300'}`}>{eventCategory === 'team' && <div className="w-2 h-2 bg-white rounded-full"></div>}</div>
+                      <div><div className="font-black text-gray-800 text-sm leading-tight">Double / Regu / Quadrant Event Team</div></div>
                     </label>
                   </div>
 
-                  <h2 className="text-sm font-black text-gray-400 mb-4 uppercase tracking-widest">Disiplin Spesifik (Label Papan Skor)</h2>
+                  <h2 className="text-sm font-black text-gray-400 mb-4 uppercase tracking-widest">Disiplin Spesifik</h2>
                   <div className="flex flex-wrap bg-gray-50 p-1 rounded-2xl border border-gray-100 gap-1">
                     <button onClick={() => setEventDiscipline('Regu')} className={`flex-1 py-3 text-xs font-black rounded-xl transition-all ${eventDiscipline === 'Regu' ? 'bg-white shadow-sm text-gray-800' : 'text-gray-400 hover:text-gray-600'}`}>Regu</button>
                     <button onClick={() => setEventDiscipline('Double')} className={`flex-1 py-3 text-xs font-black rounded-xl transition-all ${eventDiscipline === 'Double' ? 'bg-white shadow-sm text-gray-800' : 'text-gray-400 hover:text-gray-600'}`}>Double</button>
                     <button onClick={() => setEventDiscipline('Quadrant')} className={`flex-1 py-3 text-xs font-black rounded-xl transition-all ${eventDiscipline === 'Quadrant' ? 'bg-white shadow-sm text-gray-800' : 'text-gray-400 hover:text-gray-600'}`}>Quadrant</button>
-                    {eventCategory === 'team' && (
-                      <button onClick={() => setEventDiscipline('Mix')} className={`flex-1 py-3 px-2 text-xs font-black rounded-xl transition-all ${eventDiscipline === 'Mix' ? `${theme.primary} shadow-sm text-white` : 'text-gray-400 hover:text-gray-600'}`}>Campuran (Mix)</button>
-                    )}
+                    {eventCategory === 'team' && <button onClick={() => setEventDiscipline('Mix')} className={`flex-1 py-3 px-2 text-xs font-black rounded-xl transition-all ${eventDiscipline === 'Mix' ? `${theme.primary} shadow-sm text-white` : 'text-gray-400 hover:text-gray-600'}`}>Mix</button>}
                   </div>
                   
-                  {/* PANEL DROPDOWN KHUSUS MIX */}
                   {eventCategory === 'team' && eventDiscipline === 'Mix' && (
                     <div className={`mt-4 p-4 rounded-2xl border ${theme.border} ${theme.soft} flex flex-col gap-3 animate-in fade-in zoom-in-95 duration-200`}>
-                       <div className="flex flex-col gap-1">
-                          <span className={`text-[10px] font-black uppercase tracking-widest ${theme.textPrimary} opacity-70 px-1`}>Format Partai 1</span>
-                          <select value={mixDisciplines[0]} onChange={(e) => setMixDisciplines([e.target.value, mixDisciplines[1], mixDisciplines[2]])} className="w-full bg-white border border-gray-200 text-gray-800 font-bold text-xs rounded-xl px-3 py-2 outline-none focus:border-gray-400 shadow-sm cursor-pointer">
-                            <option value="Double">Double</option><option value="Regu">Regu</option><option value="Quadrant">Quadrant</option>
-                          </select>
-                       </div>
-                       <div className="flex flex-col gap-1">
-                          <span className={`text-[10px] font-black uppercase tracking-widest ${theme.textPrimary} opacity-70 px-1`}>Format Partai 2</span>
-                          <select value={mixDisciplines[1]} onChange={(e) => setMixDisciplines([mixDisciplines[0], e.target.value, mixDisciplines[2]])} className="w-full bg-white border border-gray-200 text-gray-800 font-bold text-xs rounded-xl px-3 py-2 outline-none focus:border-gray-400 shadow-sm cursor-pointer">
-                            <option value="Double">Double</option><option value="Regu">Regu</option><option value="Quadrant">Quadrant</option>
-                          </select>
-                       </div>
-                       <div className="flex flex-col gap-1">
-                          <span className={`text-[10px] font-black uppercase tracking-widest ${theme.textPrimary} opacity-70 px-1`}>Format Partai 3</span>
-                          <select value={mixDisciplines[2]} onChange={(e) => setMixDisciplines([mixDisciplines[0], mixDisciplines[1], e.target.value])} className="w-full bg-white border border-gray-200 text-gray-800 font-bold text-xs rounded-xl px-3 py-2 outline-none focus:border-gray-400 shadow-sm cursor-pointer">
-                            <option value="Double">Double</option><option value="Regu">Regu</option><option value="Quadrant">Quadrant</option>
-                          </select>
-                       </div>
+                       <div className="flex flex-col gap-1"><span className={`text-[10px] font-black uppercase tracking-widest ${theme.textPrimary} opacity-70 px-1`}>Format Partai 1</span><select value={mixDisciplines[0]} onChange={(e) => setMixDisciplines([e.target.value, mixDisciplines[1], mixDisciplines[2]])} className="w-full bg-white border border-gray-200 text-gray-800 font-bold text-xs rounded-xl px-3 py-2 outline-none focus:border-gray-400 shadow-sm cursor-pointer"><option value="Double">Double</option><option value="Regu">Regu</option><option value="Quadrant">Quadrant</option></select></div>
+                       <div className="flex flex-col gap-1"><span className={`text-[10px] font-black uppercase tracking-widest ${theme.textPrimary} opacity-70 px-1`}>Format Partai 2</span><select value={mixDisciplines[1]} onChange={(e) => setMixDisciplines([mixDisciplines[0], e.target.value, mixDisciplines[2]])} className="w-full bg-white border border-gray-200 text-gray-800 font-bold text-xs rounded-xl px-3 py-2 outline-none focus:border-gray-400 shadow-sm cursor-pointer"><option value="Double">Double</option><option value="Regu">Regu</option><option value="Quadrant">Quadrant</option></select></div>
+                       <div className="flex flex-col gap-1"><span className={`text-[10px] font-black uppercase tracking-widest ${theme.textPrimary} opacity-70 px-1`}>Format Partai 3</span><select value={mixDisciplines[2]} onChange={(e) => setMixDisciplines([mixDisciplines[0], mixDisciplines[1], e.target.value])} className="w-full bg-white border border-gray-200 text-gray-800 font-bold text-xs rounded-xl px-3 py-2 outline-none focus:border-gray-400 shadow-sm cursor-pointer"><option value="Double">Double</option><option value="Regu">Regu</option><option value="Quadrant">Quadrant</option></select></div>
                     </div>
                   )}
                 </div>
 
-                {/* CARD 3: TOURNAMENT SYSTEM & COURTS */}
                 <div className="bg-white rounded-3xl shadow-sm border border-gray-100 p-6 flex-1 flex flex-col">
                   <h2 className="text-sm font-black text-gray-400 mb-4 uppercase tracking-widest">Sistem & Lapangan</h2>
-                  
-                  {/* Courts */}
                   <div className="mb-6">
-                  <form onSubmit={handleAddCourt} className="flex gap-2 mb-3">
-  <input type="text" value={courtInputValue} onChange={(e) => setCourtInputValue(e.target.value)} placeholder="Tambah lapangan (misal: Lap 2)" className="flex-1 px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl focus:outline-none focus:bg-white transition-all text-xs font-bold" />
-  <button type="button" onClick={handleAddCourt} className="bg-gray-800 hover:bg-black text-white px-4 py-3 rounded-xl font-bold transition-colors">
-    <IconPlus />
-  </button>
-</form>
+                    {/* PERBAIKAN: Gunakan type="button" dan onClick untuk menghindari error reload */}
+                    <form className="flex gap-2 mb-3">
+                      <input type="text" value={courtInputValue} onChange={(e) => setCourtInputValue(e.target.value)} placeholder="Tambah lapangan (misal: Lap 2)" className="flex-1 px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl focus:outline-none focus:bg-white transition-all text-xs font-bold" />
+                      <button type="button" onClick={handleAddCourt} className="bg-gray-800 hover:bg-black text-white px-4 py-3 rounded-xl font-bold transition-colors"><IconPlus /></button>
+                    </form>
                     <div className="flex flex-wrap gap-2">
                       {courts.map((court, index) => (
                         <div key={index} className="bg-gray-100 text-gray-700 px-3 py-2 rounded-xl text-[10px] font-black flex items-center gap-2 border border-gray-200">
-                          {court}
-                          {courts.length > 1 && <button type="button" onClick={() => handleRemoveCourt(court)} className="text-gray-400 hover:text-red-500"><IconTrash /></button>}
+                          {court} {courts.length > 1 && <button type="button" onClick={() => handleRemoveCourt(court)} className="text-gray-400 hover:text-red-500"><IconTrash /></button>}
                         </div>
                       ))}
                     </div>
                   </div>
 
-                  {/* System */}
                   <div className="flex bg-gray-50 p-1 rounded-2xl border border-gray-100 mb-4">
                     <button onClick={() => setTournamentType('group')} className={`flex-1 py-3 text-xs font-black rounded-xl transition-all ${tournamentType === 'group' ? 'bg-white shadow-sm text-gray-800' : 'text-gray-400 hover:text-gray-600'}`}>Grup</button>
                     <button onClick={() => setTournamentType('half-robin')} className={`flex-1 py-3 text-xs font-black rounded-xl transition-all ${tournamentType === 'half-robin' ? 'bg-white shadow-sm text-gray-800' : 'text-gray-400 hover:text-gray-600'}`}>Satu Pool</button>
@@ -1177,23 +1011,19 @@ export default function App() {
                     </div>
                   )}
 
-                  {/* GENERATE BUTTON */}
                   <div className="mt-auto pt-4">
                   <button onClick={tournamentType === 'knockout' ? generateDirectKnockout : generateSchedule} disabled={teams.length < 2} className={`w-full ${theme.accent} ${theme.accentHover} ${theme.accentText} disabled:bg-gray-100 disabled:text-gray-300 font-black py-5 rounded-2xl shadow-md transition-all flex justify-center items-center gap-3 text-lg uppercase tracking-wider`}>
                       <IconCalendar /> {teams.length < 2 ? "Min. 2 Tim" : "Buat Jadwal"}
                     </button>
                   </div>
                 </div>
-
               </div>
             </div>
           )}
 
-          {/* BENTO GRID: TOURNAMENT ACTIVE PHASE (Group Stage / Satu Pool) */}
+          {/* FASE AKTIF (GRUP) */}
           {schedule.length > 0 && knockoutData.length === 0 && (
             <div className={`space-y-6 animate-in fade-in duration-500 print:space-y-4 ${isProjectorMode ? 'space-y-10' : ''}`}>
-              
-              {/* CARD: STANDINGS */}
               <div className={`bg-white rounded-3xl shadow-sm border border-gray-100 overflow-hidden print-break-inside-avoid print-border ${isProjectorMode ? 'shadow-2xl border-none' : ''}`}>
                 <div className={`flex justify-between items-center border-b border-gray-100 print:bg-gray-200 print:text-black ${isProjectorMode ? 'p-8 bg-gray-50' : 'p-6 bg-white'}`}>
                   <div className="flex items-center gap-4">
@@ -1202,9 +1032,7 @@ export default function App() {
                   </div>
                   {!isProjectorMode && (
                     <div className="no-print flex items-center gap-2">
-                       <button onClick={handleCopyWhatsApp} className="text-xs bg-green-50 hover:bg-green-100 text-green-700 px-4 py-2 rounded-xl transition-colors font-black uppercase tracking-widest border border-green-200 flex items-center gap-2 shadow-sm" title="Salin untuk WhatsApp">
-                         <IconCopy /> Salin WA
-                       </button>
+                       <button onClick={handleCopyWhatsApp} className="text-xs bg-green-50 hover:bg-green-100 text-green-700 px-4 py-2 rounded-xl transition-colors font-black uppercase tracking-widest border border-green-200 flex items-center gap-2 shadow-sm"><IconCopy /> Salin WA</button>
                        <div className="bg-gray-100 text-gray-500 px-4 py-2 rounded-xl text-xs font-bold uppercase tracking-widest border border-gray-200 hidden sm:block">Auto Update</div>
                     </div>
                   )}
@@ -1224,22 +1052,17 @@ export default function App() {
                               <th className="px-2 py-4 font-black text-center" title="Main">P</th>
                               <th className="px-2 py-4 font-black text-center" title="Menang">W</th>
                               <th className="px-2 py-4 font-black text-center" title="Kalah">L</th>
-                              {eventCategory === 'team' && <th className="px-2 py-4 font-black text-center bg-gray-50" title="Partai Menang - Kalah">Prt</th>}
-                              <th className="px-2 py-4 font-black text-center" title="Set Menang - Kalah">Set</th>
-                              <th className="px-2 py-4 font-black text-center" title="Angka Memasukkan - Kemasukan">Pts</th>
-                              <th className={`px-4 py-4 font-black text-center ${theme.soft} ${theme.textPrimary}`} title="Total Poin Klasemen">SCORE</th>
+                              {eventCategory === 'team' && <th className="px-2 py-4 font-black text-center bg-gray-50">Prt</th>}
+                              <th className="px-2 py-4 font-black text-center">Set</th>
+                              <th className="px-2 py-4 font-black text-center">Pts</th>
+                              <th className={`px-4 py-4 font-black text-center ${theme.soft} ${theme.textPrimary}`}>SCORE</th>
                             </tr>
                           </thead>
                           <tbody className="divide-y divide-gray-50">
                             {groupTeams.map((stat, index) => (
                               <tr key={stat.team} className={`${index === 0 ? `${theme.soft} bg-opacity-40` : "hover:bg-gray-50"} ${isProjectorMode ? 'text-2xl' : 'text-sm'} transition-colors`}>
                                 <td className={`px-5 py-4 font-black ${index === 0 ? theme.textPrimary : 'text-gray-300'}`}>{index + 1}</td>
-                                <td className="px-4 py-4 font-black text-gray-800">
-                                  <div className="flex items-center gap-3">
-                                    {teamLogos[stat.team] && <img src={teamLogos[stat.team]} className={`${isProjectorMode ? 'w-12 h-12' : 'w-8 h-8'} rounded-xl object-cover border border-gray-100 bg-white shadow-sm`} alt="" />}
-                                    {stat.team}
-                                  </div>
-                                </td>
+                                <td className="px-4 py-4 font-black text-gray-800"><div className="flex items-center gap-3">{teamLogos[stat.team] && <img src={teamLogos[stat.team]} className={`${isProjectorMode ? 'w-12 h-12' : 'w-8 h-8'} rounded-xl object-cover border border-gray-100 bg-white shadow-sm`} alt="" />}{stat.team}</div></td>
                                 <td className="px-2 py-4 text-center font-bold text-gray-500">{stat.play}</td>
                                 <td className="px-2 py-4 text-center font-black text-gray-700">{stat.win}</td>
                                 <td className="px-2 py-4 text-center font-black text-gray-400">{stat.lose}</td>
@@ -1257,7 +1080,6 @@ export default function App() {
                 </div>
               </div>
 
-              {/* CARD: SCHEDULES */}
               <div className={`bg-white rounded-3xl shadow-sm border border-gray-100 overflow-hidden print-border ${isProjectorMode ? 'shadow-2xl border-none' : ''}`}>
                 <div className={`flex justify-between items-center border-b border-gray-100 print:bg-gray-200 print:text-black ${isProjectorMode ? 'p-8 bg-gray-50' : 'p-6 bg-white'}`}>
                   <div className="flex items-center gap-4">
@@ -1276,14 +1098,12 @@ export default function App() {
                 </div>
               </div>
 
-              {/* KNOCKOUT TRANSITION BTN (Otomatis muncul jika isPhase1Finished) */}
+              {/* TRANSISI OTOMATIS KE FASE 2 */}
               {!isProjectorMode && (
                 <div className="no-print bg-gray-900 text-white rounded-3xl p-8 sm:p-12 text-center shadow-xl border border-gray-800 relative overflow-hidden mt-8">
                    <div className="absolute -top-10 -right-10 opacity-5 text-gray-100"><svg className="w-64 h-64" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M3 3v18"/><path d="M3 12h5"/><path d="M8 7v10"/><path d="M8 7h5"/><path d="M8 17h5"/><path d="M13 12h5"/><path d="M18 7v10"/><path d="M18 12h3"/></svg></div>
-                   
                    <div className="relative z-10">
                      <h2 className="text-3xl font-black text-white mb-3 tracking-tight">Menuju Babak Selanjutnya</h2>
-                     
                      {isPhase1Finished ? (
                        <>
                          <p className="text-emerald-400 mb-10 max-w-xl mx-auto font-medium">✨ Fase 1 telah selesai! Silakan pilih format untuk melanjutkan turnamen:</p>
@@ -1297,9 +1117,7 @@ export default function App() {
                      ) : (
                        <>
                          <p className="text-gray-400 mb-10 max-w-xl mx-auto font-medium">Harap lengkapi semua skor pertandingan di Fase Grup terlebih dahulu untuk membuka kunci babak selanjutnya.</p>
-                         <div className="flex justify-center">
-                            <div className="bg-gray-800 text-gray-500 font-black py-4 px-8 rounded-2xl border border-gray-700 cursor-not-allowed">Menunggu Hasil...</div>
-                         </div>
+                         <div className="flex justify-center"><div className="bg-gray-800 text-gray-500 font-black py-4 px-8 rounded-2xl border border-gray-700 cursor-not-allowed">Menunggu Hasil...</div></div>
                        </>
                      )}
                    </div>
@@ -1308,7 +1126,7 @@ export default function App() {
             </div>
           )}
 
-          {/* TAMPILAN FASE SISTEM GUGUR */}
+          {/* FASE AKTIF (GUGUR) */}
           {knockoutData.length > 0 && (
             <div className={`space-y-8 animate-in fade-in duration-500 ${isProjectorMode ? 'space-y-12' : ''}`}>
               <div className={`text-center bg-white rounded-3xl shadow-sm border border-gray-100 print:border-none print:shadow-none print:p-2 ${isProjectorMode ? 'p-12 shadow-2xl border-none' : 'p-8'}`}>
@@ -1316,8 +1134,6 @@ export default function App() {
                    <div className={`p-3 rounded-2xl ${theme.primary} text-white`}><IconTrophy /></div>
                    Bagan Turnamen Utama
                  </h2>
-                 
-                 {/* TOMBOL BATAL & RESET UNTUK SISTEM GUGUR */}
                  {!isProjectorMode && (
                    <div className="no-print mt-6 flex justify-center gap-3">
                       {tournamentType === 'knockout' && <button onClick={handleClearScores} className="text-xs bg-amber-50 hover:bg-amber-100 text-amber-700 px-4 py-2.5 rounded-xl font-bold uppercase tracking-widest border border-amber-200 shadow-sm">Bersihkan Skor</button>}
@@ -1342,7 +1158,6 @@ export default function App() {
                 </div>
               ))}
 
-              {/* PANEL JUARA 3 BERSAMA */}
               {jointThirdTeams.length === 2 && (
                 <div className={`bg-amber-50/50 rounded-3xl border border-amber-200 print-break-inside-avoid print:bg-white print:border-none print:p-0 ${isProjectorMode ? 'p-12 shadow-inner' : 'p-8 shadow-sm'}`}>
                    <h3 className={`font-black text-center text-amber-800 mb-10 uppercase tracking-widest bg-amber-200 w-fit mx-auto rounded-2xl shadow-sm print:bg-gray-200 print:text-black border border-amber-300 ${isProjectorMode ? 'text-2xl px-10 py-4' : 'text-sm px-6 py-3'}`}>
@@ -1366,7 +1181,6 @@ export default function App() {
             </div>
           )}
 
-          {/* SIGNATURE FOOTER */}
           <div className="text-center mt-16 pb-8 print:mt-10 print:pb-4">
             <p className="font-black text-sm tracking-widest uppercase text-gray-400">
               Sepak Takraw Tournament Management System <span className={`mx-2 ${theme.textPrimary}`}>&bull;</span> by <span className={theme.textPrimary}>fiqhipondaa9</span>
@@ -1374,6 +1188,81 @@ export default function App() {
           </div>
         </main>
       </div>
+
+      {/* MODAL JADWAL INDUK (MASTER PLANNER) */}
+      {showMasterModal && (
+        <div className="fixed inset-0 z-[60] bg-black/60 backdrop-blur-sm flex items-center justify-center p-4 animate-in fade-in duration-300">
+          <div className="bg-white w-full max-w-5xl max-h-[90vh] rounded-3xl shadow-2xl overflow-hidden flex flex-col">
+            <div className={`p-6 border-b flex justify-between items-center ${theme.header} text-white`}>
+              <div>
+                <h2 className="text-2xl font-black uppercase tracking-tight">Master Schedule Planner</h2>
+                <p className="text-xs opacity-70 font-bold tracking-widest uppercase">Proyeksi jadwal lengkap dari Penyisihan hingga Final</p>
+              </div>
+              <button onClick={() => setShowMasterModal(false)} className="bg-white/20 hover:bg-white/40 p-2 rounded-xl transition-colors">
+                <IconX />
+              </button>
+            </div>
+
+            <div id="master-print-area" className="p-8 overflow-y-auto bg-white flex-1">
+              <div className="text-center mb-8">
+                 <h1 className="text-3xl font-black uppercase text-gray-900 tracking-tight">{championshipTitles[0] || "NAMA KEJUARAAN"}</h1>
+                 <p className="font-bold text-gray-500 uppercase">{championshipTitles[1] || "KETERANGAN"}</p>
+                 <p className="text-xs font-bold text-gray-400 mt-2 uppercase">{championshipTitles[2]}</p>
+              </div>
+              
+              <table className="w-full border-collapse text-sm">
+                <thead>
+                  <tr className="bg-gray-100 border-b-2 border-gray-200">
+                    <th className="p-4 text-left font-black text-gray-700">ID</th>
+                    <th className="p-4 text-left font-black text-gray-700">FASE / GRUP</th>
+                    <th className="p-4 text-center font-black text-gray-700">PERTANDINGAN</th>
+                    <th className="p-4 text-center font-black text-gray-700">LAPANGAN & WAKTU</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {generateMasterPlan().map((match, idx) => (
+                    <tr key={idx} className="border-b border-gray-50 hover:bg-gray-50/50 transition-colors">
+                      <td className="p-4 font-bold text-gray-400">#{match.id}</td>
+                      <td className="p-4">
+                        <span className={`px-3 py-1.5 rounded-full text-[10px] font-black uppercase tracking-widest ${match.phase === 'Final' ? 'bg-amber-100 text-amber-700 border border-amber-200' : 'bg-gray-100 text-gray-600 border border-gray-200'}`}>
+                          {match.groupLabel}
+                        </span>
+                      </td>
+                      <td className="p-4 font-black">
+                        <div className="flex items-center justify-center gap-3">
+                          <span className="w-1/2 text-right truncate text-gray-800">{match.teamA}</span>
+                          <span className="text-gray-300 font-bold text-xs bg-gray-50 px-2 py-1 rounded-md">VS</span>
+                          <span className="w-1/2 text-left truncate text-gray-800">{match.teamB}</span>
+                        </div>
+                      </td>
+                      <td className="p-4 text-center">
+                        <div className="font-bold text-gray-600 text-xs">{match.court || "-"}</div>
+                        <div className="font-bold text-gray-400 text-[10px]">{match.time || "-"}</div>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+
+            <div className="p-6 border-t bg-gray-50 flex justify-end gap-3 shrink-0">
+              <button onClick={() => handleExportPNG('master-print-area', 'Master_Schedule')} className="bg-white border border-gray-200 text-gray-700 px-6 py-3 rounded-2xl font-black text-sm hover:bg-gray-100 transition-colors shadow-sm">
+                Export PNG
+              </button>
+              <button onClick={() => {
+                const printContents = document.getElementById('master-print-area').innerHTML;
+                const originalContents = document.body.innerHTML;
+                document.body.innerHTML = printContents;
+                window.print();
+                document.body.innerHTML = originalContents;
+                window.location.reload(); // Memuat ulang agar state kembali normal setelah print
+              }} className="bg-gray-800 hover:bg-black text-white px-6 py-3 rounded-2xl font-black text-sm flex items-center gap-2 shadow-lg transition-colors">
+                <IconPrinter /> Cetak PDF
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
