@@ -272,15 +272,25 @@ export default function App() {
       }
     });
 
+    // --- SORTING HIERARCHY BARU: Poin -> Selisih Set -> Selisih Angka -> H2H ---
     const sortedTeams = Object.values(standings).sort((a, b) => {
+      // 1. Total Poin
       if (b.totalPoints !== a.totalPoints) return b.totalPoints - a.totalPoints;
-      // Head to Head check
+      // Jumlah Win (Standar)
+      if (b.win !== a.win) return b.win - a.win;
+      // Partai (Jika Tim)
+      if (isTeamEvent) { const aP = a.partyWin - a.partyLose; const bP = b.partyWin - b.partyLose; if (bP !== aP) return bP - aP; }
+      // 2. Selisih Set
+      const aS = a.setWin - a.setLose; const bS = b.setWin - b.setLose; 
+      if (bS !== aS) return bS - aS;
+      // 3. Selisih Angka
+      const aPt = a.pointWin - a.pointLose; const bPt = b.pointWin - b.pointLose;
+      if (bPt !== aPt) return bPt - aPt;
+      // 4. Head to Head (Tie-Breaker Terakhir)
       const h2hMatch = filteredMatches.find(m => ((m.teamA === a.team && m.teamB === b.team) || (m.teamA === b.team && m.teamB === a.team)) && m.winner);
       if (h2hMatch && h2hMatch.winner !== 'SERI' && h2hMatch.winner !== '?') { if (h2hMatch.winner === a.team) return -1; if (h2hMatch.winner === b.team) return 1; }
-      if (b.win !== a.win) return b.win - a.win;
-      if (isTeamEvent) { const aP = a.partyWin - a.partyLose; const bP = b.partyWin - b.partyLose; if (bP !== aP) return bP - aP; }
-      const aS = a.setWin - a.setLose; const bS = b.setWin - b.setLose; if (bS !== aS) return bS - aS;
-      return (b.pointWin - b.pointLose) - (a.pointWin - a.pointLose);
+      
+      return 0;
     });
 
     const grouped = {};
@@ -451,14 +461,22 @@ export default function App() {
        const size = 8; let ord = Array(size).fill('BYE');
        
        if (phase2ByeSystem === 'seeding') {
-          // --- GLOBAL SEEDING DENGAN H2H TIEBREAKER ---
+          // --- GLOBAL SEEDING DENGAN HIERARKI BARU: Poin -> Set -> Angka -> H2H ---
           q.sort((a,b) => {
+              // 1. Total Poin
               if (b.totalPoints !== a.totalPoints) return b.totalPoints - a.totalPoints;
-              const h2h = matchHistory.find(m => ((m.teamA === a.team && m.teamB === b.team) || (m.teamA === b.team && m.teamB === a.team)) && m.winner && m.winner !== 'SERI');
-              if (h2h) return h2h.winner === a.team ? -1 : 1;
+              // Partai (Jika Tim)
+              if (isTeamEvent) { const aP = a.partyWin - a.partyLose; const bP = b.partyWin - b.partyLose; if (bP !== aP) return bP - aP; }
+              // 2. Selisih Set
               const aS = a.setWin - a.setLose; const bS = b.setWin - b.setLose;
               if (bS !== aS) return bS - aS;
-              return (b.pointWin - b.pointLose) - (a.pointWin - a.pointLose);
+              // 3. Selisih Angka
+              const aPt = a.pointWin - a.pointLose; const bPt = b.pointWin - b.pointLose;
+              if (bPt !== aPt) return bPt - aPt;
+              // 4. Head to Head (Terakhir)
+              const h2h = matchHistory.find(m => ((m.teamA === a.team && m.teamB === b.team) || (m.teamA === b.team && m.teamB === a.team)) && m.winner && m.winner !== 'SERI');
+              if (h2h) return h2h.winner === a.team ? -1 : 1;
+              return 0;
           });
           if(q.length >= 6) { 
               // Top 2 mendapat BYE
@@ -471,9 +489,9 @@ export default function App() {
           // --- FIXED MAPPING DENGAN ANTI-REMATCH ---
           const gA = std['Grup A']||[]; const gB = std['Grup B']||[]; const gC = std['Grup C']||[];
           if(q.length >= 6) { 
-              ord[0] = gA[0]?.team||'?'; ord[1] = 'BYE'; // Juara A
+              ord[0] = gA[0]?.team||'?'; ord[1] = 'BYE'; // Juara A (Dapat BYE)
               ord[2] = gC[0]?.team||'?'; ord[3] = gB[1]?.team||'?'; // Juara C vs Runner B
-              ord[4] = gB[0]?.team||'?'; ord[5] = 'BYE'; // Juara B
+              ord[4] = gB[0]?.team||'?'; ord[5] = 'BYE'; // Juara B (Dapat BYE)
               ord[6] = gC[1]?.team||'?'; ord[7] = gA[1]?.team||'?'; // Runner C vs Runner A
           }
        }
@@ -600,7 +618,8 @@ export default function App() {
          masterPlan.push({ id: matchId++, teamA: "[MENANG SF 1]", teamB: "[MENANG SF 2]", winner: null, label: "FINAL", phase: "Final Stage", court: "TBD", time: "TBD" });
       }
       else if (tournamentType === 'Groups' && n === 3) {
-         masterPlan.push({ id: matchId++, teamA: "[6 TIM TERBAIK]", teamB: "[6 TIM TERBAIK]", winner: null, label: "FASE 2 / GUGUR", phase: "Penyisihan 2", court: "TBD", time: "TBD" });
+         masterPlan.push({ id: matchId++, teamA: "[JUARA D]", teamB: "[RUNNER E]", winner: null, label: "SEMI FINAL 1", phase: "Knockout", court: "TBD", time: "TBD" });
+         masterPlan.push({ id: matchId++, teamA: "[JUARA E]", teamB: "[RUNNER D]", winner: null, label: "SEMI FINAL 2", phase: "Knockout", court: "TBD", time: "TBD" });
          masterPlan.push({ id: matchId++, teamA: "[MENANG SF 1]", teamB: "[MENANG SF 2]", winner: null, label: "FINAL", phase: "Final Stage", court: "TBD", time: "TBD" });
       }
       else if (tournamentType === 'Groups' && n > 4) {
@@ -618,7 +637,7 @@ export default function App() {
   };
 
   const formatMatchScore = (match) => {
-    if (match.isBye) return "BYE/W.O";
+    if (match.isBye) return "BYE / W.O";
     if (!match.parties) return match.winner && match.winner !== '?' ? `WIN: ${match.winner}` : "TBD";
     if (!match.winner || match.winner === '?') return "TBD";
     if (match.winner === 'SERI' && match.winsA === 0 && match.winsB === 0) return "DOUBLE W.O";
@@ -752,8 +771,8 @@ export default function App() {
     } else if (tournamentType === 'Groups' && (n === 2 || n === 3)) {
        const qfMatches = isRealData && n === 3 && knockoutData.length === 3 ? knockoutData[0] : null;
        const sfMatches = isRealData ? (knockoutData.length === 3 ? knockoutData[1] : knockoutData[0]) : [
-           { teamA: isPhase2 ? "JUARA D" : "JUARA A", teamB: isPhase2 ? "RUNNER E" : "RUNNER B" }, 
-           { teamA: isPhase2 ? "JUARA E" : "JUARA B", teamB: isPhase2 ? "RUNNER D" : "RUNNER A" }
+           { teamA: n === 3 ? "JUARA D" : "JUARA A", teamB: n === 3 ? "RUNNER E" : "RUNNER B" }, 
+           { teamA: n === 3 ? "JUARA E" : "JUARA B", teamB: n === 3 ? "RUNNER D" : "RUNNER A" }
        ];
        const fMatch = isRealData ? (knockoutData.length === 3 ? knockoutData[2][0] : knockoutData[1][0]) : { teamA: "MENANG SF 1", teamB: "MENANG SF 2" };
 
@@ -1202,7 +1221,7 @@ export default function App() {
                                    <div className="flex-1 space-y-4 animate-in fade-in duration-300">
                                       <label className="text-sm font-black text-emerald-400 uppercase tracking-widest">Sistem BYE</label>
                                       <select value={phase2ByeSystem} onChange={(e) => setPhase2ByeSystem(e.target.value)} className="w-full bg-gray-900 border border-gray-600 text-white font-bold text-sm rounded-xl px-4 py-4 outline-none focus:border-emerald-400 cursor-pointer uppercase">
-                                         <option value="seeding">Tim Terbaik (Global Seeding + H2H)</option>
+                                         <option value="seeding">Tim Terbaik (Poin &rarr; Set &rarr; Angka &rarr; H2H)</option>
                                          <option value="standard">Posisi Standar (Juara A & B + Persilangan)</option>
                                       </select>
                                       <p className="text-[10px] text-gray-400 normal-case">Peringkat 1 & 2 Global atau Juara A & B otomatis masuk ke Semi Final (BYE).</p>
