@@ -118,22 +118,21 @@ export default function App() {
     reader.readAsText(file); e.target.value = null; 
   };
 
-  // --- PERBAIKAN ARSITEKTUR PDF (ANTI-ZOMBIE) ---
   const handleExportPDF = () => {
-     // Kita hanya perlu memicu dialog print.
-     // CSS @media print (di bawah) akan mengurus bagian mana yang disembunyikan.
      window.print();
   };
 
-  // --- PERBAIKAN MESIN FOTOGRAFER (html-to-image toPng) ---
-  const handleExportPNG = async (elementId = 'master-print-area', filename = 'Jadwal_Induk') => {
+  const handleExportPNG = async (elementId = 'master-print-area', filename = 'Laporan_Turnamen') => {
     setIsExportingPng(true);
+    
+    // Trik "Pelepasan Bingkai": Tambahkan class khusus ke body untuk mencabut batasan tinggi sementara
+    document.body.classList.add('export-mode');
+    
     try {
       if (!window.htmlToImage) {
         if (!document.getElementById('html-to-image-script')) {
             const script = document.createElement('script'); 
             script.id = 'html-to-image-script'; 
-            // Menggunakan html-to-image versi stabil
             script.src = "https://cdnjs.cloudflare.com/ajax/libs/html-to-image/1.11.11/html-to-image.min.js";
             document.head.appendChild(script); 
             await new Promise((resolve, reject) => {
@@ -145,18 +144,16 @@ export default function App() {
         }
       }
       
+      // Beri waktu sebentar agar browser merender ulang ukuran penuh setelah class ditambahkan
+      await new Promise(r => setTimeout(r, 500)); 
+
       const element = document.getElementById(elementId);
       
-      // html-to-image: toPng
       const dataUrl = await window.htmlToImage.toPng(element, { 
           quality: 1, 
-          pixelRatio: 2, // Agar gambar tidak pecah
+          pixelRatio: 2, 
           backgroundColor: "#ffffff",
-          // Gaya injeksi saat dirender agar area full
-          style: {
-              maxHeight: 'none',
-              overflow: 'visible'
-          }
+          style: { margin: '0' }
       });
 
       const link = document.createElement("a"); 
@@ -167,6 +164,8 @@ export default function App() {
       console.error("Error Export PNG:", error);
       alert("Gagal mengekspor gambar PNG. " + (error.message || "Terdapat gambar/logo yang diblokir oleh CORS.")); 
     } finally { 
+      // Kembalikan bingkai modal seperti semula
+      document.body.classList.remove('export-mode');
       setIsExportingPng(false); 
     }
   };
@@ -539,7 +538,6 @@ export default function App() {
     }
   }
 
-  // --- JURU GAMBAR ESTETIK UNTUK BAGAN PROYEKSI MAUPUN RIIL ---
   const renderAestheticBracket = () => {
     const n = Number(numGroups);
     const isRealData = knockoutData.length > 0;
@@ -552,7 +550,7 @@ export default function App() {
         const w = matchInfo.winner;
 
         return (
-            <div className="bg-white border border-gray-100 rounded-2xl p-4 shadow-sm flex flex-col gap-1 w-full relative">
+            <div className="bg-white border border-gray-100 rounded-2xl p-4 shadow-sm flex flex-col gap-1 w-full relative print-break-inside-avoid">
                 <div className={`text-[9px] font-black flex justify-between ${w === tA && w !== '?' ? 'text-emerald-600' : 'opacity-60 text-gray-700'}`}>
                     <span className="truncate w-3/4">{tA}</span><span>{sA}</span>
                 </div>
@@ -575,7 +573,7 @@ export default function App() {
        const fMatch = isRealData && knockoutData.length === 3 ? knockoutData[2][0] : { teamA: "MENANG SF 1", teamB: "MENANG SF 2" };
 
        return (
-         <div className="flex gap-8 min-w-max items-center justify-start p-6 bg-gray-50/30 rounded-[40px] border border-gray-50">
+         <div className="flex gap-8 min-w-max items-center justify-start p-6 bg-gray-50/30 rounded-[40px] border border-gray-50 print-break-inside-avoid">
             <div className="flex flex-col gap-6 w-56">
                <div className="text-[9px] font-black text-gray-400 text-center mb-2 tracking-widest">PEREMPAT FINAL</div>
                {qfMatches.map((m, i) => <BracketBox key={i} matchInfo={m} />)}
@@ -586,14 +584,14 @@ export default function App() {
             </div>
             <div className="flex flex-col gap-6 w-64 items-center">
                <div className="text-[9px] font-black text-emerald-600 text-center mb-4 tracking-[0.3em]">PARTAI PUNCAK</div>
-               <div className="bg-emerald-50 border-2 border-emerald-200 rounded-[32px] p-8 shadow-xl flex flex-col gap-3 w-full text-center relative">
+               <div className="bg-emerald-50 border-2 border-emerald-200 rounded-[32px] p-8 shadow-xl flex flex-col gap-3 w-full text-center relative print-break-inside-avoid">
                   <div className="absolute -top-4 left-1/2 -translate-x-1/2 bg-emerald-500 text-white text-[8px] font-black px-4 py-1 rounded-full shadow-lg">FINALIS</div>
                   <div className={`text-xs font-black ${fMatch.winner === fMatch.teamA && fMatch.winner !== '?' ? 'text-emerald-700' : 'text-emerald-900 opacity-40'}`}>{fMatch.teamA}</div>
                   <div className="text-xs font-black text-emerald-500">VS</div>
                   <div className={`text-xs font-black ${fMatch.winner === fMatch.teamB && fMatch.winner !== '?' ? 'text-emerald-700' : 'text-emerald-900 opacity-40'}`}>{fMatch.teamB}</div>
                </div>
                
-               <div className="mt-8 text-center">
+               <div className="mt-8 text-center print-break-inside-avoid">
                   <div className="text-amber-500 font-black text-xs flex flex-col items-center gap-2"><IconTrophy /><span className="tracking-widest">JUARA 3 BERSAMA</span></div>
                   <p className="text-[8px] text-gray-400 mt-2 font-bold opacity-50 uppercase">(KALAH DI BABAK SEMI FINAL)</p>
                   {isRealData && jointThirdTeams.length === 2 && (
@@ -614,21 +612,21 @@ export default function App() {
        const fMatch = isRealData && knockoutData.length === 2 ? knockoutData[1][0] : { teamA: "MENANG SF 1", teamB: "MENANG SF 2" };
 
        return (
-         <div className="flex gap-10 min-w-max items-center justify-start p-6 bg-gray-50/30 rounded-[40px] border border-gray-50">
+         <div className="flex gap-10 min-w-max items-center justify-start p-6 bg-gray-50/30 rounded-[40px] border border-gray-50 print-break-inside-avoid">
             <div className="flex flex-col gap-6 w-56">
                <div className="text-[9px] font-black text-gray-400 text-center mb-2 tracking-widest">SEMI FINAL</div>
                {sfMatches.map((m, i) => <BracketBox key={i} matchInfo={m} />)}
             </div>
             <div className="flex flex-col gap-6 w-64 items-center">
                <div className="text-[9px] font-black text-emerald-600 text-center mb-4 tracking-[0.3em]">PARTAI PUNCAK</div>
-               <div className="bg-emerald-50 border-2 border-emerald-200 rounded-[32px] p-8 shadow-xl flex flex-col gap-3 w-full text-center relative">
+               <div className="bg-emerald-50 border-2 border-emerald-200 rounded-[32px] p-8 shadow-xl flex flex-col gap-3 w-full text-center relative print-break-inside-avoid">
                   <div className="absolute -top-4 left-1/2 -translate-x-1/2 bg-emerald-500 text-white text-[8px] font-black px-4 py-1 rounded-full shadow-lg">FINALIS</div>
                   <div className={`text-xs font-black ${fMatch.winner === fMatch.teamA && fMatch.winner !== '?' ? 'text-emerald-700' : 'text-emerald-900 opacity-40'}`}>{fMatch.teamA}</div>
                   <div className="text-xs font-black text-emerald-500">VS</div>
                   <div className={`text-xs font-black ${fMatch.winner === fMatch.teamB && fMatch.winner !== '?' ? 'text-emerald-700' : 'text-emerald-900 opacity-40'}`}>{fMatch.teamB}</div>
                </div>
                
-               <div className="mt-8 text-center">
+               <div className="mt-8 text-center print-break-inside-avoid">
                   <div className="text-amber-500 font-black text-xs flex flex-col items-center gap-2"><IconTrophy /><span className="tracking-widest">JUARA 3 BERSAMA</span></div>
                   <p className="text-[8px] text-gray-400 mt-2 font-bold opacity-50 uppercase">(KALAH DI BABAK SEMI FINAL)</p>
                   {isRealData && jointThirdTeams.length === 2 && (
@@ -643,7 +641,7 @@ export default function App() {
          </div>
        );
     }
-    return <div className="text-gray-400 text-xs font-bold p-8 text-center border-2 border-dashed rounded-3xl">BAGAN SISTEM GUGUR AKAN DITAMPILKAN BERDASARKAN HASIL FASE GRUP</div>;
+    return <div className="text-gray-400 text-xs font-bold p-8 text-center border-2 border-dashed rounded-3xl print-break-inside-avoid">BAGAN SISTEM GUGUR AKAN DITAMPILKAN BERDASARKAN HASIL FASE GRUP</div>;
   };
 
   const renderMatchCard = (match, isKnockout = false, index = null) => {
@@ -656,7 +654,7 @@ export default function App() {
     const isLive = hasStarted && !match.winner;
 
     return (
-      <div key={match.id} className={`bg-white rounded-3xl shadow-sm border ${isLive && !isProjectorMode ? 'border-red-400 shadow-md ring-4 ring-red-50' : theme.border} overflow-hidden flex flex-col transition-all duration-300 hover:shadow-md print:border-gray-300 print:shadow-none print:ring-0 ${isProjectorMode ? (isLive ? 'border-4 border-red-500 shadow-2xl' : 'border-none shadow-xl') : ''}`}>
+      <div key={match.id} className={`bg-white rounded-3xl shadow-sm border ${isLive && !isProjectorMode ? 'border-red-400 shadow-md ring-4 ring-red-50' : theme.border} overflow-hidden flex flex-col transition-all duration-300 hover:shadow-md print-break-inside-avoid print:border-gray-300 print:shadow-none print:ring-0 ${isProjectorMode ? (isLive ? 'border-4 border-red-500 shadow-2xl' : 'border-none shadow-xl') : ''}`}>
         <div className={`p-4 text-center border-b ${isLive ? 'border-red-200' : theme.border} ${match.winner ? (match.winner === 'SERI' ? 'bg-gray-100 border-transparent print:bg-gray-100' : `${theme.accent} ${theme.accentText} border-transparent print:bg-gray-100`) : isLive ? 'bg-red-50/80 print:bg-white' : `bg-gray-50/50 print:bg-white`} ${isProjectorMode ? 'py-5' : ''} relative`}>
           {isLive && <div className="no-print absolute left-4 top-1/2 -translate-y-1/2 flex items-center gap-1.5 bg-red-100 px-3 py-1.5 rounded-xl border border-red-200 shadow-sm"><span className="w-2.5 h-2.5 rounded-full bg-red-600 animate-pulse"></span><span className={`font-black text-red-700 uppercase tracking-widest ${isProjectorMode ? 'text-xs' : 'text-[10px]'}`}>LIVE</span></div>}
           {isKnockout ? ( <div className={`font-black tracking-widest uppercase ${isProjectorMode ? 'text-xl' : 'text-sm'} ${isLive ? 'text-red-800' : ''}`}>{match.title}</div> ) : (
@@ -685,7 +683,7 @@ export default function App() {
         </div>
         <div className={`bg-gray-50/50 flex-1 flex flex-col gap-3 print:bg-white ${isProjectorMode ? 'p-8' : 'p-5'}`}>
           {(!isTeamA_TBD && !isTeamB_TBD) ? match.parties.map((party, pIndex) => (
-            <div key={pIndex} className={`bg-white border ${theme.border} rounded-2xl relative shadow-sm ${isProjectorMode ? 'p-6' : 'p-3'}`}>
+            <div key={pIndex} className={`bg-white border ${theme.border} rounded-2xl relative shadow-sm print-break-inside-avoid ${isProjectorMode ? 'p-6' : 'p-3'}`}>
                {match.parties.length > 1 && ( <div className={`font-bold text-center text-gray-400 mb-3 uppercase tracking-widest border-b border-gray-100 pb-2 ${isProjectorMode ? 'text-sm' : 'text-[10px]'}`}> {party.label} {party.winner && <span className={`${party.winner === 'SERI' ? 'text-gray-400' : theme.textPrimary} ml-1`}>{party.winner === 'SERI' ? '(W.O)' : `(W: ${party.winner})`}</span>} </div> )}
                <div className="flex justify-center gap-4 sm:gap-8">
                  {[0, 1, 2].map((setIndex) => {
@@ -720,17 +718,27 @@ export default function App() {
         {`
           .hide-arrows::-webkit-outer-spin-button, .hide-arrows::-webkit-inner-spin-button { -webkit-appearance: none; margin: 0; } 
           .hide-arrows { -moz-appearance: textfield; } 
+          
+          /* TRIK PNG EXPORT: Menghapus batas scroll saat export */
+          .export-mode .master-modal-content { max-height: none !important; overflow: visible !important; height: auto !important; }
+          .export-mode #master-print-area { max-height: none !important; overflow: visible !important; height: auto !important; }
+          
           @media print { 
             @page { size: landscape; margin: 10mm; } 
             body { background-color: white !important; -webkit-print-color-adjust: exact; print-color-adjust: exact; } 
             .no-print { display: none !important; } 
             #capture-area { display: none !important; }
-            .print-break-inside-avoid { page-break-inside: avoid; } 
+            
+            /* INSTRUKSI PDF: Jangan potong kotak di tengah jalan */
+            .print-break-inside-avoid { break-inside: avoid; page-break-inside: avoid; } 
+            tr { break-inside: avoid; page-break-inside: avoid; }
             .print-border { border: 1px solid #e5e7eb !important; } 
             input[type="number"] { -moz-appearance: textfield; } 
-            .master-modal-overlay { position: absolute !important; inset: 0 !important; background: white !important; }
-            .master-modal-content { box-shadow: none !important; max-width: 100% !important; width: 100% !important; max-height: none !important; border-radius: 0 !important; }
-            #master-print-area { overflow: visible !important; max-height: none !important; padding: 0 !important; }
+            
+            /* Melepas bingkai Modal untuk Print */
+            .master-modal-overlay { position: absolute !important; inset: 0 !important; background: white !important; display: block !important; align-items: flex-start !important; }
+            .master-modal-content { box-shadow: none !important; max-width: 100% !important; width: 100% !important; max-height: none !important; height: auto !important; border-radius: 0 !important; overflow: visible !important; }
+            #master-print-area { overflow: visible !important; max-height: none !important; height: auto !important; padding: 0 !important; }
           }
         `}
       </style>
@@ -997,7 +1005,7 @@ export default function App() {
             </div>
           )}
 
-          {/* STAGE 3: FASE AKTIF (GUGUR) - (Untuk render Card yang dapat di-edit di dashboard bawah) */}
+          {/* STAGE 3: FASE AKTIF (GUGUR) */}
           {((stage === 3) || (stage === 1 && tournamentType === 'Knocked Out Round')) && knockoutData.length > 0 && (
             <div className={`space-y-8 animate-in fade-in duration-500 ${isProjectorMode ? 'space-y-12' : ''}`}>
               <div className={`text-center bg-white rounded-3xl shadow-sm border border-gray-100 print:border-none print:shadow-none print:p-2 ${isProjectorMode ? 'p-12 shadow-2xl border-none' : 'p-8'}`}>
@@ -1040,7 +1048,7 @@ export default function App() {
              </div>
 
              <div id="master-print-area" className="p-10 overflow-y-auto bg-white flex-1 uppercase relative">
-                <div className="text-center mb-10 border-b pb-8">
+                <div className="text-center mb-10 border-b pb-8 print-break-inside-avoid">
                    <h1 className="text-4xl font-black uppercase text-gray-900 tracking-tight mb-2">{championshipTitles[0] || "NAMA KEJUARAAN"}</h1>
                    <p className="text-xl font-bold text-gray-500 uppercase">{championshipTitles[1] || "KETERANGAN"}</p>
                    <p className="text-xs font-bold text-gray-400 mt-2 uppercase">{championshipTitles[2]}</p>
@@ -1048,11 +1056,11 @@ export default function App() {
 
                 {/* LAYER 1: STANDINGS */}
                 {(tournamentType === 'Groups' || tournamentType === 'Group') && (
-                  <div className="mb-12">
+                  <div className="mb-12 print-break-inside-avoid">
                      <h3 className="text-lg font-black uppercase mb-6 border-l-4 border-amber-400 pl-4 text-gray-800">Klasemen Sementara</h3>
                      <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
                         {Object.entries(getStandings()).map(([gn, gt]) => (
-                          <div key={gn} className="bg-gray-50 p-4 rounded-2xl border border-gray-100 shadow-sm print:break-inside-avoid">
+                          <div key={gn} className="bg-gray-50 p-4 rounded-2xl border border-gray-100 shadow-sm print-break-inside-avoid">
                              <div className="text-center font-black text-xs mb-3 text-gray-400 uppercase tracking-widest">{gn}</div>
                              <table className="w-full text-xs font-bold">
                                 <thead><tr className="text-gray-400 border-b border-gray-200"><th className="p-2 text-left">POS</th><th className="p-2 text-left">TIM</th><th className="p-2">W-L</th><th className="p-2 text-right">PTS</th></tr></thead>
@@ -1065,7 +1073,7 @@ export default function App() {
                 )}
 
                 {/* LAYER 2: KNOCKOUT BRACKET ESTETIK */}
-                <div className="mb-12">
+                <div className="mb-12 print-break-inside-avoid">
                     <h3 className="text-lg font-black uppercase mb-6 border-l-4 border-emerald-500 pl-4 text-gray-800">Bagan Sistem Gugur</h3>
                     <div className="overflow-x-auto pb-4">
                         {renderAestheticBracket()}
@@ -1073,7 +1081,7 @@ export default function App() {
                 </div>
 
                 {/* LAYER 3: MATCH LOG HISTORY */}
-                <div className="mb-12">
+                <div className="mb-12 print-break-inside-avoid">
                    <h3 className="text-lg font-black uppercase mb-6 border-l-4 border-blue-500 pl-4 text-gray-800">Seluruh Jadwal & Hasil</h3>
                    <table className="w-full border-collapse">
                       <thead><tr className="bg-gray-100 text-[10px] font-black uppercase tracking-widest text-gray-500"><th className="p-4 text-left rounded-tl-xl">ID</th><th className="p-4 text-left">FASE / GRUP</th><th className="p-4 text-center">PERTANDINGAN</th><th className="p-4 text-right rounded-tr-xl">HASIL</th></tr></thead>
