@@ -118,52 +118,54 @@ export default function App() {
     reader.readAsText(file); e.target.value = null; 
   };
 
+  // --- PERBAIKAN ARSITEKTUR PDF (ANTI-ZOMBIE) ---
   const handleExportPDF = () => {
-     const content = document.getElementById('master-print-area').innerHTML;
-     const original = document.body.innerHTML;
-     document.body.innerHTML = `<html><head><title>LAPORAN TURNAMEN</title><style>body { text-transform: uppercase; font-family: sans-serif; background-color: white !important; }</style></head><body>${content}</body></html>`;
+     // Kita hanya perlu memicu dialog print.
+     // CSS @media print (di bawah) akan mengurus bagian mana yang disembunyikan.
      window.print();
-     document.body.innerHTML = original;
-     window.location.reload();
   };
 
-  // --- PERBAIKAN LOGIKA EKSPOR PNG ---
+  // --- PERBAIKAN MESIN FOTOGRAFER (html-to-image toPng) ---
   const handleExportPNG = async (elementId = 'master-print-area', filename = 'Jadwal_Induk') => {
     setIsExportingPng(true);
     try {
-      if (!window.html2canvas) {
-        if (!document.getElementById('html2canvas-script')) {
-            const script = document.createElement('script'); script.id = 'html2canvas-script'; script.src = "https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js";
-            document.head.appendChild(script); await new Promise(resolve => script.onload = resolve);
-        } else { await new Promise(r => setTimeout(r, 1000)); }
+      if (!window.htmlToImage) {
+        if (!document.getElementById('html-to-image-script')) {
+            const script = document.createElement('script'); 
+            script.id = 'html-to-image-script'; 
+            // Menggunakan html-to-image versi stabil
+            script.src = "https://cdnjs.cloudflare.com/ajax/libs/html-to-image/1.11.11/html-to-image.min.js";
+            document.head.appendChild(script); 
+            await new Promise((resolve, reject) => {
+                script.onload = resolve;
+                script.onerror = () => reject(new Error("Gagal memuat pustaka html-to-image"));
+            });
+        } else { 
+            await new Promise(r => setTimeout(r, 1000)); 
+        }
       }
+      
       const element = document.getElementById(elementId);
       
-      // Trik CSS: Hapus batasan tinggi sementara agar terfoto full
-      const originalMaxHeight = element.style.maxHeight;
-      const originalOverflow = element.style.overflow;
-      element.style.maxHeight = 'none';
-      element.style.overflow = 'visible';
-
-      const canvas = await window.html2canvas(element, { 
-          scale: 2, 
-          useCORS: true, 
-          allowTaint: true, // Bantu atasi logo luar
+      // html-to-image: toPng
+      const dataUrl = await window.htmlToImage.toPng(element, { 
+          quality: 1, 
+          pixelRatio: 2, // Agar gambar tidak pecah
           backgroundColor: "#ffffff",
-          windowHeight: element.scrollHeight
+          // Gaya injeksi saat dirender agar area full
+          style: {
+              maxHeight: 'none',
+              overflow: 'visible'
+          }
       });
-
-      // Kembalikan batasan tinggi seperti semula
-      element.style.maxHeight = originalMaxHeight;
-      element.style.overflow = originalOverflow;
 
       const link = document.createElement("a"); 
       link.download = `${filename}_${new Date().toISOString().slice(0,10)}.png`; 
-      link.href = canvas.toDataURL("image/png"); 
+      link.href = dataUrl; 
       link.click();
     } catch (error) { 
-      console.error(error);
-      alert("Gagal membuat gambar PNG. Pastikan logo yang diunggah valid."); 
+      console.error("Error Export PNG:", error);
+      alert("Gagal mengekspor gambar PNG. " + (error.message || "Terdapat gambar/logo yang diblokir oleh CORS.")); 
     } finally { 
       setIsExportingPng(false); 
     }
@@ -524,13 +526,24 @@ export default function App() {
     }
   };
 
+  let jointThirdTeams = [];
+  if (knockoutData.length > 0) {
+    const semiFinalRound = knockoutData.find(r => r && r[0] && r[0].title === 'SEMI FINAL');
+    if (semiFinalRound && semiFinalRound.length === 2) {
+      const m1 = semiFinalRound[0]; const m2 = semiFinalRound[1];
+      if (m1.winner && m2.winner && m1.winner !== '?' && m2.winner !== '?') {
+         const loser1 = m1.winner === m1.teamA ? m1.teamB : m1.teamA;
+         const loser2 = m2.winner === m2.teamA ? m2.teamB : m2.teamA;
+         if (loser1 !== '?' && loser2 !== '?') jointThirdTeams = [loser1, loser2];
+      }
+    }
+  }
+
   // --- JURU GAMBAR ESTETIK UNTUK BAGAN PROYEKSI MAUPUN RIIL ---
   const renderAestheticBracket = () => {
     const n = Number(numGroups);
-    // Tentukan apakah kita menggunakan data Riil atau Proyeksi Dummy
     const isRealData = knockoutData.length > 0;
     
-    // Fungsi pembantu untuk merender kotak pertandingan yang seragam
     const BracketBox = ({ matchInfo }) => {
         const tA = matchInfo.teamA || "?";
         const tB = matchInfo.teamB || "?";
@@ -552,15 +565,14 @@ export default function App() {
     };
 
     if (tournamentType === 'Groups' && n === 4) {
-       // Siapkan Data Perempat Final (QF), Semi Final (SF), dan Final (F)
        const qfMatches = isRealData && knockoutData.length === 3 ? knockoutData[0] : [
-           { teamA: "[JUARA A]", teamB: "[RUNNER B]" }, { teamA: "[JUARA C]", teamB: "[RUNNER D]" },
-           { teamA: "[JUARA B]", teamB: "[RUNNER A]" }, { teamA: "[JUARA D]", teamB: "[RUNNER C]" }
+           { teamA: "JUARA A", teamB: "RUNNER B" }, { teamA: "JUARA C", teamB: "RUNNER D" },
+           { teamA: "JUARA B", teamB: "RUNNER A" }, { teamA: "JUARA D", teamB: "RUNNER C" }
        ];
        const sfMatches = isRealData && knockoutData.length === 3 ? knockoutData[1] : [
-           { teamA: "[MENANG PF 1]", teamB: "[MENANG PF 2]" }, { teamA: "[MENANG PF 3]", teamB: "[MENANG PF 4]" }
+           { teamA: "MENANG PF 1", teamB: "MENANG PF 2" }, { teamA: "MENANG PF 3", teamB: "MENANG PF 4" }
        ];
-       const fMatch = isRealData && knockoutData.length === 3 ? knockoutData[2][0] : { teamA: "[MENANG SF 1]", teamB: "[MENANG SF 2]" };
+       const fMatch = isRealData && knockoutData.length === 3 ? knockoutData[2][0] : { teamA: "MENANG SF 1", teamB: "MENANG SF 2" };
 
        return (
          <div className="flex gap-8 min-w-max items-center justify-start p-6 bg-gray-50/30 rounded-[40px] border border-gray-50">
@@ -596,11 +608,10 @@ export default function App() {
          </div>
        );
     } else if (tournamentType === 'Groups' && n === 2) {
-       // Siapkan Data Semi Final (SF) dan Final (F)
        const sfMatches = isRealData && knockoutData.length === 2 ? knockoutData[0] : [
-           { teamA: "[JUARA A]", teamB: "[RUNNER B]" }, { teamA: "[JUARA B]", teamB: "[RUNNER A]" }
+           { teamA: "JUARA A", teamB: "RUNNER B" }, { teamA: "JUARA B", teamB: "RUNNER A" }
        ];
-       const fMatch = isRealData && knockoutData.length === 2 ? knockoutData[1][0] : { teamA: "[MENANG SF 1]", teamB: "[MENANG SF 2]" };
+       const fMatch = isRealData && knockoutData.length === 2 ? knockoutData[1][0] : { teamA: "MENANG SF 1", teamB: "MENANG SF 2" };
 
        return (
          <div className="flex gap-10 min-w-max items-center justify-start p-6 bg-gray-50/30 rounded-[40px] border border-gray-50">
@@ -632,7 +643,7 @@ export default function App() {
          </div>
        );
     }
-    return <div className="text-gray-400 text-xs font-bold p-8 text-center border-2 border-dashed rounded-3xl">PROYEKSI BAGAN AKAN MUNCUL SETELAH FASE GRUP SELESAI</div>;
+    return <div className="text-gray-400 text-xs font-bold p-8 text-center border-2 border-dashed rounded-3xl">BAGAN SISTEM GUGUR AKAN DITAMPILKAN BERDASARKAN HASIL FASE GRUP</div>;
   };
 
   const renderMatchCard = (match, isKnockout = false, index = null) => {
@@ -703,22 +714,26 @@ export default function App() {
     );
   };
 
-  let jointThirdTeams = [];
-  if (knockoutData.length > 0) {
-    const semiFinalRound = knockoutData.find(r => r && r[0] && r[0].title === 'SEMI FINAL');
-    if (semiFinalRound && semiFinalRound.length === 2) {
-      const m1 = semiFinalRound[0]; const m2 = semiFinalRound[1];
-      if (m1.winner && m2.winner && m1.winner !== '?' && m2.winner !== '?') {
-         const loser1 = m1.winner === m1.teamA ? m1.teamB : m1.teamA;
-         const loser2 = m2.winner === m2.teamA ? m2.teamB : m2.teamA;
-         if (loser1 !== '?' && loser2 !== '?') jointThirdTeams = [loser1, loser2];
-      }
-    }
-  }
-
   return (
     <div className={`min-h-screen uppercase ${theme.bgApp} font-sans text-gray-800 pb-20 transition-all duration-500 ${isProjectorMode ? 'px-2 md:px-8' : ''}`}>
-      <style>{`.hide-arrows::-webkit-outer-spin-button, .hide-arrows::-webkit-inner-spin-button { -webkit-appearance: none; margin: 0; } .hide-arrows { -moz-appearance: textfield; } @media print { @page { size: landscape; margin: 10mm; } body { background-color: white !important; -webkit-print-color-adjust: exact; print-color-adjust: exact; } .no-print { display: none !important; } .print-break-inside-avoid { page-break-inside: avoid; } .print-border { border: 1px solid #e5e7eb !important; } input[type="number"] { -moz-appearance: textfield; } }`}</style>
+      <style>
+        {`
+          .hide-arrows::-webkit-outer-spin-button, .hide-arrows::-webkit-inner-spin-button { -webkit-appearance: none; margin: 0; } 
+          .hide-arrows { -moz-appearance: textfield; } 
+          @media print { 
+            @page { size: landscape; margin: 10mm; } 
+            body { background-color: white !important; -webkit-print-color-adjust: exact; print-color-adjust: exact; } 
+            .no-print { display: none !important; } 
+            #capture-area { display: none !important; }
+            .print-break-inside-avoid { page-break-inside: avoid; } 
+            .print-border { border: 1px solid #e5e7eb !important; } 
+            input[type="number"] { -moz-appearance: textfield; } 
+            .master-modal-overlay { position: absolute !important; inset: 0 !important; background: white !important; }
+            .master-modal-content { box-shadow: none !important; max-width: 100% !important; width: 100% !important; max-height: none !important; border-radius: 0 !important; }
+            #master-print-area { overflow: visible !important; max-height: none !important; padding: 0 !important; }
+          }
+        `}
+      </style>
 
       {isProjectorMode && <button onClick={handleExitProjectorMode} className="no-print fixed bottom-8 right-8 bg-white text-red-600 px-6 py-4 rounded-full shadow-2xl font-black z-50 flex items-center gap-3 animate-bounce border-4 border-red-100 hover:bg-red-50"><IconX /> EXIT</button>}
 
@@ -741,7 +756,7 @@ export default function App() {
         </div>
       )}
 
-      <div id="capture-area" className={`${isProjectorMode ? 'bg-transparent' : 'bg-transparent'} min-h-screen pb-10`}>
+      <div id="capture-area" className={`${isProjectorMode ? 'bg-transparent' : 'bg-transparent'} min-h-screen pb-10 ${showMasterModal ? 'print:hidden' : ''}`}>
         <main className={`${isProjectorMode ? 'w-full max-w-full mt-4' : 'max-w-7xl mx-auto mt-6'} px-4 space-y-6 transition-all`}>
           
           {/* DASHBOARD TOOLS */}
@@ -1012,11 +1027,11 @@ export default function App() {
         </main>
       </div>
 
-      {/* MODAL JADWAL INDUK (MASTER REPORT TERPADU DENGAN EKSPOR SAJA) */}
+      {/* MODAL JADWAL INDUK (MASTER REPORT) */}
       {showMasterModal && (
-        <div className="fixed inset-0 z-[60] bg-black/60 backdrop-blur-sm flex items-center justify-center p-4 animate-in fade-in duration-300">
-          <div className="bg-white w-full max-w-5xl max-h-[90vh] rounded-3xl shadow-2xl flex flex-col overflow-hidden">
-             <div className={`p-6 flex justify-between items-center ${theme.header} text-white`}>
+        <div className="fixed inset-0 z-[60] bg-black/60 backdrop-blur-sm flex items-center justify-center p-4 animate-in fade-in duration-300 master-modal-overlay">
+          <div className="bg-white w-full max-w-5xl max-h-[90vh] rounded-3xl shadow-2xl flex flex-col overflow-hidden master-modal-content">
+             <div className={`p-6 flex justify-between items-center ${theme.header} text-white no-print`}>
                 <div>
                    <h2 className="text-2xl font-black uppercase tracking-tight">Master Schedule & Results</h2>
                    <p className="text-xs opacity-70 font-bold tracking-widest uppercase">Laporan Klasemen & Jadwal Induk Terpadu</p>
@@ -1037,7 +1052,7 @@ export default function App() {
                      <h3 className="text-lg font-black uppercase mb-6 border-l-4 border-amber-400 pl-4 text-gray-800">Klasemen Sementara</h3>
                      <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
                         {Object.entries(getStandings()).map(([gn, gt]) => (
-                          <div key={gn} className="bg-gray-50 p-4 rounded-2xl border border-gray-100 shadow-sm">
+                          <div key={gn} className="bg-gray-50 p-4 rounded-2xl border border-gray-100 shadow-sm print:break-inside-avoid">
                              <div className="text-center font-black text-xs mb-3 text-gray-400 uppercase tracking-widest">{gn}</div>
                              <table className="w-full text-xs font-bold">
                                 <thead><tr className="text-gray-400 border-b border-gray-200"><th className="p-2 text-left">POS</th><th className="p-2 text-left">TIM</th><th className="p-2">W-L</th><th className="p-2 text-right">PTS</th></tr></thead>
@@ -1049,7 +1064,7 @@ export default function App() {
                   </div>
                 )}
 
-                {/* LAYER 2: KNOCKOUT BRACKET ESTETIK (BISA PROYEKSI MAUPUN RIIL) */}
+                {/* LAYER 2: KNOCKOUT BRACKET ESTETIK */}
                 <div className="mb-12">
                     <h3 className="text-lg font-black uppercase mb-6 border-l-4 border-emerald-500 pl-4 text-gray-800">Bagan Sistem Gugur</h3>
                     <div className="overflow-x-auto pb-4">
@@ -1088,7 +1103,7 @@ export default function App() {
                 </div>
              </div>
 
-             <div className="p-6 bg-gray-50 border-t flex justify-end gap-3 shrink-0">
+             <div className="p-6 bg-gray-50 border-t flex justify-end gap-3 shrink-0 no-print">
                 <button onClick={() => handleExportPNG('master-print-area', 'Laporan_Turnamen')} disabled={isExportingPng} className="bg-white border border-gray-200 text-gray-700 px-6 py-3 rounded-2xl font-black text-sm hover:bg-gray-100 transition-colors shadow-sm disabled:opacity-50 flex items-center gap-2">
                     {isExportingPng ? <span className="animate-spin w-4 h-4 border-2 border-gray-400 border-t-transparent rounded-full"></span> : <IconImage />} Export Gambar (PNG)
                 </button>
