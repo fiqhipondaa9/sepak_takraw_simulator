@@ -63,7 +63,7 @@ export default function App() {
   const [isExportingPng, setIsExportingPng] = useState(false);
   
   const [undoHistory, setUndoHistory] = useState(null);
-  const [showCoffeeModal, setShowCoffeeModal] = useState(false); // Modal Apresiasi
+  const [showCoffeeModal, setShowCoffeeModal] = useState(false); 
 
   const isTeamEvent = selectedEventFormat.toUpperCase().includes('TEAM');
   let eventCategory = isTeamEvent ? 'team' : 'single';
@@ -174,7 +174,9 @@ export default function App() {
   const handleCopyWhatsApp = () => {
     const standings = getStandings();
     let waText = `🏆 *FASE PENYISIHAN* 🏆\n*${championshipTitles[0]}*\n\n`;
-    Object.entries(standings).forEach(([groupName, groupTeams]) => {
+    Object.entries(standings)
+      .filter(([groupName]) => groupName !== 'Unknown') // Filter agar Grup Siluman tidak disalin
+      .forEach(([groupName, groupTeams]) => {
       waText += `*${groupName}*\n`;
       groupTeams.forEach((stat, index) => {
         let medal = index === 0 ? '🥇 ' : index === 1 ? '🥈 ' : index === 2 ? '🥉 ' : '▪️ ';
@@ -570,6 +572,9 @@ export default function App() {
     const n = Number(numGroups);
     const isRealData = knockoutData.length > 0;
     
+    // Cek dinamis: apakah kita sedang berada di Fase 2 (Grup D & E)?
+    const isPhase2 = Object.values(groupAssignments).includes('D');
+    
     const getTeamScore = (matchInfo, isTeamA) => {
         if (!matchInfo || matchInfo.winner === null || matchInfo.winner === undefined || matchInfo.winner === '?') return "-";
         if (isTeamEvent) return isTeamA ? matchInfo.winsA : matchInfo.winsB;
@@ -659,7 +664,8 @@ export default function App() {
        );
     } else if (tournamentType === 'Groups' && n === 2) {
        const sfMatches = isRealData && knockoutData.length === 2 ? knockoutData[0] : [
-           { teamA: "JUARA A", teamB: "RUNNER B" }, { teamA: "JUARA B", teamB: "RUNNER A" }
+           { teamA: isPhase2 ? "JUARA D" : "JUARA A", teamB: isPhase2 ? "RUNNER E" : "RUNNER B" }, 
+           { teamA: isPhase2 ? "JUARA E" : "JUARA B", teamB: isPhase2 ? "RUNNER D" : "RUNNER A" }
        ];
        const fMatch = isRealData && knockoutData.length === 2 ? knockoutData[1][0] : { teamA: "MENANG SF 1", teamB: "MENANG SF 2" };
 
@@ -780,17 +786,24 @@ export default function App() {
         {`
           .hide-arrows::-webkit-outer-spin-button, .hide-arrows::-webkit-inner-spin-button { -webkit-appearance: none; margin: 0; } 
           .hide-arrows { -moz-appearance: textfield; } 
+          
+          /* TRIK PNG EXPORT */
           .export-mode .master-modal-content { max-height: none !important; overflow: visible !important; height: auto !important; }
           .export-mode #master-print-area { max-height: none !important; overflow: visible !important; height: auto !important; }
+          
           @media print { 
             @page { size: landscape; margin: 10mm; } 
             body { background-color: white !important; -webkit-print-color-adjust: exact; print-color-adjust: exact; } 
             .no-print { display: none !important; } 
             #capture-area { display: none !important; }
+            
+            /* INSTRUKSI PDF */
             .print-break-inside-avoid { break-inside: avoid; page-break-inside: avoid; } 
             tr { break-inside: avoid; page-break-inside: avoid; }
             .print-border { border: 1px solid #e5e7eb !important; } 
             input[type="number"] { -moz-appearance: textfield; } 
+            
+            /* Melepas bingkai Modal untuk Print */
             .master-modal-overlay { position: absolute !important; inset: 0 !important; background: white !important; display: block !important; align-items: flex-start !important; }
             .master-modal-content { box-shadow: none !important; max-width: 100% !important; width: 100% !important; max-height: none !important; height: auto !important; border-radius: 0 !important; overflow: visible !important; }
             #master-print-area { overflow: visible !important; max-height: none !important; height: auto !important; padding: 0 !important; }
@@ -831,9 +844,9 @@ export default function App() {
               <div className="flex bg-gray-50 rounded-xl p-1 border border-gray-100 mr-2">
                  {Object.keys(themes).map(t => ( <button key={t} onClick={() => setActiveTheme(t)} className={`w-6 h-6 sm:w-8 sm:h-8 rounded-lg flex items-center justify-center transition-all ${activeTheme === t ? 'bg-white shadow-sm scale-110' : 'hover:bg-gray-200'}`} title={themes[t].name}><div className={`w-3 h-3 sm:w-4 sm:h-4 rounded-full ${themes[t].primary}`}></div></button> ))}
               </div>
-              <button onClick={() => setShowCoffeeModal(true)} className="bg-amber-100 text-amber-700 hover:bg-amber-200 p-2 sm:px-4 sm:py-2 rounded-xl flex items-center gap-2 font-bold transition-colors shadow-sm text-xs sm:text-sm" title="Traktir Kopi"><IconCoffee /> <span className="hidden md:inline">APRESIASI</span></button>
-              <label className={`cursor-pointer ${theme.soft} ${theme.textPrimary} hover:bg-gray-100 px-4 py-2 rounded-xl flex items-center gap-2 transition-colors font-bold text-xs sm:text-sm`}><IconFolder /> <span className="hidden md:inline">OPEN</span><input type="file" accept=".json" hidden onChange={handleOpenFile} /></label>
-              <button onClick={handleSaveFile} className={`${theme.primary} ${theme.primaryHover} text-white px-4 py-2 rounded-xl flex items-center gap-2 font-bold transition-colors shadow-md text-xs sm:text-sm`}><IconSave /> <span className="hidden md:inline">SAVE</span></button>
+              <button onClick={() => setShowCoffeeModal(true)} className="bg-amber-100 text-amber-700 hover:bg-amber-200 p-2 sm:px-4 sm:py-2 rounded-xl flex items-center gap-2 font-bold transition-colors shadow-sm text-xs sm:text-sm" title="Traktir Kopi"><IconCoffee /> <span className="hidden md:inline">Apresiasi</span></button>
+              <label className={`cursor-pointer ${theme.soft} ${theme.textPrimary} hover:bg-gray-100 px-4 py-2 rounded-xl flex items-center gap-2 transition-colors font-bold text-xs sm:text-sm`}><IconFolder /> <span className="hidden md:inline">Open</span><input type="file" accept=".json" hidden onChange={handleOpenFile} /></label>
+              <button onClick={handleSaveFile} className={`${theme.primary} ${theme.primaryHover} text-white px-4 py-2 rounded-xl flex items-center gap-2 font-bold transition-colors shadow-md text-xs sm:text-sm`}><IconSave /> <span className="hidden md:inline">Save</span></button>
            </div>
         </div>
       )}
@@ -984,7 +997,9 @@ export default function App() {
                     </div>
                     
                     <div className={`grid grid-cols-1 lg:grid-cols-2 print:gap-4 print:p-2 ${isProjectorMode ? 'p-8 gap-8 bg-white' : 'p-6 gap-6 bg-gray-50/50'}`}>
-                      {Object.entries(getStandings()).map(([groupName, groupTeams]) => (
+                      {Object.entries(getStandings())
+                        .filter(([groupName]) => groupName !== 'Unknown') // Filter Grup Siluman
+                        .map(([groupName, groupTeams]) => (
                         <div key={groupName} className="bg-white border border-gray-100 rounded-3xl overflow-hidden print-break-inside-avoid shadow-sm flex flex-col">
                           <div className={`font-black uppercase tracking-widest text-center border-b border-gray-100 print:bg-gray-100 ${isProjectorMode ? 'px-6 py-5 text-2xl text-gray-800 bg-gray-50' : 'px-4 py-4 text-sm text-gray-400'}`}>{groupName}</div>
                           <div className="overflow-x-auto flex-1">
@@ -1145,7 +1160,9 @@ export default function App() {
                   <div className="mb-12 print-break-inside-avoid">
                      <h3 className="text-lg font-black uppercase mb-6 border-l-4 border-amber-400 pl-4 text-gray-800">FASE PENYISIHAN</h3>
                      <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-                        {Object.entries(getStandings()).map(([gn, gt]) => (
+                        {Object.entries(getStandings())
+                          .filter(([groupName]) => groupName !== 'Unknown') // Filter Grup Siluman
+                          .map(([gn, gt]) => (
                           <div key={gn} className="bg-gray-50 p-4 rounded-2xl border border-gray-100 shadow-sm print-break-inside-avoid">
                              <div className="text-center font-black text-xs mb-3 text-gray-400 uppercase tracking-widest">{gn}</div>
                              <table className="w-full text-xs font-bold text-left whitespace-nowrap">
