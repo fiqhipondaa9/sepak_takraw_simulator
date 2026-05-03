@@ -18,6 +18,7 @@ const IconArrowUp = () => <svg className="w-4 h-4" xmlns="http://www.w3.org/2000
 const IconArrowDown = () => <svg className="w-4 h-4" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><polyline points="19 12 12 19 5 12"/></svg>;
 const IconCopy = () => <svg className="w-4 h-4" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>;
 const IconList = () => <svg className="w-5 h-5" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><line x1="8" y1="6" x2="21" y2="6"/><line x1="8" y1="12" x2="21" y2="12"/><line x1="8" y1="18" x2="21" y2="18"/><line x1="3" y1="6" x2="3.01" y2="6"/><line x1="3" y1="12" x2="3.01" y2="12"/><line x1="3" y1="18" x2="3.01" y2="18"/></svg>;
+const IconUndo = () => <svg className="w-4 h-4" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M3 7v6h6"/><path d="M21 17a9 9 0 0 0-9-9 9 9 0 0 0-6 2.3L3 13"/></svg>;
 
 // --- KONFIGURASI TEMA ---
 const themes = {
@@ -59,6 +60,9 @@ export default function App() {
 
   const [isProjectorMode, setIsProjectorMode] = useState(false);
   const [isExportingPng, setIsExportingPng] = useState(false);
+  
+  // Fitur "Mesin Waktu" / Rollback Snapshot
+  const [undoHistory, setUndoHistory] = useState(null);
 
   const isTeamEvent = selectedEventFormat.toUpperCase().includes('TEAM');
   let eventCategory = isTeamEvent ? 'team' : 'single';
@@ -113,6 +117,7 @@ export default function App() {
         setTeamLogos(data.teamLogos || {}); setSponsorLogos(data.sponsorLogos || []); if (data.championshipTitles) setChampionshipTitles(data.championshipTitles);
         setKnockoutData(data.knockoutData || []); setCourts(data.courts || ['Lapangan Utama', 'Lapangan B']);
         if (data.activeTheme && themes[data.activeTheme]) setActiveTheme(data.activeTheme);
+        setUndoHistory(null); // Reset history on open
       } catch (err) { alert("Gagal memuat! Format file tidak valid."); }
     };
     reader.readAsText(file); e.target.value = null; 
@@ -124,8 +129,6 @@ export default function App() {
 
   const handleExportPNG = async (elementId = 'master-print-area', filename = 'Laporan_Turnamen') => {
     setIsExportingPng(true);
-    
-    // Trik "Pelepasan Bingkai": Tambahkan class khusus ke body untuk mencabut batasan tinggi sementara
     document.body.classList.add('export-mode');
     
     try {
@@ -144,11 +147,9 @@ export default function App() {
         }
       }
       
-      // Beri waktu sebentar agar browser merender ulang ukuran penuh setelah class ditambahkan
       await new Promise(r => setTimeout(r, 500)); 
 
       const element = document.getElementById(elementId);
-      
       const dataUrl = await window.htmlToImage.toPng(element, { 
           quality: 1, 
           pixelRatio: 2, 
@@ -164,7 +165,6 @@ export default function App() {
       console.error("Error Export PNG:", error);
       alert("Gagal mengekspor gambar PNG. " + (error.message || "Terdapat gambar/logo yang diblokir oleh CORS.")); 
     } finally { 
-      // Kembalikan bingkai modal seperti semula
       document.body.classList.remove('export-mode');
       setIsExportingPng(false); 
     }
@@ -172,7 +172,7 @@ export default function App() {
 
   const handleCopyWhatsApp = () => {
     const standings = getStandings();
-    let waText = `🏆 *KLASEMEN SEMENTARA* 🏆\n*${championshipTitles[0]}*\n\n`;
+    let waText = `🏆 *FASE PENYISIHAN* 🏆\n*${championshipTitles[0]}*\n\n`;
     Object.entries(standings).forEach(([groupName, groupTeams]) => {
       waText += `*${groupName}*\n`;
       groupTeams.forEach((stat, index) => {
@@ -184,6 +184,34 @@ export default function App() {
     const textArea = document.createElement("textarea"); textArea.value = waText; document.body.appendChild(textArea); textArea.select();
     try { document.execCommand('copy'); alert("✅ Klasemen disalin! Silakan Paste di grup WhatsApp."); } 
     catch (err) { alert("❌ Gagal menyalin."); } document.body.removeChild(textArea);
+  };
+
+  // --- LOGIKA SNAPSHOT & ROLLBACK (UNDO) ---
+  const saveSnapshot = () => {
+    setUndoHistory({
+        stage, 
+        schedule: [...schedule], 
+        matchHistory: [...matchHistory], 
+        knockoutData: JSON.parse(JSON.stringify(knockoutData)), 
+        teams: [...teams], 
+        groupAssignments: {...groupAssignments}, 
+        tournamentType, 
+        numGroups
+    });
+  };
+
+  const handleRollback = () => {
+    if (undoHistory && window.confirm("Batalkan Lanjut Fase? Anda akan kembali ke fase sebelumnya dan bisa mengubah skor lagi.")) {
+        setStage(undoHistory.stage);
+        setSchedule(undoHistory.schedule);
+        setMatchHistory(undoHistory.matchHistory);
+        setKnockoutData(undoHistory.knockoutData);
+        setTeams(undoHistory.teams);
+        setGroupAssignments(undoHistory.groupAssignments);
+        setTournamentType(undoHistory.tournamentType);
+        setNumGroups(undoHistory.numGroups);
+        setUndoHistory(null);
+    }
   };
 
   const handleAddSponsor = (e) => { const file = e.target.files[0]; if (file) { const reader = new FileReader(); reader.onloadend = () => setSponsorLogos([...sponsorLogos, reader.result]); reader.readAsDataURL(file); } };
@@ -254,6 +282,7 @@ export default function App() {
 
   const generateSchedule = () => {
     if (tournamentType === 'Groups' && !teams.every(team => groupAssignments[team])) return alert("Ada tim yang belum masuk ke dalam grup!");
+    saveSnapshot(); // Simpan riwayat sblm buat jadwal
     
     let allMatches = [];
     const activeNG = Number(numGroups) || 2;
@@ -336,6 +365,9 @@ export default function App() {
     let q = [];
     Object.values(std).forEach(gt => { if (gt[0]) q.push(gt[0]); if (gt[1]) q.push(gt[1]); });
     if (q.length < 2) return alert("Tim tidak cukup!");
+    
+    saveSnapshot(); // Simpan riwayat sblm lanjut fase
+
     setMatchHistory([...matchHistory, ...schedule]);
     const startId = [...matchHistory, ...schedule].length + 1;
 
@@ -393,6 +425,9 @@ export default function App() {
     const tD1 = gD[0]?.team; const tD2 = gD[1]?.team;
     const tE1 = gE[0]?.team; const tE2 = gE[1]?.team;
     if(!tD1||!tD2||!tE1||!tE2) return alert("Selesaikan semua pertandingan Fase 2 terlebih dahulu!");
+    
+    saveSnapshot(); // Simpan riwayat sblm lanjut semi final
+
     setMatchHistory([...matchHistory, ...schedule]); 
     const startId = [...matchHistory, ...schedule].length + 1;
     const ord = [tD1, tE2, tE1, tD2];
@@ -448,7 +483,7 @@ export default function App() {
     setKnockoutData(knockoutData.map((r, ri) => r.map(m => ({ ...m, winner: null, winsA:0, winsB:0, teamA: ri===0?m.teamA:'?', teamB: ri===0?m.teamB:'?', parties: m.parties.map(p => ({...p, winner:null, sets:[{scoreA:'',scoreB:''},{scoreA:'',scoreB:''},{scoreA:'',scoreB:''}]})) }))));
   };
 
-  const handleReset = () => { if (window.confirm("Hapus semua data turnamen?")) { setTeams([]); setSchedule([]); setGroupAssignments({}); setKnockoutData([]); setMatchHistory([]); setStage(0); } };
+  const handleReset = () => { if (window.confirm("Hapus semua data turnamen?")) { setTeams([]); setSchedule([]); setGroupAssignments({}); setKnockoutData([]); setMatchHistory([]); setStage(0); setUndoHistory(null); } };
 
   const generateMasterPlan = () => {
     let masterPlan = [];
@@ -719,7 +754,7 @@ export default function App() {
           .hide-arrows::-webkit-outer-spin-button, .hide-arrows::-webkit-inner-spin-button { -webkit-appearance: none; margin: 0; } 
           .hide-arrows { -moz-appearance: textfield; } 
           
-          /* TRIK PNG EXPORT: Menghapus batas scroll saat export */
+          /* TRIK PNG EXPORT */
           .export-mode .master-modal-content { max-height: none !important; overflow: visible !important; height: auto !important; }
           .export-mode #master-print-area { max-height: none !important; overflow: visible !important; height: auto !important; }
           
@@ -729,7 +764,7 @@ export default function App() {
             .no-print { display: none !important; } 
             #capture-area { display: none !important; }
             
-            /* INSTRUKSI PDF: Jangan potong kotak di tengah jalan */
+            /* INSTRUKSI PDF */
             .print-break-inside-avoid { break-inside: avoid; page-break-inside: avoid; } 
             tr { break-inside: avoid; page-break-inside: avoid; }
             .print-border { border: 1px solid #e5e7eb !important; } 
@@ -887,7 +922,7 @@ export default function App() {
                     )}
                   </div>
 
-                  <div className="mt-auto pt-4"><button onClick={tournamentType === 'Knocked Out Round' ? () => { setSchedule([]); setKnockoutData(generateDirectKnockout(teams, 0, 1)); setStage(3); } : generateSchedule} disabled={teams.length < 2} className={`w-full ${theme.accent} ${theme.accentHover} ${theme.accentText} disabled:bg-gray-100 disabled:text-gray-300 font-black py-5 rounded-2xl shadow-md transition-all flex justify-center items-center gap-3 text-lg uppercase tracking-wider`}><IconCalendar /> {teams.length < 2 ? "Min. 2 Tim" : "Mulai Turnamen"}</button></div>
+                  <div className="mt-auto pt-4"><button onClick={tournamentType === 'Knocked Out Round' ? () => { saveSnapshot(); setSchedule([]); setKnockoutData(generateDirectKnockout(teams, 0, 1)); setStage(3); } : generateSchedule} disabled={teams.length < 2} className={`w-full ${theme.accent} ${theme.accentHover} ${theme.accentText} disabled:bg-gray-100 disabled:text-gray-300 font-black py-5 rounded-2xl shadow-md transition-all flex justify-center items-center gap-3 text-lg uppercase tracking-wider`}><IconCalendar /> {teams.length < 2 ? "Min. 2 Tim" : "Mulai Turnamen"}</button></div>
                 </div>
               </div>
             </div>
@@ -900,7 +935,12 @@ export default function App() {
                   <div className={`bg-white rounded-3xl shadow-sm border border-gray-100 overflow-hidden print-break-inside-avoid print-border ${isProjectorMode ? 'shadow-2xl border-none' : ''}`}>
                     <div className={`flex justify-between items-center border-b border-gray-100 print:bg-gray-200 print:text-black ${isProjectorMode ? 'p-8 bg-gray-50' : 'p-6 bg-white'}`}>
                       <div className="flex items-center gap-4"><div className={`p-3 rounded-2xl ${theme.soft} ${theme.textPrimary}`}><IconTable /></div><h2 className={`font-black text-gray-800 tracking-tight print:text-black ${isProjectorMode ? 'text-4xl' : 'text-xl'}`}>Klasemen {stage === 2 ? 'Fase 2' : 'Grup'}</h2></div>
-                      {!isProjectorMode && ( <div className="no-print flex items-center gap-2"><button onClick={handleCopyWhatsApp} className="text-xs bg-green-50 hover:bg-green-100 text-green-700 px-4 py-2 rounded-xl font-black uppercase tracking-widest border border-green-200 shadow-sm flex items-center gap-2"><IconCopy /> Salin WA</button></div> )}
+                      {!isProjectorMode && ( 
+                         <div className="no-print flex items-center gap-2">
+                             {undoHistory && <button onClick={handleRollback} className="text-xs bg-purple-50 hover:bg-purple-100 text-purple-700 px-4 py-2 rounded-xl font-black uppercase tracking-widest border border-purple-200 shadow-sm flex items-center gap-2"><IconUndo /> Batal Lanjut Fase</button>}
+                             <button onClick={handleCopyWhatsApp} className="text-xs bg-green-50 hover:bg-green-100 text-green-700 px-4 py-2 rounded-xl font-black uppercase tracking-widest border border-green-200 shadow-sm flex items-center gap-2"><IconCopy /> Salin WA</button>
+                         </div> 
+                      )}
                       {isProjectorMode && <div className={`${theme.accent} ${theme.accentText} px-6 py-3 rounded-2xl font-black text-sm tracking-widest uppercase shadow-sm flex items-center gap-2`}><span className="w-2 h-2 bg-red-500 rounded-full animate-pulse"></span> LIVE SCORE</div>}
                     </div>
                     
@@ -939,7 +979,13 @@ export default function App() {
               <div className={`bg-white rounded-3xl shadow-sm border border-gray-100 overflow-hidden print-border ${isProjectorMode ? 'shadow-2xl border-none' : ''}`}>
                 <div className={`flex justify-between items-center border-b border-gray-100 print:bg-gray-200 print:text-black ${isProjectorMode ? 'p-8 bg-gray-50' : 'p-6 bg-white'}`}>
                   <div className="flex items-center gap-4"><div className={`p-3 rounded-2xl ${theme.soft} ${theme.textPrimary}`}><IconCalendar /></div><h2 className={`font-black text-gray-800 tracking-tight print:text-black ${isProjectorMode ? 'text-4xl' : 'text-xl'}`}>Jadwal Pertandingan {roundRobinType === 'Double Round Robin' ? '(Ptg 1 & 2)' : ''}</h2></div>
-                  {!isProjectorMode && ( <div className="no-print flex items-center gap-2"><button onClick={handleClearScores} className="text-xs bg-amber-50 hover:bg-amber-100 text-amber-700 px-4 py-2.5 rounded-xl font-bold uppercase tracking-widest border border-amber-200">Bersihkan Skor</button><button onClick={handleReset} className="text-xs bg-red-50 hover:bg-red-100 text-red-600 px-4 py-2.5 rounded-xl font-bold uppercase tracking-widest border border-red-200">Reset Ulang</button></div> )}
+                  {!isProjectorMode && ( 
+                     <div className="no-print flex items-center gap-2">
+                        {undoHistory && <button onClick={handleRollback} className="text-xs bg-purple-50 hover:bg-purple-100 text-purple-700 px-4 py-2.5 rounded-xl font-bold uppercase tracking-widest border border-purple-200 shadow-sm flex items-center gap-2"><IconUndo /> Batal</button>}
+                        <button onClick={handleClearScores} className="text-xs bg-amber-50 hover:bg-amber-100 text-amber-700 px-4 py-2.5 rounded-xl font-bold uppercase tracking-widest border border-amber-200">Bersihkan Skor</button>
+                        <button onClick={handleReset} className="text-xs bg-red-50 hover:bg-red-100 text-red-600 px-4 py-2.5 rounded-xl font-bold uppercase tracking-widest border border-red-200">Reset Ulang</button>
+                     </div> 
+                  )}
                 </div>
                 <div className={`grid grid-cols-1 xl:grid-cols-2 bg-gray-50/50 print:bg-white print:p-2 print:gap-4 ${isProjectorMode ? 'p-8 gap-8' : 'p-6 gap-6'}`}>
                   {schedule.map((match, index) => renderMatchCard(match, false, index))}
@@ -1011,7 +1057,8 @@ export default function App() {
               <div className={`text-center bg-white rounded-3xl shadow-sm border border-gray-100 print:border-none print:shadow-none print:p-2 ${isProjectorMode ? 'p-12 shadow-2xl border-none' : 'p-8'}`}>
                  <h2 className={`font-black text-gray-900 flex items-center justify-center gap-4 ${isProjectorMode ? 'text-5xl tracking-tight' : 'text-3xl'}`}><div className={`p-3 rounded-2xl ${theme.primary} text-white`}><IconTrophy /></div>Penginputan Skor Bagan Utama</h2>
                  {!isProjectorMode && (
-                   <div className="no-print mt-6 flex justify-center gap-3">
+                   <div className="no-print mt-6 flex justify-center gap-3 flex-wrap">
+                      {undoHistory && <button onClick={handleRollback} className="text-xs bg-purple-50 hover:bg-purple-100 text-purple-700 px-4 py-2.5 rounded-xl font-bold uppercase tracking-widest border border-purple-200 shadow-sm flex items-center gap-2"><IconUndo /> Batal Lanjut Fase</button>}
                       <button onClick={handleClearScores} className="text-xs bg-amber-50 hover:bg-amber-100 text-amber-700 px-4 py-2.5 rounded-xl font-bold uppercase tracking-widest border border-amber-200 shadow-sm">Bersihkan Skor</button>
                       <button onClick={handleReset} className="text-xs bg-red-50 hover:bg-red-100 text-red-600 px-4 py-2.5 rounded-xl font-bold uppercase tracking-widest border border-red-200 shadow-sm">Reset Ulang</button>
                    </div>
@@ -1057,14 +1104,38 @@ export default function App() {
                 {/* LAYER 1: STANDINGS */}
                 {(tournamentType === 'Groups' || tournamentType === 'Group') && (
                   <div className="mb-12 print-break-inside-avoid">
-                     <h3 className="text-lg font-black uppercase mb-6 border-l-4 border-amber-400 pl-4 text-gray-800">Klasemen Sementara</h3>
+                     <h3 className="text-lg font-black uppercase mb-6 border-l-4 border-amber-400 pl-4 text-gray-800">FASE PENYISIHAN</h3>
                      <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
                         {Object.entries(getStandings()).map(([gn, gt]) => (
                           <div key={gn} className="bg-gray-50 p-4 rounded-2xl border border-gray-100 shadow-sm print-break-inside-avoid">
                              <div className="text-center font-black text-xs mb-3 text-gray-400 uppercase tracking-widest">{gn}</div>
-                             <table className="w-full text-xs font-bold">
-                                <thead><tr className="text-gray-400 border-b border-gray-200"><th className="p-2 text-left">POS</th><th className="p-2 text-left">TIM</th><th className="p-2">W-L</th><th className="p-2 text-right">PTS</th></tr></thead>
-                                <tbody>{gt.map((s,i)=><tr key={i} className="border-b border-gray-100"><td className="p-2 text-gray-400">{i+1}</td><td className="p-2 text-gray-800 uppercase">{s.team}</td><td className="p-2 text-center text-gray-500">{s.win}-{s.lose}</td><td className="p-2 text-right text-lg font-black text-gray-800">{s.totalPoints}</td></tr>)}</tbody>
+                             <table className="w-full text-xs font-bold text-left whitespace-nowrap">
+                                <thead>
+                                  <tr className="text-gray-400 border-b border-gray-200 text-[9px] uppercase tracking-widest">
+                                    <th className="p-2">#</th>
+                                    <th className="p-2">TIM</th>
+                                    <th className="p-2 text-center">P</th>
+                                    <th className="p-2 text-center">W</th>
+                                    <th className="p-2 text-center">L</th>
+                                    {isTeamEvent && <th className="p-2 text-center">PRT</th>}
+                                    <th className="p-2 text-center">SET</th>
+                                    <th className="p-2 text-right">PTS</th>
+                                  </tr>
+                                </thead>
+                                <tbody className="divide-y divide-gray-100">
+                                  {gt.map((stat, i) => (
+                                    <tr key={i} className={i === 0 ? "bg-white" : ""}>
+                                      <td className="p-2 text-gray-400">{i+1}</td>
+                                      <td className="p-2 text-gray-800 uppercase font-black truncate max-w-[120px]">{stat.team}</td>
+                                      <td className="p-2 text-center text-gray-500">{stat.play}</td>
+                                      <td className="p-2 text-center text-gray-700">{stat.win}</td>
+                                      <td className="p-2 text-center text-gray-400">{stat.lose}</td>
+                                      {isTeamEvent && <td className="p-2 text-center text-gray-500">{stat.partyWin}-{stat.partyLose}</td>}
+                                      <td className="p-2 text-center text-gray-500">{stat.setWin}-{stat.setLose}</td>
+                                      <td className="p-2 text-right text-base font-black text-gray-800">{stat.totalPoints}</td>
+                                    </tr>
+                                  ))}
+                                </tbody>
                              </table>
                           </div>
                         ))}
@@ -1074,7 +1145,7 @@ export default function App() {
 
                 {/* LAYER 2: KNOCKOUT BRACKET ESTETIK */}
                 <div className="mb-12 print-break-inside-avoid">
-                    <h3 className="text-lg font-black uppercase mb-6 border-l-4 border-emerald-500 pl-4 text-gray-800">Bagan Sistem Gugur</h3>
+                    <h3 className="text-lg font-black uppercase mb-6 border-l-4 border-emerald-500 pl-4 text-gray-800">FASE SISTEM GUGUR</h3>
                     <div className="overflow-x-auto pb-4">
                         {renderAestheticBracket()}
                     </div>
