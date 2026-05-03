@@ -58,6 +58,9 @@ export default function App() {
 
   const [phase2Format, setPhase2Format] = useState('group'); 
   const [phase2ByeSystem, setPhase2ByeSystem] = useState('seeding'); 
+  
+  // PENYIMPANAN DATA KLASEMEN FASE 1
+  const [phase1Standings, setPhase1Standings] = useState(null);
 
   const [isProjectorMode, setIsProjectorMode] = useState(false);
   const [isExportingPng, setIsExportingPng] = useState(false);
@@ -99,7 +102,7 @@ export default function App() {
   }, []);
 
   const handleSaveFile = () => {
-    const dataToSave = { stage, matchHistory, teams, schedule, tournamentType, roundRobinType, selectedEventFormat, mixDisciplines, numGroups, groupAssignments, teamLogos, sponsorLogos, championshipTitles, knockoutData, courts, activeTheme };
+    const dataToSave = { stage, matchHistory, teams, schedule, tournamentType, roundRobinType, selectedEventFormat, mixDisciplines, numGroups, groupAssignments, teamLogos, sponsorLogos, championshipTitles, knockoutData, courts, activeTheme, phase1Standings };
     const blob = new Blob([JSON.stringify(dataToSave)], { type: 'application/json' });
     const url = URL.createObjectURL(blob);
     const link = document.createElement('a'); link.href = url; link.download = `Takraw_${new Date().toISOString().slice(0,10)}.json`; link.click(); URL.revokeObjectURL(url);
@@ -118,6 +121,7 @@ export default function App() {
         setTeamLogos(data.teamLogos || {}); setSponsorLogos(data.sponsorLogos || []); if (data.championshipTitles) setChampionshipTitles(data.championshipTitles);
         setKnockoutData(data.knockoutData || []); setCourts(data.courts || ['Lapangan Utama', 'Lapangan B']);
         if (data.activeTheme && themes[data.activeTheme]) setActiveTheme(data.activeTheme);
+        setPhase1Standings(data.phase1Standings || null);
         setUndoHistory(null); 
       } catch (err) { alert("Gagal memuat! Format file tidak valid."); }
     };
@@ -175,7 +179,7 @@ export default function App() {
     const standings = getStandings();
     let waText = `🏆 *FASE PENYISIHAN* 🏆\n*${championshipTitles[0]}*\n\n`;
     Object.entries(standings)
-      .filter(([groupName]) => !groupName.toLowerCase().includes('unknown')) // Blokir siluman disalin ke WA
+      .filter(([gn]) => !gn.toLowerCase().includes('unknown') && !gn.toLowerCase().includes('eliminated')) 
       .forEach(([groupName, groupTeams]) => {
       waText += `*${groupName}*\n`;
       groupTeams.forEach((stat, index) => {
@@ -194,7 +198,7 @@ export default function App() {
         stage, schedule: [...schedule], matchHistory: [...matchHistory], 
         knockoutData: JSON.parse(JSON.stringify(knockoutData)), 
         teams: [...teams], groupAssignments: {...groupAssignments}, 
-        tournamentType, numGroups
+        tournamentType, numGroups, phase1Standings: phase1Standings ? JSON.parse(JSON.stringify(phase1Standings)) : null
     });
   };
 
@@ -204,6 +208,7 @@ export default function App() {
         setMatchHistory(undoHistory.matchHistory); setKnockoutData(undoHistory.knockoutData);
         setTeams(undoHistory.teams); setGroupAssignments(undoHistory.groupAssignments);
         setTournamentType(undoHistory.tournamentType); setNumGroups(undoHistory.numGroups);
+        setPhase1Standings(undoHistory.phase1Standings);
         setUndoHistory(null);
     }
   };
@@ -220,7 +225,7 @@ export default function App() {
   const handleNumGroupsChange = (e) => { const val = e.target.value; if (val === '') { setNumGroups(''); return; } const num = Number(val); if (num >= 1 && num <= 26) { setNumGroups(num); setGroupAssignments({}); } };
   const handleAutoAssign = () => { if (teams.length === 0) return; const activeNG = Number(numGroups) || 2; const shf = [...teams].sort(() => 0.5 - Math.random()); const assignments = {}; const gl = Array.from({length: activeNG}, (_, i) => String.fromCharCode(65 + i)); shf.forEach((t, i) => { assignments[t] = gl[i % activeNG]; }); setGroupAssignments(assignments); };
 
-  // --- PERBAIKAN: STERILISASI DATA KLASEMEN (MEMUTUS KABEL HISTORI SAAT FASE 2) ---
+  // --- KLASEMEN CERDAS ---
   const getStandings = (specificSchedule = schedule, specificAssignments = groupAssignments) => {
     let standings = {};
     teams.forEach(t => { 
@@ -231,9 +236,7 @@ export default function App() {
 
     const filteredMatches = [...matchHistory, ...specificSchedule].filter(match => {
        if (!match.winner || match.winner === '?') return false;
-       // Jika Grup D & E aktif, KITA HANYA MENGHITUNG JADWAL FASE 2. Semua skor lama dibuang!
        if (isPhase2Active) return match.groupLabel && match.groupLabel.includes("Fase 2");
-       // Jika Fase 1 aktif, kita hanya menghitung jadwal tanpa embel-embel "Fase 2"
        return !match.groupLabel || !match.groupLabel.includes("Fase 2");
     });
 
@@ -271,6 +274,7 @@ export default function App() {
 
     const sortedTeams = Object.values(standings).sort((a, b) => {
       if (b.totalPoints !== a.totalPoints) return b.totalPoints - a.totalPoints;
+      // Head to Head check
       const h2hMatch = filteredMatches.find(m => ((m.teamA === a.team && m.teamB === b.team) || (m.teamA === b.team && m.teamB === a.team)) && m.winner);
       if (h2hMatch && h2hMatch.winner !== 'SERI' && h2hMatch.winner !== '?') { if (h2hMatch.winner === a.team) return -1; if (h2hMatch.winner === b.team) return 1; }
       if (b.win !== a.win) return b.win - a.win;
@@ -326,6 +330,7 @@ export default function App() {
     setSchedule(fSch); setKnockoutData([]); setStage(1); 
   };
 
+  // --- AUTO-ADVANCE BYE LOGIC ---
   const generateDirectKnockout = (manualTeams = teams, startRoundIdx = 0, initialId = 1) => {
     const size = Math.pow(2, Math.ceil(Math.log2(manualTeams.length))); 
     let orderedTeams = Array(size).fill('BYE');
@@ -352,12 +357,33 @@ export default function App() {
        let matchesInRound = size / Math.pow(2, r + 1); let roundMatches = [];
        for(let m = 0; m < matchesInRound; m++) {
           let tA = '?'; let tB = '?';
-          if (r === 0) { tA = orderedTeams[m * 2]; tB = orderedTeams[m * 2 + 1]; }
+          if (r === 0) { 
+              tA = orderedTeams[m * 2]; 
+              tB = orderedTeams[m * 2 + 1]; 
+          } else {
+              // Menarik Pemenang Otomatis dari Round Sebelumnya (Jika BYE)
+              let prevA = rounds[r-1][m*2];
+              let prevB = rounds[r-1][m*2+1];
+              if (prevA.winner) tA = prevA.winner;
+              if (prevB.winner) tB = prevB.winner;
+          }
+
+          let isByeMatch = (tA === 'BYE' || tB === 'BYE') && tA !== '?' && tB !== '?';
+          let autoWinner = isByeMatch ? (tA === 'BYE' ? tB : tA) : null;
+          if (tA === 'BYE' && tB === 'BYE') autoWinner = 'BYE';
+
           let initialParties = [];
           for(let p = 0; p < nP; p++) { initialParties.push({ id: `k_dir_p${p}`, label: isTeamEvent ? pL[p] : `Match`, sets: [{ scoreA: '', scoreB: '' }, { scoreA: '', scoreB: '' }, { scoreA: '', scoreB: '' }], winner: null }); }
+          
           let nextR = r + 1; let nextM = Math.floor(m / 2); let nextSlot = m % 2 === 0 ? 'teamA' : 'teamB';
           let roundTitle = r === numRounds - 1 ? 'BABAK FINAL' : r === numRounds - 2 ? 'SEMI FINAL' : r === numRounds - 3 ? 'PEREMPAT FINAL' : 'BABAK PENYISIHAN';
-          roundMatches.push({ id: matchCounter++, roundIndex: r, matchIndex: m, title: roundTitle, teamA: tA, teamB: tB, parties: initialParties, winner: null, winsA: 0, winsB: 0, nextMatchRef: nextR < numRounds ? { r: nextR, m: nextM, slot: nextSlot } : null });
+          
+          roundMatches.push({ 
+              id: matchCounter++, roundIndex: r, matchIndex: m, title: roundTitle, 
+              teamA: tA, teamB: tB, parties: initialParties, 
+              winner: autoWinner, winsA: 0, winsB: 0, isBye: isByeMatch,
+              nextMatchRef: nextR < numRounds ? { r: nextR, m: nextM, slot: nextSlot } : null 
+          });
        }
        rounds.push(roundMatches);
     }
@@ -378,12 +404,14 @@ export default function App() {
     if (tournamentType === 'Groups' && Number(numGroups) === 4) {
        const gA = std['Grup A']||[]; const gB = std['Grup B']||[]; const gC = std['Grup C']||[]; const gD = std['Grup D']||[];
        const ord = [gA[0]?.team||'?', gB[1]?.team||'?', gC[0]?.team||'?', gD[1]?.team||'?', gB[0]?.team||'?', gA[1]?.team||'?', gD[0]?.team||'?', gC[1]?.team||'?'];
+       setPhase1Standings(std);
        setSchedule([]); setKnockoutData(generateDirectKnockout(ord, 0, startId)); setStage(3); window.scrollTo(0,0);
        return;
     }
     else if (tournamentType === 'Groups' && Number(numGroups) === 2) {
        const gA = std['Grup A']||[]; const gB = std['Grup B']||[];
        const ord = [gA[0]?.team||'?', gB[1]?.team||'?', gB[0]?.team||'?', gA[1]?.team||'?'];
+       setPhase1Standings(std);
        setSchedule([]); setKnockoutData(generateDirectKnockout(ord, 0, startId)); setStage(3); window.scrollTo(0,0);
        return;
     }
@@ -391,8 +419,17 @@ export default function App() {
        const gA = std['Grup A']||[]; const gB = std['Grup B']||[]; const gC = std['Grup C']||[];
        const tA1 = gA[0]?.team; const tA2 = gA[1]?.team; const tB1 = gB[0]?.team; const tB2 = gB[1]?.team; const tC1 = gC[0]?.team; const tC2 = gC[1]?.team;
        if(!tA1||!tB1||!tC1||!tA2||!tB2||!tC2) return alert("Skor belum lengkap untuk menentukan 6 tim.");
-       const newAssigns = { [tA1]:'D', [tB2]:'D', [tC1]:'D', [tB1]:'E', [tA2]:'E', [tC2]:'E' };
-       setTeams([tA1, tB2, tC1, tB1, tA2, tC2]); setGroupAssignments(newAssigns); setTournamentType('Groups'); setNumGroups(2);
+       
+       setPhase1Standings(std); // Simpan Snapshot Fase 1
+
+       const newAssigns = { ...groupAssignments };
+       teams.forEach(t => {
+           if ([tA1, tB2, tC1].includes(t)) newAssigns[t] = 'D';
+           else if ([tB1, tA2, tC2].includes(t)) newAssigns[t] = 'E';
+           else newAssigns[t] = 'Eliminated'; // Pemusnahan Grup Siluman
+       });
+       setGroupAssignments(newAssigns); 
+       setTournamentType('Groups'); setNumGroups(2);
        
        let fSch = []; let counter = startId;
        const aC = courts.length > 0 ? courts : ['Lap. Utama']; let cTimes = aC.map(() => { let t = new Date(); t.setHours(8, 0, 0, 0); return t; });
@@ -412,14 +449,40 @@ export default function App() {
     } 
     else if (phase2Format === 'knockout') {
        const size = 8; let ord = Array(size).fill('BYE');
+       
        if (phase2ByeSystem === 'seeding') {
-          q.sort((a,b) => b.totalPoints - a.totalPoints || (b.setWin - b.setLose) - (a.setWin - a.setLose) || (b.pointWin - b.pointLose) - (a.pointWin - a.pointLose));
-          if(q.length >= 6) { ord[0] = q[0].team; ord[4] = q[1].team; ord[2] = q[3].team; ord[3] = q[4].team; ord[6] = q[2].team; ord[7] = q[5].team; }
+          // --- GLOBAL SEEDING DENGAN H2H TIEBREAKER ---
+          q.sort((a,b) => {
+              if (b.totalPoints !== a.totalPoints) return b.totalPoints - a.totalPoints;
+              const h2h = matchHistory.find(m => ((m.teamA === a.team && m.teamB === b.team) || (m.teamA === b.team && m.teamB === a.team)) && m.winner && m.winner !== 'SERI');
+              if (h2h) return h2h.winner === a.team ? -1 : 1;
+              const aS = a.setWin - a.setLose; const bS = b.setWin - b.setLose;
+              if (bS !== aS) return bS - aS;
+              return (b.pointWin - b.pointLose) - (a.pointWin - a.pointLose);
+          });
+          if(q.length >= 6) { 
+              // Top 2 mendapat BYE
+              ord[0] = q[0].team; ord[1] = 'BYE';
+              ord[2] = q[3].team; ord[3] = q[4].team; // Rank 4 vs 5
+              ord[4] = q[1].team; ord[5] = 'BYE';
+              ord[6] = q[2].team; ord[7] = q[5].team; // Rank 3 vs 6
+          }
        } else {
+          // --- FIXED MAPPING DENGAN ANTI-REMATCH ---
           const gA = std['Grup A']||[]; const gB = std['Grup B']||[]; const gC = std['Grup C']||[];
-          if(q.length >= 6) { ord[0] = gA[0]?.team||'BYE'; ord[4] = gB[0]?.team||'BYE'; ord[2] = gC[0]?.team||'?'; ord[3] = gB[1]?.team||'?'; ord[6] = gC[1]?.team||'?'; ord[7] = gA[1]?.team||'?'; }
+          if(q.length >= 6) { 
+              ord[0] = gA[0]?.team||'?'; ord[1] = 'BYE'; // Juara A
+              ord[2] = gC[0]?.team||'?'; ord[3] = gB[1]?.team||'?'; // Juara C vs Runner B
+              ord[4] = gB[0]?.team||'?'; ord[5] = 'BYE'; // Juara B
+              ord[6] = gC[1]?.team||'?'; ord[7] = gA[1]?.team||'?'; // Runner C vs Runner A
+          }
        }
-       setSchedule([]); setKnockoutData(generateDirectKnockout(ord, 0, startId)); setStage(3); window.scrollTo(0,0);
+       
+       setPhase1Standings(std); // Simpan Snapshot Fase 1
+       setSchedule([]); 
+       setKnockoutData(generateDirectKnockout(ord, 0, startId)); 
+       setStage(3); 
+       window.scrollTo(0,0);
     }
   };
 
@@ -484,10 +547,24 @@ export default function App() {
   const handleClearScores = () => {
     if (!window.confirm("Bersihkan semua skor?")) return;
     setSchedule(schedule.map(m => ({ ...m, winner: null, winsA:0, winsB:0, parties: m.parties.map(p => ({...p, winner:null, sets:[{scoreA:'',scoreB:''},{scoreA:'',scoreB:''},{scoreA:'',scoreB:''}]})) })));
-    setKnockoutData(knockoutData.map((r, ri) => r.map(m => ({ ...m, winner: null, winsA:0, winsB:0, teamA: ri===0?m.teamA:'?', teamB: ri===0?m.teamB:'?', parties: m.parties.map(p => ({...p, winner:null, sets:[{scoreA:'',scoreB:''},{scoreA:'',scoreB:''},{scoreA:'',scoreB:''}]})) }))));
+    
+    if (knockoutData.length > 0) {
+        setKnockoutData(prev => prev.map((r, ri) => r.map(m => {
+            if (m.isBye) return m; // JANGAN HAPUS AUTO ADVANCE BYE!
+            let resetTeamA = ri === 0 ? m.teamA : '?';
+            let resetTeamB = ri === 0 ? m.teamB : '?';
+            if (ri > 0) {
+                let prevA = prev[ri-1][m.matchIndex*2];
+                let prevB = prev[ri-1][m.matchIndex*2+1];
+                if (prevA.isBye) resetTeamA = prevA.winner;
+                if (prevB.isBye) resetTeamB = prevB.winner;
+            }
+            return { ...m, winner: null, winsA:0, winsB:0, teamA: resetTeamA, teamB: resetTeamB, parties: m.parties.map(p => ({...p, winner:null, sets:[{scoreA:'',scoreB:''},{scoreA:'',scoreB:''},{scoreA:'',scoreB:''}]})) };
+        })));
+    }
   };
 
-  const handleReset = () => { if (window.confirm("Hapus semua data turnamen?")) { setTeams([]); setSchedule([]); setGroupAssignments({}); setKnockoutData([]); setMatchHistory([]); setStage(0); setUndoHistory(null); } };
+  const handleReset = () => { if (window.confirm("Hapus semua data turnamen?")) { setTeams([]); setSchedule([]); setGroupAssignments({}); setKnockoutData([]); setMatchHistory([]); setStage(0); setUndoHistory(null); setPhase1Standings(null); } };
 
   const generateMasterPlan = () => {
     let masterPlan = [];
@@ -533,7 +610,7 @@ export default function App() {
     } else if (knockoutData.length > 0) {
        knockoutData.forEach(round => {
          round.forEach(m => {
-           masterPlan.push({ ...m, id: m.id, teamA: m.teamA, teamB: m.teamB, winner: m.winner, label: m.title, phase: "Knockout", court: m.court || "TBD", time: m.time || "TBD" });
+           masterPlan.push({ ...m, id: m.id, teamA: m.teamA, teamB: m.teamB, winner: m.winner, label: m.title, phase: "Knockout", court: m.court || "TBD", time: m.time || "TBD", isBye: m.isBye });
          });
        });
     }
@@ -541,6 +618,7 @@ export default function App() {
   };
 
   const formatMatchScore = (match) => {
+    if (match.isBye) return "BYE/W.O";
     if (!match.parties) return match.winner && match.winner !== '?' ? `WIN: ${match.winner}` : "TBD";
     if (!match.winner || match.winner === '?') return "TBD";
     if (match.winner === 'SERI' && match.winsA === 0 && match.winsB === 0) return "DOUBLE W.O";
@@ -581,8 +659,6 @@ export default function App() {
   const renderAestheticBracket = () => {
     const n = Number(numGroups);
     const isRealData = knockoutData.length > 0;
-    
-    // Cek dinamis: apakah kita sedang berada di Fase 2 (Grup D & E)?
     const isPhase2 = Object.values(groupAssignments).includes('D');
     
     const getTeamScore = (matchInfo, isTeamA) => {
@@ -602,9 +678,10 @@ export default function App() {
     const BracketBox = ({ matchInfo }) => {
         const tA = matchInfo.teamA || "?";
         const tB = matchInfo.teamB || "?";
-        const sA = getTeamScore(matchInfo, true);
-        const sB = getTeamScore(matchInfo, false);
         const w = matchInfo.winner;
+        
+        const sA = matchInfo.isBye ? (w === tA ? 'BYE' : '') : getTeamScore(matchInfo, true);
+        const sB = matchInfo.isBye ? (w === tB ? 'BYE' : '') : getTeamScore(matchInfo, false);
 
         return (
             <div className="bg-white border border-gray-100 rounded-2xl p-4 shadow-sm flex flex-col gap-1 w-full relative print-break-inside-avoid">
@@ -672,17 +749,24 @@ export default function App() {
             </div>
          </div>
        );
-    } else if (tournamentType === 'Groups' && n === 2) {
-       const sfMatches = isRealData && knockoutData.length === 2 ? knockoutData[0] : [
+    } else if (tournamentType === 'Groups' && (n === 2 || n === 3)) {
+       const qfMatches = isRealData && n === 3 && knockoutData.length === 3 ? knockoutData[0] : null;
+       const sfMatches = isRealData ? (knockoutData.length === 3 ? knockoutData[1] : knockoutData[0]) : [
            { teamA: isPhase2 ? "JUARA D" : "JUARA A", teamB: isPhase2 ? "RUNNER E" : "RUNNER B" }, 
            { teamA: isPhase2 ? "JUARA E" : "JUARA B", teamB: isPhase2 ? "RUNNER D" : "RUNNER A" }
        ];
-       const fMatch = isRealData && knockoutData.length === 2 ? knockoutData[1][0] : { teamA: "MENANG SF 1", teamB: "MENANG SF 2" };
+       const fMatch = isRealData ? (knockoutData.length === 3 ? knockoutData[2][0] : knockoutData[1][0]) : { teamA: "MENANG SF 1", teamB: "MENANG SF 2" };
 
        return (
          <div className="flex gap-10 min-w-max items-center justify-start p-6 bg-gray-50/30 rounded-[40px] border border-gray-50 print-break-inside-avoid">
-            <div className="flex flex-col gap-6 w-56">
-               <div className="text-[9px] font-black text-gray-400 text-center mb-2 tracking-widest">SEMI FINAL</div>
+            {qfMatches && (
+                <div className="flex flex-col gap-6 w-56">
+                   <div className="text-[9px] font-black text-gray-400 text-center mb-2 tracking-widest">PEREMPAT FINAL</div>
+                   {qfMatches.map((m, i) => <BracketBox key={i} matchInfo={m} />)}
+                </div>
+            )}
+            <div className={`flex flex-col gap-6 w-56 ${qfMatches ? 'justify-around h-full' : ''}`}>
+               <div className={`text-[9px] font-black text-gray-400 text-center mb-2 tracking-widest ${qfMatches ? '-mt-8' : ''}`}>SEMI FINAL</div>
                {sfMatches.map((m, i) => <BracketBox key={i} matchInfo={m} />)}
             </div>
             <div className="flex flex-col gap-6 w-64 items-center">
@@ -751,16 +835,18 @@ export default function App() {
         <div className={`flex justify-between items-center bg-white relative ${isProjectorMode ? 'p-8' : 'p-5'}`}>
           <div className={`absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 bg-gray-100 text-gray-400 font-black rounded-xl z-0 print:border ${isProjectorMode ? 'text-base px-4 py-2' : 'text-[10px] px-3 py-1'}`}>VS</div>
           <div className={`w-2/5 flex flex-col items-center text-center z-10 ${match.winner === safeTeamA ? 'scale-110 transition-transform' : ''}`}>
-            {teamLogos[safeTeamA] && !isTeamA_TBD ? ( <img src={teamLogos[safeTeamA]} className={`${isProjectorMode ? 'w-24 h-24 border-4' : 'w-14 h-14 border-2'} rounded-2xl object-cover ${theme.border} shadow-sm mb-3`} alt="" /> ) : ( <div className={`${isProjectorMode ? 'w-24 h-24 rounded-3xl' : 'w-14 h-14 rounded-2xl'} bg-gray-50 border-2 border-gray-100 flex items-center justify-center mb-3`}><IconUsers /></div> )}
+            {teamLogos[safeTeamA] && !isTeamA_TBD && safeTeamA !== 'BYE' ? ( <img src={teamLogos[safeTeamA]} className={`${isProjectorMode ? 'w-24 h-24 border-4' : 'w-14 h-14 border-2'} rounded-2xl object-cover ${theme.border} shadow-sm mb-3`} alt="" /> ) : ( <div className={`${isProjectorMode ? 'w-24 h-24 rounded-3xl' : 'w-14 h-14 rounded-2xl'} bg-gray-50 border-2 border-gray-100 flex items-center justify-center mb-3`}><IconUsers /></div> )}
             <span className={`font-black line-clamp-2 ${isProjectorMode ? 'text-2xl' : 'text-sm'} ${isTeamA_TBD ? 'text-gray-400 italic' : match.winner === safeTeamA ? theme.textPrimary : 'text-gray-700'}`}>{safeTeamA}</span>
           </div>
           <div className={`w-2/5 flex flex-col items-center text-center z-10 ${match.winner === safeTeamB ? 'scale-110 transition-transform' : ''}`}>
-            {teamLogos[safeTeamB] && !isTeamB_TBD ? ( <img src={teamLogos[safeTeamB]} className={`${isProjectorMode ? 'w-24 h-24 border-4' : 'w-14 h-14 border-2'} rounded-2xl object-cover ${theme.border} shadow-sm mb-3`} alt="" /> ) : ( <div className={`${isProjectorMode ? 'w-24 h-24 rounded-3xl' : 'w-14 h-14 rounded-2xl'} bg-gray-50 border-2 border-gray-100 flex items-center justify-center mb-3`}><IconUsers /></div> )}
+            {teamLogos[safeTeamB] && !isTeamB_TBD && safeTeamB !== 'BYE' ? ( <img src={teamLogos[safeTeamB]} className={`${isProjectorMode ? 'w-24 h-24 border-4' : 'w-14 h-14 border-2'} rounded-2xl object-cover ${theme.border} shadow-sm mb-3`} alt="" /> ) : ( <div className={`${isProjectorMode ? 'w-24 h-24 rounded-3xl' : 'w-14 h-14 rounded-2xl'} bg-gray-50 border-2 border-gray-100 flex items-center justify-center mb-3`}><IconUsers /></div> )}
             <span className={`font-black line-clamp-2 ${isProjectorMode ? 'text-2xl' : 'text-sm'} ${isTeamB_TBD ? 'text-gray-400 italic' : match.winner === safeTeamB ? theme.textPrimary : 'text-gray-700'}`}>{safeTeamB}</span>
           </div>
         </div>
         <div className={`bg-gray-50/50 flex-1 flex flex-col gap-3 print:bg-white ${isProjectorMode ? 'p-8' : 'p-5'}`}>
-          {(!isTeamA_TBD && !isTeamB_TBD) ? match.parties.map((party, pIndex) => (
+          {match.isBye ? (
+             <div className={`h-full flex items-center justify-center font-black text-emerald-500 bg-emerald-50/30 rounded-2xl border-2 border-emerald-100 border-dashed print-break-inside-avoid ${isProjectorMode ? 'text-2xl p-8' : 'text-sm p-4'}`}>AUTO ADVANCE (BYE)</div>
+          ) : (!isTeamA_TBD && !isTeamB_TBD) ? match.parties.map((party, pIndex) => (
             <div key={pIndex} className={`bg-white border ${theme.border} rounded-2xl relative shadow-sm print-break-inside-avoid ${isProjectorMode ? 'p-6' : 'p-3'}`}>
                {match.parties.length > 1 && ( <div className={`font-bold text-center text-gray-400 mb-3 uppercase tracking-widest border-b border-gray-100 pb-2 ${isProjectorMode ? 'text-sm' : 'text-[10px]'}`}> {party.label} {party.winner && <span className={`${party.winner === 'SERI' ? 'text-gray-400' : theme.textPrimary} ml-1`}>{party.winner === 'SERI' ? '(W.O)' : `(W: ${party.winner})`}</span>} </div> )}
                <div className="flex justify-center gap-4 sm:gap-8">
@@ -785,10 +871,53 @@ export default function App() {
             </div>
           )) : <div className={`h-full flex items-center justify-center text-gray-400 font-medium text-center py-8 ${isProjectorMode ? 'text-xl' : 'text-sm'}`}>Menunggu penantang...</div>}
         </div>
-        {match.winner && ( <div className={`${match.winner === 'SERI' ? 'bg-gray-500 text-white' : `${theme.primary} text-white`} p-3 text-center font-black flex items-center justify-center gap-2 print:border-t print:bg-gray-100 print:text-black ${isProjectorMode ? 'text-2xl py-5' : 'text-base'}`}> {match.winner === 'SERI' ? <><IconX /> DOUBLE WALK-OVER</> : <><IconTrophy /> WINNER: {match.winner}</>} </div> )}
+        {match.winner && ( <div className={`${match.winner === 'SERI' ? 'bg-gray-500 text-white' : `${theme.primary} text-white`} p-3 text-center font-black flex items-center justify-center gap-2 print:border-t print:bg-gray-100 print:text-black ${isProjectorMode ? 'text-2xl py-5' : 'text-base'}`}> {match.isBye ? <><IconTrophy /> AUTO ADVANCE: {match.winner}</> : match.winner === 'SERI' ? <><IconX /> DOUBLE WALK-OVER</> : <><IconTrophy /> WINNER: {match.winner}</>} </div> )}
       </div>
     );
   };
+
+  const renderStandingsTables = (standingsData, title, borderColor) => (
+     <div className="mb-12 print-break-inside-avoid">
+         <h3 className={`text-lg font-black uppercase mb-6 border-l-4 ${borderColor} pl-4 text-gray-800`}>{title}</h3>
+         <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+            {Object.entries(standingsData)
+              .filter(([gn]) => !gn.toLowerCase().includes('unknown') && !gn.toLowerCase().includes('eliminated'))
+              .map(([gn, gt]) => (
+              <div key={gn} className="bg-gray-50 p-4 rounded-2xl border border-gray-100 shadow-sm print-break-inside-avoid">
+                 <div className="text-center font-black text-xs mb-3 text-gray-400 uppercase tracking-widest">{gn}</div>
+                 <table className="w-full text-xs font-bold text-left whitespace-nowrap">
+                    <thead>
+                      <tr className="text-gray-400 border-b border-gray-200 text-[9px] uppercase tracking-widest">
+                        <th className="p-2">#</th>
+                        <th className="p-2">TIM</th>
+                        <th className="p-2 text-center">P</th>
+                        <th className="p-2 text-center">W</th>
+                        <th className="p-2 text-center">L</th>
+                        {isTeamEvent && <th className="p-2 text-center">PRT</th>}
+                        <th className="p-2 text-center">SET</th>
+                        <th className="p-2 text-right">PTS</th>
+                      </tr>
+                    </thead>
+                    <tbody className="divide-y divide-gray-100">
+                      {gt.map((stat, i) => (
+                        <tr key={i} className={i === 0 ? "bg-white" : ""}>
+                          <td className="p-2 text-gray-400">{i+1}</td>
+                          <td className="p-2 text-gray-800 uppercase font-black truncate max-w-[120px]">{stat.team}</td>
+                          <td className="p-2 text-center text-gray-500">{stat.play}</td>
+                          <td className="p-2 text-center text-gray-700">{stat.win}</td>
+                          <td className="p-2 text-center text-gray-400">{stat.lose}</td>
+                          {isTeamEvent && <td className="p-2 text-center text-gray-500">{stat.partyWin}-{stat.partyLose}</td>}
+                          <td className="p-2 text-center text-gray-500">{stat.setWin}-{stat.setLose}</td>
+                          <td className="p-2 text-right text-base font-black text-gray-800">{stat.totalPoints}</td>
+                        </tr>
+                      ))}
+                    </tbody>
+                 </table>
+              </div>
+            ))}
+         </div>
+     </div>
+  );
 
   return (
     <div className={`min-h-screen uppercase ${theme.bgApp} font-sans text-gray-800 pb-20 transition-all duration-500 ${isProjectorMode ? 'px-2 md:px-8' : ''}`}>
@@ -821,7 +950,6 @@ export default function App() {
         `}
       </style>
 
-      {/* MODAL APRESIASI (TRAKTIR KOPI) */}
       {showCoffeeModal && (
         <div className="fixed inset-0 z-[70] bg-black/60 backdrop-blur-sm flex items-center justify-center p-4 animate-in fade-in duration-300">
           <div className="bg-white w-full max-w-sm rounded-3xl shadow-2xl flex flex-col overflow-hidden text-center relative p-8">
@@ -864,7 +992,6 @@ export default function App() {
       <div id="capture-area" className={`${isProjectorMode ? 'bg-transparent' : 'bg-transparent'} min-h-screen pb-10 ${showMasterModal ? 'print:hidden' : ''}`}>
         <main className={`${isProjectorMode ? 'w-full max-w-full mt-4' : 'max-w-7xl mx-auto mt-6'} px-4 space-y-6 transition-all`}>
           
-          {/* DASHBOARD TOOLS */}
           {!isProjectorMode && stage > 0 && (
             <div className="no-print bg-white rounded-3xl shadow-sm p-4 flex flex-col md:flex-row justify-between items-center gap-4 border border-gray-100">
               <div className="flex items-center gap-3">
@@ -878,7 +1005,6 @@ export default function App() {
             </div>
           )}
 
-          {/* BRANDING HEADER */}
           <div className={`bg-white rounded-3xl shadow-sm border border-gray-100 relative overflow-hidden print-break-inside-avoid print:shadow-none print:border-none print:p-0 ${isProjectorMode ? 'p-10 md:p-16 mb-8 shadow-xl' : 'p-8'}`}>
             <div className={`absolute top-0 left-0 w-full h-3 ${theme.gradient || theme.primary}`}></div>
             <div className="relative z-10 flex flex-col items-center">
@@ -901,7 +1027,6 @@ export default function App() {
             </div>
           </div>
 
-          {/* STAGE 0: SETUP & PENDAFTARAN */}
           {!isProjectorMode && stage === 0 && (
             <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 no-print">
               <div className="lg:col-span-7 bg-white rounded-3xl shadow-sm border border-gray-100 p-6 md:p-8 flex flex-col h-full">
@@ -990,7 +1115,6 @@ export default function App() {
             </div>
           )}
 
-          {/* DASHBOARD AKTIF (Stage 1 & 2: Grup Penyisihan) */}
           {(stage === 1 || stage === 2) && schedule.length > 0 && (
             <div className={`space-y-6 animate-in fade-in duration-500 print:space-y-4 ${isProjectorMode ? 'space-y-10' : ''}`}>
               {(tournamentType === 'Groups' || tournamentType === 'Group') && (
@@ -1008,7 +1132,7 @@ export default function App() {
                     
                     <div className={`grid grid-cols-1 lg:grid-cols-2 print:gap-4 print:p-2 ${isProjectorMode ? 'p-8 gap-8 bg-white' : 'p-6 gap-6 bg-gray-50/50'}`}>
                       {Object.entries(getStandings())
-                        .filter(([groupName]) => !groupName.toLowerCase().includes('unknown')) // Filter Grup Siluman
+                        .filter(([groupName]) => !groupName.toLowerCase().includes('unknown') && !groupName.toLowerCase().includes('eliminated'))
                         .map(([groupName, groupTeams]) => (
                         <div key={groupName} className="bg-white border border-gray-100 rounded-3xl overflow-hidden print-break-inside-avoid shadow-sm flex flex-col">
                           <div className={`font-black uppercase tracking-widest text-center border-b border-gray-100 print:bg-gray-100 ${isProjectorMode ? 'px-6 py-5 text-2xl text-gray-800 bg-gray-50' : 'px-4 py-4 text-sm text-gray-400'}`}>{groupName}</div>
@@ -1056,7 +1180,6 @@ export default function App() {
                 </div>
               </div>
 
-              {/* TRANSISI FASE: Tergantung Stage Saat Ini */}
               {!isProjectorMode && stage === 1 && tournamentType === 'Groups' && (
                 <div className="no-print bg-gray-900 text-white rounded-3xl p-8 sm:p-12 text-center shadow-xl border border-gray-800 relative overflow-hidden mt-8">
                    <div className="absolute -top-10 -right-10 opacity-5 text-gray-100"><svg className="w-64 h-64" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M3 3v18"/><path d="M3 12h5"/><path d="M8 7v10"/><path d="M8 7h5"/><path d="M8 17h5"/><path d="M13 12h5"/><path d="M18 7v10"/><path d="M18 12h3"/></svg></div>
@@ -1079,10 +1202,10 @@ export default function App() {
                                    <div className="flex-1 space-y-4 animate-in fade-in duration-300">
                                       <label className="text-sm font-black text-emerald-400 uppercase tracking-widest">Sistem BYE</label>
                                       <select value={phase2ByeSystem} onChange={(e) => setPhase2ByeSystem(e.target.value)} className="w-full bg-gray-900 border border-gray-600 text-white font-bold text-sm rounded-xl px-4 py-4 outline-none focus:border-emerald-400 cursor-pointer uppercase">
-                                         <option value="seeding">Tim Terbaik (Global Seeding)</option>
-                                         <option value="standard">Posisi Standar (Juara A & B)</option>
+                                         <option value="seeding">Tim Terbaik (Global Seeding + H2H)</option>
+                                         <option value="standard">Posisi Standar (Juara A & B + Persilangan)</option>
                                       </select>
-                                      <p className="text-[10px] text-gray-400 normal-case">Tim Terbaik = Mengambil 2 tim poin tertinggi dari semua grup.</p>
+                                      <p className="text-[10px] text-gray-400 normal-case">Peringkat 1 & 2 Global atau Juara A & B otomatis masuk ke Semi Final (BYE).</p>
                                    </div>
                                 )}
                              </div>
@@ -1115,7 +1238,6 @@ export default function App() {
             </div>
           )}
 
-          {/* STAGE 3: FASE AKTIF (GUGUR) */}
           {((stage === 3) || (stage === 1 && tournamentType === 'Knocked Out Round')) && knockoutData.length > 0 && (
             <div className={`space-y-8 animate-in fade-in duration-500 ${isProjectorMode ? 'space-y-12' : ''}`}>
               <div className={`text-center bg-white rounded-3xl shadow-sm border border-gray-100 print:border-none print:shadow-none print:p-2 ${isProjectorMode ? 'p-12 shadow-2xl border-none' : 'p-8'}`}>
@@ -1146,7 +1268,6 @@ export default function App() {
         </main>
       </div>
 
-      {/* MODAL JADWAL INDUK (MASTER REPORT) */}
       {showMasterModal && (
         <div className="fixed inset-0 z-[60] bg-black/60 backdrop-blur-sm flex items-center justify-center p-4 animate-in fade-in duration-300 master-modal-overlay">
           <div className="bg-white w-full max-w-5xl max-h-[90vh] rounded-3xl shadow-2xl flex flex-col overflow-hidden master-modal-content">
@@ -1165,51 +1286,18 @@ export default function App() {
                    <p className="text-xs font-bold text-gray-400 mt-2 uppercase">{championshipTitles[2]}</p>
                 </div>
 
-                {/* LAYER 1: STANDINGS */}
-                {(tournamentType === 'Groups' || tournamentType === 'Group') && (
-                  <div className="mb-12 print-break-inside-avoid">
-                     <h3 className="text-lg font-black uppercase mb-6 border-l-4 border-amber-400 pl-4 text-gray-800">FASE PENYISIHAN</h3>
-                     <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-                        {Object.entries(getStandings())
-                          .filter(([groupName]) => !groupName.toLowerCase().includes('unknown')) // Blokir rendering Grup Siluman
-                          .map(([gn, gt]) => (
-                          <div key={gn} className="bg-gray-50 p-4 rounded-2xl border border-gray-100 shadow-sm print-break-inside-avoid">
-                             <div className="text-center font-black text-xs mb-3 text-gray-400 uppercase tracking-widest">{gn}</div>
-                             <table className="w-full text-xs font-bold text-left whitespace-nowrap">
-                                <thead>
-                                  <tr className="text-gray-400 border-b border-gray-200 text-[9px] uppercase tracking-widest">
-                                    <th className="p-2">#</th>
-                                    <th className="p-2">TIM</th>
-                                    <th className="p-2 text-center">P</th>
-                                    <th className="p-2 text-center">W</th>
-                                    <th className="p-2 text-center">L</th>
-                                    {isTeamEvent && <th className="p-2 text-center">PRT</th>}
-                                    <th className="p-2 text-center">SET</th>
-                                    <th className="p-2 text-right">PTS</th>
-                                  </tr>
-                                </thead>
-                                <tbody className="divide-y divide-gray-100">
-                                  {gt.map((stat, i) => (
-                                    <tr key={i} className={i === 0 ? "bg-white" : ""}>
-                                      <td className="p-2 text-gray-400">{i+1}</td>
-                                      <td className="p-2 text-gray-800 uppercase font-black truncate max-w-[120px]">{stat.team}</td>
-                                      <td className="p-2 text-center text-gray-500">{stat.play}</td>
-                                      <td className="p-2 text-center text-gray-700">{stat.win}</td>
-                                      <td className="p-2 text-center text-gray-400">{stat.lose}</td>
-                                      {isTeamEvent && <td className="p-2 text-center text-gray-500">{stat.partyWin}-{stat.partyLose}</td>}
-                                      <td className="p-2 text-center text-gray-500">{stat.setWin}-{stat.setLose}</td>
-                                      <td className="p-2 text-right text-base font-black text-gray-800">{stat.totalPoints}</td>
-                                    </tr>
-                                  ))}
-                                </tbody>
-                             </table>
-                          </div>
-                        ))}
-                     </div>
-                  </div>
-                )}
+                {/* LAYER 1: HASIL FASE 1 (JIKA ADA) */}
+                {phase1Standings && renderStandingsTables(phase1Standings, "HASIL FASE 1 (PENYISIHAN AWAL)", "border-blue-500")}
+                
+                {/* LAYER 2: HASIL FASE 2 ATAU KLASEMEN SAAT INI */}
+                {(!phase1Standings && (tournamentType === 'Groups' || tournamentType === 'Group')) && 
+                     renderStandingsTables(getStandings(), "FASE PENYISIHAN", "border-amber-400")
+                }
+                {(phase1Standings && phase2Format === 'group' && stage >= 2) && 
+                     renderStandingsTables(getStandings(), "HASIL FASE 2", "border-amber-400")
+                }
 
-                {/* LAYER 2: KNOCKOUT BRACKET ESTETIK */}
+                {/* LAYER 3: KNOCKOUT BRACKET ESTETIK */}
                 <div className="mb-12 print-break-inside-avoid">
                     <h3 className="text-lg font-black uppercase mb-6 border-l-4 border-emerald-500 pl-4 text-gray-800">FASE SISTEM GUGUR</h3>
                     <div className="overflow-x-auto pb-4">
@@ -1217,7 +1305,7 @@ export default function App() {
                     </div>
                 </div>
 
-                {/* LAYER 3: MATCH LOG HISTORY */}
+                {/* LAYER 4: MATCH LOG HISTORY */}
                 <div className="mb-12 print-break-inside-avoid">
                    <h3 className="text-lg font-black uppercase mb-6 border-l-4 border-blue-500 pl-4 text-gray-800">Seluruh Jadwal & Hasil</h3>
                    <table className="w-full border-collapse">
