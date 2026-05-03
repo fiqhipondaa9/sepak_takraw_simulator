@@ -19,6 +19,7 @@ const IconArrowDown = () => <svg className="w-4 h-4" xmlns="http://www.w3.org/20
 const IconCopy = () => <svg className="w-4 h-4" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>;
 const IconList = () => <svg className="w-5 h-5" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><line x1="8" y1="6" x2="21" y2="6"/><line x1="8" y1="12" x2="21" y2="12"/><line x1="8" y1="18" x2="21" y2="18"/><line x1="3" y1="6" x2="3.01" y2="6"/><line x1="3" y1="12" x2="3.01" y2="12"/><line x1="3" y1="18" x2="3.01" y2="18"/></svg>;
 const IconUndo = () => <svg className="w-4 h-4" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M3 7v6h6"/><path d="M21 17a9 9 0 0 0-9-9 9 9 0 0 0-6 2.3L3 13"/></svg>;
+const IconCoffee = () => <svg className="w-5 h-5" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M17 8h1a4 4 0 1 1 0 8h-1"/><path d="M3 8h14v9a4 4 0 0 1-4 4H7a4 4 0 0 1-4-4Z"/><line x1="6" x2="6" y1="2" y2="4"/><line x1="10" x2="10" y1="2" y2="4"/><line x1="14" x2="14" y1="2" y2="4"/></svg>;
 
 // --- KONFIGURASI TEMA ---
 const themes = {
@@ -61,8 +62,8 @@ export default function App() {
   const [isProjectorMode, setIsProjectorMode] = useState(false);
   const [isExportingPng, setIsExportingPng] = useState(false);
   
-  // Fitur "Mesin Waktu" / Rollback Snapshot
   const [undoHistory, setUndoHistory] = useState(null);
+  const [showCoffeeModal, setShowCoffeeModal] = useState(false); // Modal Apresiasi
 
   const isTeamEvent = selectedEventFormat.toUpperCase().includes('TEAM');
   let eventCategory = isTeamEvent ? 'team' : 'single';
@@ -117,7 +118,7 @@ export default function App() {
         setTeamLogos(data.teamLogos || {}); setSponsorLogos(data.sponsorLogos || []); if (data.championshipTitles) setChampionshipTitles(data.championshipTitles);
         setKnockoutData(data.knockoutData || []); setCourts(data.courts || ['Lapangan Utama', 'Lapangan B']);
         if (data.activeTheme && themes[data.activeTheme]) setActiveTheme(data.activeTheme);
-        setUndoHistory(null); // Reset history on open
+        setUndoHistory(null); 
       } catch (err) { alert("Gagal memuat! Format file tidak valid."); }
     };
     reader.readAsText(file); e.target.value = null; 
@@ -186,30 +187,21 @@ export default function App() {
     catch (err) { alert("❌ Gagal menyalin."); } document.body.removeChild(textArea);
   };
 
-  // --- LOGIKA SNAPSHOT & ROLLBACK (UNDO) ---
   const saveSnapshot = () => {
     setUndoHistory({
-        stage, 
-        schedule: [...schedule], 
-        matchHistory: [...matchHistory], 
+        stage, schedule: [...schedule], matchHistory: [...matchHistory], 
         knockoutData: JSON.parse(JSON.stringify(knockoutData)), 
-        teams: [...teams], 
-        groupAssignments: {...groupAssignments}, 
-        tournamentType, 
-        numGroups
+        teams: [...teams], groupAssignments: {...groupAssignments}, 
+        tournamentType, numGroups
     });
   };
 
   const handleRollback = () => {
     if (undoHistory && window.confirm("Batalkan Lanjut Fase? Anda akan kembali ke fase sebelumnya dan bisa mengubah skor lagi.")) {
-        setStage(undoHistory.stage);
-        setSchedule(undoHistory.schedule);
-        setMatchHistory(undoHistory.matchHistory);
-        setKnockoutData(undoHistory.knockoutData);
-        setTeams(undoHistory.teams);
-        setGroupAssignments(undoHistory.groupAssignments);
-        setTournamentType(undoHistory.tournamentType);
-        setNumGroups(undoHistory.numGroups);
+        setStage(undoHistory.stage); setSchedule(undoHistory.schedule);
+        setMatchHistory(undoHistory.matchHistory); setKnockoutData(undoHistory.knockoutData);
+        setTeams(undoHistory.teams); setGroupAssignments(undoHistory.groupAssignments);
+        setTournamentType(undoHistory.tournamentType); setNumGroups(undoHistory.numGroups);
         setUndoHistory(null);
     }
   };
@@ -282,7 +274,7 @@ export default function App() {
 
   const generateSchedule = () => {
     if (tournamentType === 'Groups' && !teams.every(team => groupAssignments[team])) return alert("Ada tim yang belum masuk ke dalam grup!");
-    saveSnapshot(); // Simpan riwayat sblm buat jadwal
+    saveSnapshot(); 
     
     let allMatches = [];
     const activeNG = Number(numGroups) || 2;
@@ -366,7 +358,7 @@ export default function App() {
     Object.values(std).forEach(gt => { if (gt[0]) q.push(gt[0]); if (gt[1]) q.push(gt[1]); });
     if (q.length < 2) return alert("Tim tidak cukup!");
     
-    saveSnapshot(); // Simpan riwayat sblm lanjut fase
+    saveSnapshot(); 
 
     setMatchHistory([...matchHistory, ...schedule]);
     const startId = [...matchHistory, ...schedule].length + 1;
@@ -426,7 +418,7 @@ export default function App() {
     const tE1 = gE[0]?.team; const tE2 = gE[1]?.team;
     if(!tD1||!tD2||!tE1||!tE2) return alert("Selesaikan semua pertandingan Fase 2 terlebih dahulu!");
     
-    saveSnapshot(); // Simpan riwayat sblm lanjut semi final
+    saveSnapshot(); 
 
     setMatchHistory([...matchHistory, ...schedule]); 
     const startId = [...matchHistory, ...schedule].length + 1;
@@ -573,24 +565,39 @@ export default function App() {
     }
   }
 
+  // --- MATA ELANG: JURU GAMBAR ESTETIK DAN KALIBRASI SKOR ---
   const renderAestheticBracket = () => {
     const n = Number(numGroups);
     const isRealData = knockoutData.length > 0;
     
+    const getTeamScore = (matchInfo, isTeamA) => {
+        if (!matchInfo || matchInfo.winner === null || matchInfo.winner === undefined || matchInfo.winner === '?') return "-";
+        if (isTeamEvent) return isTeamA ? matchInfo.winsA : matchInfo.winsB;
+        if (matchInfo.parties && matchInfo.parties[0]) {
+            let wA = 0, wB = 0;
+            matchInfo.parties[0].sets.forEach(s => {
+                const a = parseInt(s.scoreA), b = parseInt(s.scoreB);
+                if (!isNaN(a) && !isNaN(b)) { if (a > b) wA++; else if (b > a) wB++; }
+            });
+            return isTeamA ? wA : wB;
+        }
+        return "-";
+    };
+
     const BracketBox = ({ matchInfo }) => {
         const tA = matchInfo.teamA || "?";
         const tB = matchInfo.teamB || "?";
-        const sA = matchInfo.winsA !== undefined ? matchInfo.winsA : "-";
-        const sB = matchInfo.winsB !== undefined ? matchInfo.winsB : "-";
+        const sA = getTeamScore(matchInfo, true);
+        const sB = getTeamScore(matchInfo, false);
         const w = matchInfo.winner;
 
         return (
             <div className="bg-white border border-gray-100 rounded-2xl p-4 shadow-sm flex flex-col gap-1 w-full relative print-break-inside-avoid">
-                <div className={`text-[9px] font-black flex justify-between ${w === tA && w !== '?' ? 'text-emerald-600' : 'opacity-60 text-gray-700'}`}>
+                <div className={`text-[9px] font-black flex justify-between ${w === tA && w !== '?' ? 'text-emerald-600' : (tA !== '?' && !tA.includes('JUARA') && !tA.includes('MENANG') ? 'text-gray-700' : 'opacity-60 text-gray-700')}`}>
                     <span className="truncate w-3/4">{tA}</span><span>{sA}</span>
                 </div>
                 <div className="h-px bg-gray-50 my-1"></div>
-                <div className={`text-[9px] font-black flex justify-between ${w === tB && w !== '?' ? 'text-emerald-600' : 'opacity-60 text-gray-700'}`}>
+                <div className={`text-[9px] font-black flex justify-between ${w === tB && w !== '?' ? 'text-emerald-600' : (tB !== '?' && !tB.includes('RUNNER') && !tB.includes('MENANG') ? 'text-gray-700' : 'opacity-60 text-gray-700')}`}>
                     <span className="truncate w-3/4">{tB}</span><span>{sB}</span>
                 </div>
             </div>
@@ -621,18 +628,28 @@ export default function App() {
                <div className="text-[9px] font-black text-emerald-600 text-center mb-4 tracking-[0.3em]">PARTAI PUNCAK</div>
                <div className="bg-emerald-50 border-2 border-emerald-200 rounded-[32px] p-8 shadow-xl flex flex-col gap-3 w-full text-center relative print-break-inside-avoid">
                   <div className="absolute -top-4 left-1/2 -translate-x-1/2 bg-emerald-500 text-white text-[8px] font-black px-4 py-1 rounded-full shadow-lg">FINALIS</div>
-                  <div className={`text-xs font-black ${fMatch.winner === fMatch.teamA && fMatch.winner !== '?' ? 'text-emerald-700' : 'text-emerald-900 opacity-40'}`}>{fMatch.teamA}</div>
-                  <div className="text-xs font-black text-emerald-500">VS</div>
-                  <div className={`text-xs font-black ${fMatch.winner === fMatch.teamB && fMatch.winner !== '?' ? 'text-emerald-700' : 'text-emerald-900 opacity-40'}`}>{fMatch.teamB}</div>
+                  
+                  <div className="flex justify-between items-center w-full px-2">
+                      <div className={`text-[10px] font-black truncate w-1/3 text-right ${fMatch.winner === fMatch.teamA && fMatch.winner !== '?' ? 'text-emerald-700' : (fMatch.teamA !== '?' && !fMatch.teamA.includes('MENANG') ? 'text-emerald-900' : 'text-emerald-900 opacity-40')}`}>{fMatch.teamA}</div>
+                      
+                      <div className="flex flex-col items-center justify-center w-1/3">
+                          <div className="text-[10px] font-black text-emerald-500 mb-1">VS</div>
+                          <div className="bg-emerald-100 text-emerald-800 px-3 py-1 rounded-lg text-[9px] font-black shadow-inner">
+                              {getTeamScore(fMatch, true)} - {getTeamScore(fMatch, false)}
+                          </div>
+                      </div>
+
+                      <div className={`text-[10px] font-black truncate w-1/3 text-left ${fMatch.winner === fMatch.teamB && fMatch.winner !== '?' ? 'text-emerald-700' : (fMatch.teamB !== '?' && !fMatch.teamB.includes('MENANG') ? 'text-emerald-900' : 'text-emerald-900 opacity-40')}`}>{fMatch.teamB}</div>
+                  </div>
                </div>
                
                <div className="mt-8 text-center print-break-inside-avoid">
                   <div className="text-amber-500 font-black text-xs flex flex-col items-center gap-2"><IconTrophy /><span className="tracking-widest">JUARA 3 BERSAMA</span></div>
                   <p className="text-[8px] text-gray-400 mt-2 font-bold opacity-50 uppercase">(KALAH DI BABAK SEMI FINAL)</p>
                   {isRealData && jointThirdTeams.length === 2 && (
-                    <div className="mt-3 bg-amber-50/50 border border-amber-100 rounded-xl p-2 shadow-sm text-[10px] font-black text-amber-800">
+                    <div className="mt-3 bg-amber-50/50 border border-amber-100 rounded-xl p-2 shadow-sm text-[10px] font-black text-amber-800 flex flex-col gap-1">
                         <div>{jointThirdTeams[0]}</div>
-                        <div className="h-px bg-amber-200/50 my-1"></div>
+                        <div className="h-px bg-amber-200/50"></div>
                         <div>{jointThirdTeams[1]}</div>
                     </div>
                   )}
@@ -656,18 +673,28 @@ export default function App() {
                <div className="text-[9px] font-black text-emerald-600 text-center mb-4 tracking-[0.3em]">PARTAI PUNCAK</div>
                <div className="bg-emerald-50 border-2 border-emerald-200 rounded-[32px] p-8 shadow-xl flex flex-col gap-3 w-full text-center relative print-break-inside-avoid">
                   <div className="absolute -top-4 left-1/2 -translate-x-1/2 bg-emerald-500 text-white text-[8px] font-black px-4 py-1 rounded-full shadow-lg">FINALIS</div>
-                  <div className={`text-xs font-black ${fMatch.winner === fMatch.teamA && fMatch.winner !== '?' ? 'text-emerald-700' : 'text-emerald-900 opacity-40'}`}>{fMatch.teamA}</div>
-                  <div className="text-xs font-black text-emerald-500">VS</div>
-                  <div className={`text-xs font-black ${fMatch.winner === fMatch.teamB && fMatch.winner !== '?' ? 'text-emerald-700' : 'text-emerald-900 opacity-40'}`}>{fMatch.teamB}</div>
+                  
+                  <div className="flex justify-between items-center w-full px-2">
+                      <div className={`text-[10px] font-black truncate w-1/3 text-right ${fMatch.winner === fMatch.teamA && fMatch.winner !== '?' ? 'text-emerald-700' : (fMatch.teamA !== '?' && !fMatch.teamA.includes('MENANG') ? 'text-emerald-900' : 'text-emerald-900 opacity-40')}`}>{fMatch.teamA}</div>
+                      
+                      <div className="flex flex-col items-center justify-center w-1/3">
+                          <div className="text-[10px] font-black text-emerald-500 mb-1">VS</div>
+                          <div className="bg-emerald-100 text-emerald-800 px-3 py-1 rounded-lg text-[9px] font-black shadow-inner">
+                              {getTeamScore(fMatch, true)} - {getTeamScore(fMatch, false)}
+                          </div>
+                      </div>
+
+                      <div className={`text-[10px] font-black truncate w-1/3 text-left ${fMatch.winner === fMatch.teamB && fMatch.winner !== '?' ? 'text-emerald-700' : (fMatch.teamB !== '?' && !fMatch.teamB.includes('MENANG') ? 'text-emerald-900' : 'text-emerald-900 opacity-40')}`}>{fMatch.teamB}</div>
+                  </div>
                </div>
                
                <div className="mt-8 text-center print-break-inside-avoid">
                   <div className="text-amber-500 font-black text-xs flex flex-col items-center gap-2"><IconTrophy /><span className="tracking-widest">JUARA 3 BERSAMA</span></div>
                   <p className="text-[8px] text-gray-400 mt-2 font-bold opacity-50 uppercase">(KALAH DI BABAK SEMI FINAL)</p>
                   {isRealData && jointThirdTeams.length === 2 && (
-                    <div className="mt-3 bg-amber-50/50 border border-amber-100 rounded-xl p-2 shadow-sm text-[10px] font-black text-amber-800">
+                    <div className="mt-3 bg-amber-50/50 border border-amber-100 rounded-xl p-2 shadow-sm text-[10px] font-black text-amber-800 flex flex-col gap-1">
                         <div>{jointThirdTeams[0]}</div>
-                        <div className="h-px bg-amber-200/50 my-1"></div>
+                        <div className="h-px bg-amber-200/50"></div>
                         <div>{jointThirdTeams[1]}</div>
                     </div>
                   )}
@@ -753,30 +780,41 @@ export default function App() {
         {`
           .hide-arrows::-webkit-outer-spin-button, .hide-arrows::-webkit-inner-spin-button { -webkit-appearance: none; margin: 0; } 
           .hide-arrows { -moz-appearance: textfield; } 
-          
-          /* TRIK PNG EXPORT */
           .export-mode .master-modal-content { max-height: none !important; overflow: visible !important; height: auto !important; }
           .export-mode #master-print-area { max-height: none !important; overflow: visible !important; height: auto !important; }
-          
           @media print { 
             @page { size: landscape; margin: 10mm; } 
             body { background-color: white !important; -webkit-print-color-adjust: exact; print-color-adjust: exact; } 
             .no-print { display: none !important; } 
             #capture-area { display: none !important; }
-            
-            /* INSTRUKSI PDF */
             .print-break-inside-avoid { break-inside: avoid; page-break-inside: avoid; } 
             tr { break-inside: avoid; page-break-inside: avoid; }
             .print-border { border: 1px solid #e5e7eb !important; } 
             input[type="number"] { -moz-appearance: textfield; } 
-            
-            /* Melepas bingkai Modal untuk Print */
             .master-modal-overlay { position: absolute !important; inset: 0 !important; background: white !important; display: block !important; align-items: flex-start !important; }
             .master-modal-content { box-shadow: none !important; max-width: 100% !important; width: 100% !important; max-height: none !important; height: auto !important; border-radius: 0 !important; overflow: visible !important; }
             #master-print-area { overflow: visible !important; max-height: none !important; height: auto !important; padding: 0 !important; }
           }
         `}
       </style>
+
+      {/* MODAL APRESIASI (TRAKTIR KOPI) */}
+      {showCoffeeModal && (
+        <div className="fixed inset-0 z-[70] bg-black/60 backdrop-blur-sm flex items-center justify-center p-4 animate-in fade-in duration-300">
+          <div className="bg-white w-full max-w-sm rounded-3xl shadow-2xl flex flex-col overflow-hidden text-center relative p-8">
+            <button onClick={() => setShowCoffeeModal(false)} className="absolute top-4 right-4 bg-gray-100 text-gray-400 hover:bg-gray-200 hover:text-gray-600 p-2 rounded-xl transition-colors"><IconX /></button>
+            <div className="bg-amber-100 text-amber-600 w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4"><IconCoffee /></div>
+            <h3 className="text-xl font-black text-gray-800 mb-2">Traktir Kopi Developer</h3>
+            <p className="text-xs font-bold text-gray-500 mb-6 leading-relaxed normal-case">Terima kasih telah menggunakan aplikasi ini! Dukungan Anda sangat berarti bagi pengembangan fitur selanjutnya.</p>
+            <div className="bg-gray-50 rounded-2xl p-4 border border-gray-100 mb-6 flex justify-center">
+                <img src="/shareqr.png" alt="QRIS DANA" className="max-w-[200px] h-auto rounded-xl shadow-sm" />
+            </div>
+            <a href="https://wa.me/6285340804702?text=Halo%20Developer%20TMS%20Sepak%20Takraw,%20saya%20ingin%20konsultasi..." target="_blank" rel="noopener noreferrer" className="bg-emerald-500 hover:bg-emerald-600 text-white font-black py-4 rounded-xl shadow-md transition-colors w-full flex items-center justify-center gap-2 text-sm uppercase tracking-widest">
+                Konsultasi WhatsApp
+            </a>
+          </div>
+        </div>
+      )}
 
       {isProjectorMode && <button onClick={handleExitProjectorMode} className="no-print fixed bottom-8 right-8 bg-white text-red-600 px-6 py-4 rounded-full shadow-2xl font-black z-50 flex items-center gap-3 animate-bounce border-4 border-red-100 hover:bg-red-50"><IconX /> EXIT</button>}
 
@@ -793,6 +831,7 @@ export default function App() {
               <div className="flex bg-gray-50 rounded-xl p-1 border border-gray-100 mr-2">
                  {Object.keys(themes).map(t => ( <button key={t} onClick={() => setActiveTheme(t)} className={`w-6 h-6 sm:w-8 sm:h-8 rounded-lg flex items-center justify-center transition-all ${activeTheme === t ? 'bg-white shadow-sm scale-110' : 'hover:bg-gray-200'}`} title={themes[t].name}><div className={`w-3 h-3 sm:w-4 sm:h-4 rounded-full ${themes[t].primary}`}></div></button> ))}
               </div>
+              <button onClick={() => setShowCoffeeModal(true)} className="bg-amber-100 text-amber-700 hover:bg-amber-200 p-2 sm:px-4 sm:py-2 rounded-xl flex items-center gap-2 font-bold transition-colors shadow-sm text-xs sm:text-sm" title="Traktir Kopi"><IconCoffee /> <span className="hidden md:inline">Apresiasi</span></button>
               <label className={`cursor-pointer ${theme.soft} ${theme.textPrimary} hover:bg-gray-100 px-4 py-2 rounded-xl flex items-center gap-2 transition-colors font-bold text-xs sm:text-sm`}><IconFolder /> <span className="hidden md:inline">Open</span><input type="file" accept=".json" hidden onChange={handleOpenFile} /></label>
               <button onClick={handleSaveFile} className={`${theme.primary} ${theme.primaryHover} text-white px-4 py-2 rounded-xl flex items-center gap-2 font-bold transition-colors shadow-md text-xs sm:text-sm`}><IconSave /> <span className="hidden md:inline">Save</span></button>
            </div>
@@ -807,7 +846,7 @@ export default function App() {
             <div className="no-print bg-white rounded-3xl shadow-sm p-4 flex flex-col md:flex-row justify-between items-center gap-4 border border-gray-100">
               <div className="flex items-center gap-3">
                  <div className={`p-3 rounded-2xl ${theme.soft} ${theme.textPrimary}`}><IconTable /></div>
-                 <div><h3 className="font-black text-gray-800">Tournament Dashboard</h3><p className="text-xs text-gray-500 font-medium">Input skor atau lihat Jadwal Induk.</p></div>
+                 <div><h3 className="font-black text-gray-800">Tournament Dashboard</h3><p className="text-xs text-gray-500 font-medium normal-case">Input skor pertandingan atau lihat Jadwal Induk (Master Report).</p></div>
               </div>
               <div className="flex flex-wrap gap-2 items-center">
                 <button onClick={() => setShowMasterModal(true)} className={`${theme.soft} ${theme.textPrimary} hover:bg-gray-100 px-4 py-2.5 rounded-2xl flex items-center gap-2 text-sm font-black transition-colors`}><IconList /> JADWAL INDUK (LAPORAN)</button>
@@ -850,7 +889,7 @@ export default function App() {
                 </form>
                 <div className="flex justify-between items-end mb-4 px-1"><h3 className="text-xs font-black text-gray-400 uppercase tracking-widest">Daftar Tim ({teams.length})</h3></div>
                 <div className="flex flex-col gap-3 overflow-y-auto pr-2 pb-2 flex-1">
-                  {teams.length === 0 && <div className="h-32 flex items-center justify-center border-2 border-dashed border-gray-100 rounded-2xl text-gray-400 font-bold text-sm">Belum ada tim didaftarkan.</div>}
+                  {teams.length === 0 && <div className="h-32 flex items-center justify-center border-2 border-dashed border-gray-100 rounded-2xl text-gray-400 font-bold text-sm normal-case">Belum ada tim didaftarkan.</div>}
                   {teams.map((team) => (
                     <div key={team} className="bg-white p-3 pr-4 rounded-2xl flex items-center justify-between border border-gray-200 shadow-sm hover:border-gray-300 transition-colors">
                       <div className="flex items-center gap-4">
@@ -1000,7 +1039,7 @@ export default function App() {
                      <h2 className="text-3xl font-black text-white mb-3 tracking-tight">Fase Berikutnya</h2>
                      {isActivePhaseFinished ? (
                        <>
-                         <p className="text-emerald-400 mb-8 font-medium">✨ Fase 1 telah selesai! Silakan atur konfigurasi untuk babak selanjutnya:</p>
+                         <p className="text-emerald-400 mb-8 font-medium normal-case">✨ Fase 1 telah selesai! Silakan atur konfigurasi untuk babak selanjutnya:</p>
                          {Number(numGroups) === 3 ? (
                            <div className="bg-gray-800/80 p-6 md:p-8 rounded-2xl border border-gray-700 text-left backdrop-blur-sm">
                              <div className="flex flex-col md:flex-row gap-8">
@@ -1018,7 +1057,7 @@ export default function App() {
                                          <option value="seeding">Tim Terbaik (Global Seeding)</option>
                                          <option value="standard">Posisi Standar (Juara A & B)</option>
                                       </select>
-                                      <p className="text-[10px] text-gray-400">Tim Terbaik = Mengambil 2 tim poin tertinggi dari semua grup.</p>
+                                      <p className="text-[10px] text-gray-400 normal-case">Tim Terbaik = Mengambil 2 tim poin tertinggi dari semua grup.</p>
                                    </div>
                                 )}
                              </div>
@@ -1028,11 +1067,11 @@ export default function App() {
                            </div>
                          ) : (
                            <div className="flex flex-wrap justify-center gap-4">
-                              <button onClick={handleExecutePhase2} className="bg-emerald-600 hover:bg-emerald-700 text-white font-black py-4 px-8 rounded-2xl shadow-md transition-all">Lanjut Sistem Gugur</button>
+                              <button onClick={handleExecutePhase2} className="bg-emerald-600 hover:bg-emerald-700 text-white font-black py-4 px-8 rounded-2xl shadow-md transition-all uppercase tracking-widest">Lanjut Sistem Gugur</button>
                            </div>
                          )}
                        </>
-                     ) : <p className="text-gray-400 font-bold">Menunggu semua skor diinput untuk membuka kunci fase berikutnya.</p>}
+                     ) : <p className="text-gray-400 font-bold normal-case">Menunggu semua skor diinput untuk membuka kunci fase berikutnya.</p>}
                    </div>
                 </div>
               )}
@@ -1042,10 +1081,10 @@ export default function App() {
                    <h2 className="text-3xl font-black text-white mb-3">Menuju Semi Final</h2>
                    {isActivePhaseFinished ? (
                       <>
-                        <p className="text-emerald-400 mb-8 font-medium">✨ Grup D dan E telah selesai! Mari tentukan Juara Turnamen ini.</p>
-                        <button onClick={handleGenerateSemiFinals} className="bg-emerald-600 hover:bg-emerald-700 text-white font-black py-4 px-8 rounded-2xl shadow-md transition-all text-lg">Mulai Semi Final & Final</button>
+                        <p className="text-emerald-400 mb-8 font-medium normal-case">✨ Grup D dan E telah selesai! Mari tentukan Juara Turnamen ini.</p>
+                        <button onClick={handleGenerateSemiFinals} className="bg-emerald-600 hover:bg-emerald-700 text-white font-black py-4 px-8 rounded-2xl shadow-md transition-all text-lg uppercase tracking-widest">Mulai Semi Final & Final</button>
                       </>
-                   ) : <p className="text-gray-400 font-bold">Selesaikan jadwal Fase 2 di atas untuk membuka Semi Final.</p>}
+                   ) : <p className="text-gray-400 font-bold normal-case">Selesaikan jadwal Fase 2 di atas untuk membuka Semi Final.</p>}
                 </div>
               )}
             </div>
@@ -1055,7 +1094,7 @@ export default function App() {
           {((stage === 3) || (stage === 1 && tournamentType === 'Knocked Out Round')) && knockoutData.length > 0 && (
             <div className={`space-y-8 animate-in fade-in duration-500 ${isProjectorMode ? 'space-y-12' : ''}`}>
               <div className={`text-center bg-white rounded-3xl shadow-sm border border-gray-100 print:border-none print:shadow-none print:p-2 ${isProjectorMode ? 'p-12 shadow-2xl border-none' : 'p-8'}`}>
-                 <h2 className={`font-black text-gray-900 flex items-center justify-center gap-4 ${isProjectorMode ? 'text-5xl tracking-tight' : 'text-3xl'}`}><div className={`p-3 rounded-2xl ${theme.primary} text-white`}><IconTrophy /></div>Penginputan Skor Bagan Utama</h2>
+                 <h2 className={`font-black text-gray-900 flex items-center justify-center gap-4 ${isProjectorMode ? 'text-5xl tracking-tight' : 'text-3xl'}`}><div className={`p-3 rounded-2xl ${theme.primary} text-white`}><IconTrophy /></div>PENGINPUTAN SKOR BAGAN UTAMA</h2>
                  {!isProjectorMode && (
                    <div className="no-print mt-6 flex justify-center gap-3 flex-wrap">
                       {undoHistory && <button onClick={handleRollback} className="text-xs bg-purple-50 hover:bg-purple-100 text-purple-700 px-4 py-2.5 rounded-xl font-bold uppercase tracking-widest border border-purple-200 shadow-sm flex items-center gap-2"><IconUndo /> Batal Lanjut Fase</button>}
