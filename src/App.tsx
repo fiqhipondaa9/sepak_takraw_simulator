@@ -175,7 +175,7 @@ export default function App() {
     const standings = getStandings();
     let waText = `🏆 *FASE PENYISIHAN* 🏆\n*${championshipTitles[0]}*\n\n`;
     Object.entries(standings)
-      .filter(([groupName]) => groupName !== 'Unknown') // Filter agar Grup Siluman tidak disalin
+      .filter(([groupName]) => !groupName.toLowerCase().includes('unknown')) // Blokir siluman disalin ke WA
       .forEach(([groupName, groupTeams]) => {
       waText += `*${groupName}*\n`;
       groupTeams.forEach((stat, index) => {
@@ -220,14 +220,24 @@ export default function App() {
   const handleNumGroupsChange = (e) => { const val = e.target.value; if (val === '') { setNumGroups(''); return; } const num = Number(val); if (num >= 1 && num <= 26) { setNumGroups(num); setGroupAssignments({}); } };
   const handleAutoAssign = () => { if (teams.length === 0) return; const activeNG = Number(numGroups) || 2; const shf = [...teams].sort(() => 0.5 - Math.random()); const assignments = {}; const gl = Array.from({length: activeNG}, (_, i) => String.fromCharCode(65 + i)); shf.forEach((t, i) => { assignments[t] = gl[i % activeNG]; }); setGroupAssignments(assignments); };
 
+  // --- PERBAIKAN: STERILISASI DATA KLASEMEN (MEMUTUS KABEL HISTORI SAAT FASE 2) ---
   const getStandings = (specificSchedule = schedule, specificAssignments = groupAssignments) => {
     let standings = {};
     teams.forEach(t => { 
-      standings[t] = { team: t, group: tournamentType === 'Groups' ? (specificAssignments[t] ? `Grup ${specificAssignments[t]}` : 'Pool Utama') : 'Pool Utama', play: 0, win: 0, lose: 0, partyWin: 0, partyLose: 0, setWin: 0, setLose: 0, pointWin: 0, pointLose: 0, totalPoints: 0 }; 
+      standings[t] = { team: t, group: tournamentType === 'Groups' ? (specificAssignments[t] ? `Grup ${specificAssignments[t]}` : 'Unknown') : 'Pool Utama', play: 0, win: 0, lose: 0, partyWin: 0, partyLose: 0, setWin: 0, setLose: 0, pointWin: 0, pointLose: 0, totalPoints: 0 }; 
     });
 
-    [...matchHistory, ...specificSchedule].forEach(match => {
-      if (!match.winner || match.winner === '?') return;
+    const isPhase2Active = Object.values(specificAssignments).some(g => g === 'D' || g === 'E');
+
+    const filteredMatches = [...matchHistory, ...specificSchedule].filter(match => {
+       if (!match.winner || match.winner === '?') return false;
+       // Jika Grup D & E aktif, KITA HANYA MENGHITUNG JADWAL FASE 2. Semua skor lama dibuang!
+       if (isPhase2Active) return match.groupLabel && match.groupLabel.includes("Fase 2");
+       // Jika Fase 1 aktif, kita hanya menghitung jadwal tanpa embel-embel "Fase 2"
+       return !match.groupLabel || !match.groupLabel.includes("Fase 2");
+    });
+
+    filteredMatches.forEach(match => {
       const tA = match.teamA; const tB = match.teamB;
       if(!standings[tA]) standings[tA] = { team: tA, group: 'Unknown', play: 0, win: 0, lose: 0, partyWin: 0, partyLose: 0, setWin: 0, setLose: 0, pointWin: 0, pointLose: 0, totalPoints: 0 };
       if(!standings[tB]) standings[tB] = { team: tB, group: 'Unknown', play: 0, win: 0, lose: 0, partyWin: 0, partyLose: 0, setWin: 0, setLose: 0, pointWin: 0, pointLose: 0, totalPoints: 0 };
@@ -261,7 +271,7 @@ export default function App() {
 
     const sortedTeams = Object.values(standings).sort((a, b) => {
       if (b.totalPoints !== a.totalPoints) return b.totalPoints - a.totalPoints;
-      const h2hMatch = [...matchHistory, ...specificSchedule].find(m => ((m.teamA === a.team && m.teamB === b.team) || (m.teamA === b.team && m.teamB === a.team)) && m.winner);
+      const h2hMatch = filteredMatches.find(m => ((m.teamA === a.team && m.teamB === b.team) || (m.teamA === b.team && m.teamB === a.team)) && m.winner);
       if (h2hMatch && h2hMatch.winner !== 'SERI' && h2hMatch.winner !== '?') { if (h2hMatch.winner === a.team) return -1; if (h2hMatch.winner === b.team) return 1; }
       if (b.win !== a.win) return b.win - a.win;
       if (isTeamEvent) { const aP = a.partyWin - a.partyLose; const bP = b.partyWin - b.partyLose; if (bP !== aP) return bP - aP; }
@@ -844,9 +854,9 @@ export default function App() {
               <div className="flex bg-gray-50 rounded-xl p-1 border border-gray-100 mr-2">
                  {Object.keys(themes).map(t => ( <button key={t} onClick={() => setActiveTheme(t)} className={`w-6 h-6 sm:w-8 sm:h-8 rounded-lg flex items-center justify-center transition-all ${activeTheme === t ? 'bg-white shadow-sm scale-110' : 'hover:bg-gray-200'}`} title={themes[t].name}><div className={`w-3 h-3 sm:w-4 sm:h-4 rounded-full ${themes[t].primary}`}></div></button> ))}
               </div>
-              <button onClick={() => setShowCoffeeModal(true)} className="bg-amber-100 text-amber-700 hover:bg-amber-200 p-2 sm:px-4 sm:py-2 rounded-xl flex items-center gap-2 font-bold transition-colors shadow-sm text-xs sm:text-sm" title="Traktir Kopi"><IconCoffee /> <span className="hidden md:inline">Apresiasi</span></button>
-              <label className={`cursor-pointer ${theme.soft} ${theme.textPrimary} hover:bg-gray-100 px-4 py-2 rounded-xl flex items-center gap-2 transition-colors font-bold text-xs sm:text-sm`}><IconFolder /> <span className="hidden md:inline">Open</span><input type="file" accept=".json" hidden onChange={handleOpenFile} /></label>
-              <button onClick={handleSaveFile} className={`${theme.primary} ${theme.primaryHover} text-white px-4 py-2 rounded-xl flex items-center gap-2 font-bold transition-colors shadow-md text-xs sm:text-sm`}><IconSave /> <span className="hidden md:inline">Save</span></button>
+              <button onClick={() => setShowCoffeeModal(true)} className="bg-amber-100 text-amber-700 hover:bg-amber-200 p-2 sm:px-4 sm:py-2 rounded-xl flex items-center gap-2 font-bold transition-colors shadow-sm text-xs sm:text-sm" title="Traktir Kopi"><IconCoffee /> <span className="hidden md:inline">APRESIASI</span></button>
+              <label className={`cursor-pointer ${theme.soft} ${theme.textPrimary} hover:bg-gray-100 px-4 py-2 rounded-xl flex items-center gap-2 transition-colors font-bold text-xs sm:text-sm`}><IconFolder /> <span className="hidden md:inline">OPEN</span><input type="file" accept=".json" hidden onChange={handleOpenFile} /></label>
+              <button onClick={handleSaveFile} className={`${theme.primary} ${theme.primaryHover} text-white px-4 py-2 rounded-xl flex items-center gap-2 font-bold transition-colors shadow-md text-xs sm:text-sm`}><IconSave /> <span className="hidden md:inline">SAVE</span></button>
            </div>
         </div>
       )}
@@ -998,7 +1008,7 @@ export default function App() {
                     
                     <div className={`grid grid-cols-1 lg:grid-cols-2 print:gap-4 print:p-2 ${isProjectorMode ? 'p-8 gap-8 bg-white' : 'p-6 gap-6 bg-gray-50/50'}`}>
                       {Object.entries(getStandings())
-                        .filter(([groupName]) => groupName !== 'Unknown') // Filter Grup Siluman
+                        .filter(([groupName]) => !groupName.toLowerCase().includes('unknown')) // Filter Grup Siluman
                         .map(([groupName, groupTeams]) => (
                         <div key={groupName} className="bg-white border border-gray-100 rounded-3xl overflow-hidden print-break-inside-avoid shadow-sm flex flex-col">
                           <div className={`font-black uppercase tracking-widest text-center border-b border-gray-100 print:bg-gray-100 ${isProjectorMode ? 'px-6 py-5 text-2xl text-gray-800 bg-gray-50' : 'px-4 py-4 text-sm text-gray-400'}`}>{groupName}</div>
@@ -1161,7 +1171,7 @@ export default function App() {
                      <h3 className="text-lg font-black uppercase mb-6 border-l-4 border-amber-400 pl-4 text-gray-800">FASE PENYISIHAN</h3>
                      <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
                         {Object.entries(getStandings())
-                          .filter(([groupName]) => groupName !== 'Unknown') // Filter Grup Siluman
+                          .filter(([groupName]) => !groupName.toLowerCase().includes('unknown')) // Blokir rendering Grup Siluman
                           .map(([gn, gt]) => (
                           <div key={gn} className="bg-gray-50 p-4 rounded-2xl border border-gray-100 shadow-sm print-break-inside-avoid">
                              <div className="text-center font-black text-xs mb-3 text-gray-400 uppercase tracking-widest">{gn}</div>
