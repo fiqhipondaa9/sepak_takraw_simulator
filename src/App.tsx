@@ -86,6 +86,18 @@ export default function App() {
     return () => window.removeEventListener('beforeunload', handleBeforeUnload);
   }, [stage]);
 
+  // --- TIMER APRESIASI & KONSULTASI WA (33 MENIT) ---
+  useEffect(() => {
+    const apresiasiTimer = setInterval(() => {
+      // Pastikan modal hanya muncul jika tidak sedang presentasi layar penuh (Projector Mode)
+      if (!isProjectorMode) {
+        setShowCoffeeModal(true);
+      }
+    }, 33 * 60 * 1000); // 33 Menit = 1.980.000 ms
+
+    return () => clearInterval(apresiasiTimer);
+  }, [isProjectorMode]);
+
   const handleEnterProjectorMode = () => {
     setIsProjectorMode(true);
     const elem = document.documentElement;
@@ -987,6 +999,24 @@ export default function App() {
       )}
 
       {isProjectorMode && <button onClick={handleExitProjectorMode} className="no-print fixed bottom-8 right-8 bg-white text-red-600 px-6 py-4 rounded-full shadow-2xl font-black z-50 flex items-center gap-3 animate-bounce border-4 border-red-100 hover:bg-red-50"><IconX /> EXIT</button>}
+
+      {/* --- FAB KONSULTASI & APRESIASI --- */}
+      {!isProjectorMode && (
+        <button 
+          onClick={() => setShowCoffeeModal(true)} 
+          className="no-print fixed bottom-8 right-8 bg-emerald-500 hover:bg-emerald-600 text-white h-14 rounded-full shadow-2xl z-50 flex items-center justify-center px-4 gap-0 hover:gap-3 transition-all duration-300 border-4 border-emerald-100 group overflow-hidden"
+          title="Konsultasi & Apresiasi"
+        >
+          <div className="relative flex items-center justify-center">
+            <IconCoffee />
+            <span className="absolute -top-1 -right-1 w-2.5 h-2.5 bg-red-500 rounded-full animate-ping"></span>
+            <span className="absolute -top-1 -right-1 w-2.5 h-2.5 bg-red-500 rounded-full border border-white"></span>
+          </div>
+          <span className="max-w-0 opacity-0 group-hover:max-w-xs group-hover:opacity-100 transition-all duration-500 ease-in-out whitespace-nowrap font-black text-xs uppercase tracking-widest">
+            Konsultasi WA
+          </span>
+        </button>
+      )}
 
       {!isProjectorMode && (
         <div className="no-print sticky top-0 z-40 p-4 backdrop-blur-md bg-white/60 border-b border-white/20 shadow-sm flex justify-between items-center">
