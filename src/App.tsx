@@ -1031,7 +1031,6 @@ export default function App() {
               <div className="flex bg-gray-50 rounded-xl p-1 border border-gray-100 mr-2">
                  {Object.keys(themes).map(t => ( <button key={t} onClick={() => setActiveTheme(t)} className={`w-6 h-6 sm:w-8 sm:h-8 rounded-lg flex items-center justify-center transition-all ${activeTheme === t ? 'bg-white shadow-sm scale-110' : 'hover:bg-gray-200'}`} title={themes[t].name}><div className={`w-3 h-3 sm:w-4 sm:h-4 rounded-full ${themes[t].primary}`}></div></button> ))}
               </div>
-              <button onClick={() => setShowCoffeeModal(true)} className="bg-amber-100 text-amber-700 hover:bg-amber-200 p-2 sm:px-4 sm:py-2 rounded-xl flex items-center gap-2 font-bold transition-colors shadow-sm text-xs sm:text-sm" title="Traktir Kopi"><IconCoffee /> <span className="hidden md:inline">APRESIASI</span></button>
               <label className={`cursor-pointer ${theme.soft} ${theme.textPrimary} hover:bg-gray-100 px-4 py-2 rounded-xl flex items-center gap-2 transition-colors font-bold text-xs sm:text-sm`}><IconFolder /> <span className="hidden md:inline">OPEN</span><input type="file" accept=".json" hidden onChange={handleOpenFile} /></label>
               <button onClick={handleSaveFile} className={`${theme.primary} ${theme.primaryHover} text-white px-4 py-2 rounded-xl flex items-center gap-2 font-bold transition-colors shadow-md text-xs sm:text-sm`}><IconSave /> <span className="hidden md:inline">SAVE</span></button>
            </div>
