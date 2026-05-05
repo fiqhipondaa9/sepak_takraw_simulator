@@ -59,14 +59,16 @@ export default function App() {
 
   const [phase2Format, setPhase2Format] = useState('group'); 
   const [phase2ByeSystem, setPhase2ByeSystem] = useState('seeding'); 
-  
-  // PENYIMPANAN DATA KLASEMEN FASE 1
   const [phase1Standings, setPhase1Standings] = useState(null);
 
   const [isProjectorMode, setIsProjectorMode] = useState(false);
   const [isExportingPng, setIsExportingPng] = useState(false);
   
-  const [undoHistory, setUndoHistory] = useState(null);
+  // --- TAHAP 2: STATE UNTUK UNDO/REDO SYSTEM ---
+  // Kita menggunakan dua array untuk melacak masa lalu (past) dan masa depan (future)
+  const [past, setPast] = useState([]);
+  const [future, setFuture] = useState([]);
+  
   const [showCoffeeModal, setShowCoffeeModal] = useState(false); 
 
   const isTeamEvent = selectedEventFormat.toUpperCase().includes('TEAM');
@@ -87,13 +89,12 @@ export default function App() {
     return () => window.removeEventListener('beforeunload', handleBeforeUnload);
   }, [stage]);
 
-  // --- TIMER APRESIASI & KONSULTASI WA (33 MENIT) ---
   useEffect(() => {
     const apresiasiTimer = setInterval(() => {
       if (!isProjectorMode) {
         setShowCoffeeModal(true);
       }
-    }, 33 * 60 * 1000); // 33 Menit = 1.980.000 ms
+    }, 33 * 60 * 1000); 
 
     return () => clearInterval(apresiasiTimer);
   }, [isProjectorMode]);
@@ -135,7 +136,10 @@ export default function App() {
         setKnockoutData(data.knockoutData || []); setCourts(data.courts || ['LAPANGAN 1', 'LAPANGAN 2']);
         if (data.activeTheme && themes[data.activeTheme]) setActiveTheme(data.activeTheme);
         setPhase1Standings(data.phase1Standings || null);
-        setUndoHistory(null); 
+        
+        // Reset riwayat saat memuat file baru
+        setPast([]); 
+        setFuture([]);
       } catch (err) { alert("Gagal memuat! Format file tidak valid."); }
     };
     reader.readAsText(file); e.target.value = null; 
@@ -206,24 +210,75 @@ export default function App() {
     catch (err) { alert("❌ Gagal menyalin."); } document.body.removeChild(textArea);
   };
 
+  // --- TAHAP 2: FUNGSI SNAPSHOT GLOBAL ---
+  // Fungsi ini "memfoto" seluruh state penting sebelum terjadi perubahan data yang merusak
+  const getCurrentStateSnapshot = () => ({
+    stage,
+    schedule: JSON.parse(JSON.stringify(schedule)),
+    matchHistory: JSON.parse(JSON.stringify(matchHistory)),
+    knockoutData: JSON.parse(JSON.stringify(knockoutData)),
+    teams: [...teams],
+    groupAssignments: { ...groupAssignments },
+    tournamentType,
+    numGroups,
+    phase1Standings: phase1Standings ? JSON.parse(JSON.stringify(phase1Standings)) : null,
+    tournamentStartDate
+  });
+
   const saveSnapshot = () => {
-    setUndoHistory({
-        stage, schedule: [...schedule], matchHistory: [...matchHistory], 
-        knockoutData: JSON.parse(JSON.stringify(knockoutData)), 
-        teams: [...teams], groupAssignments: {...groupAssignments}, 
-        tournamentType, numGroups, phase1Standings: phase1Standings ? JSON.parse(JSON.stringify(phase1Standings)) : null
+    const currentState = getCurrentStateSnapshot();
+    setPast(prev => {
+        const newPast = [...prev, currentState];
+        if (newPast.length > 15) newPast.shift(); // Maksimal 15 langkah agar tidak boros memori
+        return newPast;
     });
+    setFuture([]); // Hapus 'masa depan' jika ada intervensi baru
   };
 
-  const handleRollback = () => {
-    if (undoHistory && window.confirm("Batalkan Lanjut Fase? Anda akan kembali ke fase sebelumnya dan bisa mengubah skor lagi.")) {
-        setStage(undoHistory.stage); setSchedule(undoHistory.schedule);
-        setMatchHistory(undoHistory.matchHistory); setKnockoutData(undoHistory.knockoutData);
-        setTeams(undoHistory.teams); setGroupAssignments(undoHistory.groupAssignments);
-        setTournamentType(undoHistory.tournamentType); setNumGroups(undoHistory.numGroups);
-        setPhase1Standings(undoHistory.phase1Standings);
-        setUndoHistory(null);
-    }
+  const handleUndo = () => {
+    if (past.length === 0) return;
+    const previousState = past[past.length - 1];
+    const currentState = getCurrentStateSnapshot();
+    
+    // Simpan keadaan saat ini ke 'masa depan'
+    setFuture(prev => [currentState, ...prev]);
+    // Mundurkan 'masa lalu'
+    setPast(prev => prev.slice(0, -1));
+    
+    // Terapkan data dari masa lalu ke state utama
+    setStage(previousState.stage);
+    setSchedule(previousState.schedule);
+    setMatchHistory(previousState.matchHistory);
+    setKnockoutData(previousState.knockoutData);
+    setTeams(previousState.teams);
+    setGroupAssignments(previousState.groupAssignments);
+    setTournamentType(previousState.tournamentType);
+    setNumGroups(previousState.numGroups);
+    setPhase1Standings(previousState.phase1Standings);
+    setTournamentStartDate(previousState.tournamentStartDate);
+  };
+
+  const handleRedo = () => {
+    if (future.length === 0) return;
+    const nextState = future[0];
+    const currentState = getCurrentStateSnapshot();
+    
+    // Simpan keadaan saat ini ke 'masa lalu'
+    setPast(prev => [...prev, currentState]);
+    // Majukan 'masa depan'
+    setFuture(prev => prev.slice(1));
+    
+    // Terapkan data dari masa depan ke state utama
+    setStage(nextState.stage);
+    setSchedule(nextState.schedule);
+    setMatchHistory(nextState.matchHistory);
+    setKnockoutData(nextState.knockoutData);
+    setTeams(nextState.teams);
+    setGroupAssignments(nextState.groupAssignments);
+    setTournamentType(nextState.tournamentType);
+    setNumGroups(nextState.numGroups);
+    setPhase1Standings(nextState.phase1Standings);
+    setTournamentStartDate(nextState.tournamentStartDate);
   };
 
   const handleAddSponsor = (e) => { const file = e.target.files[0]; if (file) { const reader = new FileReader(); reader.onloadend = () => setSponsorLogos([...sponsorLogos, reader.result]); reader.readAsDataURL(file); } };
@@ -347,7 +402,6 @@ export default function App() {
     setSchedule(fSch); setKnockoutData([]); setStage(1); 
   };
 
-  // --- AUTO-ADVANCE BYE LOGIC ---
   const generateDirectKnockout = (manualTeams = teams, startRoundIdx = 0, initialId = 1) => {
     const size = Math.pow(2, Math.ceil(Math.log2(manualTeams.length))); 
     let orderedTeams = Array(size).fill('BYE');
@@ -532,7 +586,6 @@ export default function App() {
     nSch[index] = t2; nSch[swp] = t1; setSchedule(nSch);
   };
 
-  // --- TAHAP 1: HANDLER EDIT JAM DAN TANGGAL ---
   const handleDateTimeChange = (matchId, isKnockout, rI, mI, field, value) => {
     if (isKnockout) {
         setKnockoutData(prev => {
@@ -579,6 +632,7 @@ export default function App() {
 
   const handleClearScores = () => {
     if (!window.confirm("Bersihkan semua skor?")) return;
+    saveSnapshot(); // Menyimpan riwayat agar aksi bersih skor ini bisa di-Undo
     setSchedule(schedule.map(m => ({ ...m, winner: null, winsA:0, winsB:0, parties: m.parties.map(p => ({...p, winner:null, sets:[{scoreA:'',scoreB:''},{scoreA:'',scoreB:''},{scoreA:'',scoreB:''}]})) })));
     
     if (knockoutData.length > 0) {
@@ -597,7 +651,12 @@ export default function App() {
     }
   };
 
-  const handleReset = () => { if (window.confirm("Hapus semua data turnamen?")) { setTeams([]); setSchedule([]); setGroupAssignments({}); setKnockoutData([]); setMatchHistory([]); setStage(0); setUndoHistory(null); setPhase1Standings(null); } };
+  const handleReset = () => { 
+    if (window.confirm("Hapus semua data turnamen?")) { 
+        saveSnapshot(); // Menyimpan riwayat agar aksi reset bisa di-Undo
+        setTeams([]); setSchedule([]); setGroupAssignments({}); setKnockoutData([]); setMatchHistory([]); setStage(0); setPhase1Standings(null); 
+    } 
+  };
 
   const generateMasterPlan = () => {
     let masterPlan = [];
@@ -857,7 +916,6 @@ export default function App() {
           {isKnockout ? ( 
              <div className="flex flex-col items-center">
                 <div className={`font-black tracking-widest uppercase ${isProjectorMode ? 'text-xl' : 'text-sm'} ${isLive ? 'text-red-800' : ''}`}>{match.title}</div> 
-                {/* --- TAHAP 1: EDIT TANGGAL & JAM UNTUK KNOCKOUT --- */}
                 <div className={`font-medium mt-1 flex items-center justify-center gap-2 ${isLive ? 'text-red-600 font-bold opacity-100' : 'opacity-70'} ${isProjectorMode ? 'text-base' : 'text-[10px]'}`}>
                   <span>MATCH #{match.id} &bull; {match.court} &bull;</span>
                   {isProjectorMode ? (
@@ -874,7 +932,6 @@ export default function App() {
             <div className="flex flex-col items-center relative">
                <span className={`font-black uppercase tracking-widest ${isLive ? 'text-red-800' : theme.textPrimary} ${isProjectorMode ? 'text-lg' : 'text-xs'}`}>{match.groupLabel} {match.roundLabel && `(${match.roundLabel})`}</span>
                
-               {/* --- TAHAP 1: EDIT TANGGAL & JAM UNTUK FASE GRUP --- */}
                <div className={`font-medium mt-1 flex items-center justify-center gap-2 ${isLive ? 'text-red-600 font-bold opacity-100' : 'opacity-70'} ${isProjectorMode ? 'text-base' : 'text-[10px]'}`}>
                   <span>MATCH #{match.id} &bull; {match.court} &bull;</span>
                   {isProjectorMode ? (
@@ -1105,7 +1162,6 @@ export default function App() {
                 <input value={championshipTitles[1]} onChange={(e) => handleUpdateTitle(1, e.target.value)} readOnly={isProjectorMode} className={`font-black ${theme.textPrimary} text-center uppercase focus:outline-none focus:bg-gray-50 rounded-xl bg-transparent transition-colors placeholder:text-gray-300 w-full px-4 print:p-0 ${isProjectorMode ? 'text-2xl md:text-4xl mt-3 cursor-default' : 'text-xl md:text-2xl mt-1'}`} placeholder="EDIT KETERANGAN DAN LAIN-LAIN" />
                 <input value={championshipTitles[2]} onChange={(e) => handleUpdateTitle(2, e.target.value)} readOnly={isProjectorMode} className={`font-bold text-gray-400 text-center uppercase focus:outline-none focus:bg-gray-50 rounded-xl bg-transparent transition-colors placeholder:text-gray-200 w-full px-4 print:p-0 ${isProjectorMode ? 'text-xl md:text-2xl mt-3 cursor-default' : 'text-sm md:text-base mt-1'}`} placeholder="EDIT LOKASI" />
                 
-                {/* --- TAHAP 1: INPUT TANGGAL GLOBAL TURNAMEN --- */}
                 <div className="flex justify-center mt-2 no-print">
                     <input type="date" value={tournamentStartDate} onChange={(e) => setTournamentStartDate(e.target.value)} readOnly={isProjectorMode} className={`font-bold text-gray-500 text-center uppercase focus:outline-none focus:bg-gray-50 rounded-xl bg-transparent transition-colors w-auto px-4 print:hidden ${isProjectorMode ? 'hidden' : 'text-xs md:text-sm border border-dashed border-gray-300 p-2'}`} />
                 </div>
@@ -1209,7 +1265,13 @@ export default function App() {
                       <div className="flex items-center gap-4"><div className={`p-3 rounded-2xl ${theme.soft} ${theme.textPrimary}`}><IconTable /></div><h2 className={`font-black text-gray-800 tracking-tight print:text-black ${isProjectorMode ? 'text-4xl' : 'text-xl'}`}>Klasemen {stage === 2 ? 'Fase 2' : 'Grup'}</h2></div>
                       {!isProjectorMode && ( 
                          <div className="no-print flex items-center gap-2">
-                             {undoHistory && <button onClick={handleRollback} className="text-xs bg-purple-50 hover:bg-purple-100 text-purple-700 px-4 py-2 rounded-xl font-black uppercase tracking-widest border border-purple-200 shadow-sm flex items-center gap-2"><IconUndo /> Batal Lanjut Fase</button>}
+                             {/* --- TAHAP 2: TOMBOL UNDO DAN REDO UI --- */}
+                             <button onClick={handleUndo} disabled={past.length === 0} className={`text-xs px-4 py-2 rounded-xl font-black uppercase tracking-widest border shadow-sm flex items-center gap-2 transition-all ${past.length === 0 ? 'bg-gray-50 text-gray-400 border-gray-200 cursor-not-allowed' : 'bg-purple-50 hover:bg-purple-100 text-purple-700 border-purple-200'}`}>
+                                 <IconUndo /> Undo
+                             </button>
+                             <button onClick={handleRedo} disabled={future.length === 0} className={`text-xs px-4 py-2 rounded-xl font-black uppercase tracking-widest border shadow-sm flex items-center gap-2 transition-all ${future.length === 0 ? 'bg-gray-50 text-gray-400 border-gray-200 cursor-not-allowed' : 'bg-purple-50 hover:bg-purple-100 text-purple-700 border-purple-200'}`}>
+                                 Redo <IconUndo className="scale-x-[-1]" />
+                             </button>
                              <button onClick={handleCopyWhatsApp} className="text-xs bg-green-50 hover:bg-green-100 text-green-700 px-4 py-2 rounded-xl font-black uppercase tracking-widest border border-green-200 shadow-sm flex items-center gap-2"><IconCopy /> Salin WA</button>
                          </div> 
                       )}
@@ -1255,7 +1317,13 @@ export default function App() {
                   <div className="flex items-center gap-4"><div className={`p-3 rounded-2xl ${theme.soft} ${theme.textPrimary}`}><IconCalendar /></div><h2 className={`font-black text-gray-800 tracking-tight print:text-black ${isProjectorMode ? 'text-4xl' : 'text-xl'}`}>Jadwal Pertandingan {roundRobinType === 'Double Round Robin' ? '(Ptg 1 & 2)' : ''}</h2></div>
                   {!isProjectorMode && ( 
                      <div className="no-print flex items-center gap-2">
-                        {undoHistory && <button onClick={handleRollback} className="text-xs bg-purple-50 hover:bg-purple-100 text-purple-700 px-4 py-2.5 rounded-xl font-bold uppercase tracking-widest border border-purple-200 shadow-sm flex items-center gap-2"><IconUndo /> Batal</button>}
+                        {/* --- TAHAP 2: TOMBOL UNDO DAN REDO UI --- */}
+                        <button onClick={handleUndo} disabled={past.length === 0} className={`text-xs px-4 py-2.5 rounded-xl font-bold uppercase tracking-widest border shadow-sm flex items-center gap-2 transition-all ${past.length === 0 ? 'bg-gray-50 text-gray-400 border-gray-200 cursor-not-allowed' : 'bg-purple-50 hover:bg-purple-100 text-purple-700 border-purple-200'}`}>
+                            <IconUndo /> Undo
+                        </button>
+                        <button onClick={handleRedo} disabled={future.length === 0} className={`text-xs px-4 py-2.5 rounded-xl font-bold uppercase tracking-widest border shadow-sm flex items-center gap-2 transition-all ${future.length === 0 ? 'bg-gray-50 text-gray-400 border-gray-200 cursor-not-allowed' : 'bg-purple-50 hover:bg-purple-100 text-purple-700 border-purple-200'}`}>
+                            Redo <IconUndo className="scale-x-[-1]" />
+                        </button>
                         <button onClick={handleClearScores} className="text-xs bg-amber-50 hover:bg-amber-100 text-amber-700 px-4 py-2.5 rounded-xl font-bold uppercase tracking-widest border border-amber-200">Bersihkan Skor</button>
                         <button onClick={handleReset} className="text-xs bg-red-50 hover:bg-red-100 text-red-600 px-4 py-2.5 rounded-xl font-bold uppercase tracking-widest border border-red-200">Reset Ulang</button>
                      </div> 
@@ -1266,7 +1334,6 @@ export default function App() {
                 </div>
               </div>
 
-              {/* --- PERUBAHAN FASE BERIKUTNYA UNTUK SEMUA MODE --- */}
               {!isProjectorMode && stage === 1 && tournamentType === 'Groups' && (
                 <div className="no-print bg-gray-900 text-white rounded-3xl p-8 sm:p-12 text-center shadow-xl border border-gray-800 relative overflow-hidden mt-8">
                    <div className="absolute -top-10 -right-10 opacity-5 text-gray-100"><svg className="w-64 h-64" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M3 3v18"/><path d="M3 12h5"/><path d="M8 7v10"/><path d="M8 7h5"/><path d="M8 17h5"/><path d="M13 12h5"/><path d="M18 7v10"/><path d="M18 12h3"/></svg></div>
@@ -1356,7 +1423,13 @@ export default function App() {
                  <h2 className={`font-black text-gray-900 flex items-center justify-center gap-4 ${isProjectorMode ? 'text-5xl tracking-tight' : 'text-3xl'}`}><div className={`p-3 rounded-2xl ${theme.primary} text-white`}><IconTrophy /></div>PENGINPUTAN SKOR BAGAN UTAMA</h2>
                  {!isProjectorMode && (
                    <div className="no-print mt-6 flex justify-center gap-3 flex-wrap">
-                      {undoHistory && <button onClick={handleRollback} className="text-xs bg-purple-50 hover:bg-purple-100 text-purple-700 px-4 py-2.5 rounded-xl font-bold uppercase tracking-widest border border-purple-200 shadow-sm flex items-center gap-2"><IconUndo /> Batal Lanjut Fase</button>}
+                      {/* --- TAHAP 2: TOMBOL UNDO DAN REDO UI --- */}
+                      <button onClick={handleUndo} disabled={past.length === 0} className={`text-xs px-4 py-2.5 rounded-xl font-bold uppercase tracking-widest border shadow-sm flex items-center gap-2 transition-all ${past.length === 0 ? 'bg-gray-50 text-gray-400 border-gray-200 cursor-not-allowed' : 'bg-purple-50 hover:bg-purple-100 text-purple-700 border-purple-200'}`}>
+                          <IconUndo /> Undo
+                      </button>
+                      <button onClick={handleRedo} disabled={future.length === 0} className={`text-xs px-4 py-2.5 rounded-xl font-bold uppercase tracking-widest border shadow-sm flex items-center gap-2 transition-all ${future.length === 0 ? 'bg-gray-50 text-gray-400 border-gray-200 cursor-not-allowed' : 'bg-purple-50 hover:bg-purple-100 text-purple-700 border-purple-200'}`}>
+                          Redo <IconUndo className="scale-x-[-1]" />
+                      </button>
                       <button onClick={handleClearScores} className="text-xs bg-amber-50 hover:bg-amber-100 text-amber-700 px-4 py-2.5 rounded-xl font-bold uppercase tracking-widest border border-amber-200 shadow-sm">Bersihkan Skor</button>
                       <button onClick={handleReset} className="text-xs bg-red-50 hover:bg-red-100 text-red-600 px-4 py-2.5 rounded-xl font-bold uppercase tracking-widest border border-red-200 shadow-sm">Reset Ulang</button>
                    </div>
