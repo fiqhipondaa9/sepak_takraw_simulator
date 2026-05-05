@@ -16,12 +16,12 @@ const IconMonitor = () => <svg className="w-4 h-4" xmlns="http://www.w3.org/2000
 const IconX = () => <svg className="w-5 h-5" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>;
 const IconArrowUp = () => <svg className="w-4 h-4" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><line x1="12" y1="19" x2="12" y2="5"/><polyline points="5 12 12 5 19 12"/></svg>;
 const IconArrowDown = () => <svg className="w-4 h-4" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><polyline points="19 12 12 19 5 12"/></svg>;
-const IconChevronsUp = () => <svg className="w-4 h-4" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="m17 11-5-5-5 5"/><path d="m17 18-5-5-5 5"/></svg>;
-const IconChevronsDown = () => <svg className="w-4 h-4" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="m7 13 5 5 5-5"/><path d="m7 6 5 5 5-5"/></svg>;
 const IconCopy = () => <svg className="w-4 h-4" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>;
 const IconList = () => <svg className="w-5 h-5" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><line x1="8" y1="6" x2="21" y2="6"/><line x1="8" y1="12" x2="21" y2="12"/><line x1="8" y1="18" x2="21" y2="18"/><line x1="3" y1="6" x2="3.01" y2="6"/><line x1="3" y1="12" x2="3.01" y2="12"/><line x1="3" y1="18" x2="3.01" y2="18"/></svg>;
 const IconUndo = () => <svg className="w-4 h-4" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M3 7v6h6"/><path d="M21 17a9 9 0 0 0-9-9 9 9 0 0 0-6 2.3L3 13"/></svg>;
 const IconCoffee = () => <svg className="w-5 h-5" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M17 8h1a4 4 0 1 1 0 8h-1"/><path d="M3 8h14v9a4 4 0 0 1-4 4H7a4 4 0 0 1-4-4Z"/><line x1="6" x2="6" y1="2" y2="4"/><line x1="10" x2="10" y1="2" y2="4"/><line x1="14" x2="14" y1="2" y2="4"/></svg>;
+const IconChevronsUp = () => <svg className="w-4 h-4" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="m17 11-5-5-5 5"/><path d="m17 18-5-5-5 5"/></svg>;
+const IconChevronsDown = () => <svg className="w-4 h-4" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="m7 13 5 5 5-5"/><path d="m7 6 5 5 5-5"/></svg>;
 const IconChevronRight = () => <svg className="w-5 h-5" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="m9 18 6-6-6-6"/></svg>;
 const IconShare = () => <svg className="w-4 h-4" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"/><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"/></svg>;
 
@@ -34,7 +34,8 @@ const themes = {
   slate: { name: 'Slate', bgApp: 'bg-slate-100', primary: 'bg-slate-800', primaryHover: 'hover:bg-slate-900', textPrimary: 'text-slate-900', border: 'border-slate-200', accent: 'bg-indigo-500', accentText: 'text-indigo-50', accentHover: 'hover:bg-indigo-600', soft: 'bg-slate-100', header: 'bg-slate-950' },
   amber: { name: 'Amber', bgApp: 'bg-amber-50/50', primary: 'bg-amber-600', primaryHover: 'hover:bg-amber-700', textPrimary: 'text-amber-900', border: 'border-amber-100', accent: 'bg-blue-400', accentText: 'text-blue-900', accentHover: 'hover:bg-blue-500', soft: 'bg-amber-50', header: 'bg-amber-800' },
   indigo: { name: 'Indigo', bgApp: 'bg-indigo-50/50', primary: 'bg-indigo-600', primaryHover: 'hover:bg-indigo-700', textPrimary: 'text-indigo-900', border: 'border-indigo-100', accent: 'bg-pink-400', accentText: 'text-pink-900', accentHover: 'hover:bg-pink-500', soft: 'bg-indigo-50', header: 'bg-indigo-800' },
-  teal: { name: 'Teal', bgApp: 'bg-teal-50/50', primary: 'bg-teal-600', primaryHover: 'hover:bg-teal-700', textPrimary: 'text-teal-900', border: 'border-teal-100', accent: 'bg-orange-400', accentText: 'text-orange-900', accentHover: 'hover:bg-orange-500', soft: 'bg-teal-50', header: 'bg-teal-800' }
+  teal: { name: 'Teal', bgApp: 'bg-teal-50/50', primary: 'bg-teal-600', primaryHover: 'hover:bg-teal-700', textPrimary: 'text-teal-900', border: 'border-teal-100', accent: 'bg-orange-400', accentText: 'text-orange-900', accentHover: 'hover:bg-orange-500', soft: 'bg-teal-50', header: 'bg-teal-800' },
+  rose: { name: 'Rose', bgApp: 'bg-rose-50/50', primary: 'bg-rose-600', primaryHover: 'hover:bg-rose-700', textPrimary: 'text-rose-900', border: 'border-rose-100', accent: 'bg-emerald-400', accentText: 'text-emerald-900', accentHover: 'hover:bg-emerald-500', soft: 'bg-rose-50', header: 'bg-rose-800' }
 };
 
 export default function App() {
@@ -66,17 +67,15 @@ export default function App() {
   const [isProjectorMode, setIsProjectorMode] = useState(false);
   const [isExportingPng, setIsExportingPng] = useState(false);
   
-  // UNDO/REDO STATE
+  // STATE UNDO/REDO & SCOREBOARD
   const [past, setPast] = useState([]);
   const [future, setFuture] = useState([]);
-
-  // SCOREBOARD STATE
   const [activeScoreboard, setActiveScoreboard] = useState(null); 
   const [serviceStarter, setServiceStarter] = useState(null); 
-
   const [showCoffeeModal, setShowCoffeeModal] = useState(false); 
 
   const isTeamEvent = selectedEventFormat.toUpperCase().includes('TEAM');
+  let eventCategory = isTeamEvent ? 'team' : 'single';
   let eventDiscipline = 'Regu';
   if (selectedEventFormat.toUpperCase().includes('DOUBLE')) eventDiscipline = 'Double';
   else if (selectedEventFormat.toUpperCase().includes('REGU')) eventDiscipline = 'Regu';
@@ -132,12 +131,50 @@ export default function App() {
         setTournamentStartDate(data.tournamentStartDate || '');
         setKnockoutData(data.knockoutData || []); setCourts(data.courts || ['LAPANGAN 1', 'LAPANGAN 2']);
         if (data.activeTheme && themes[data.activeTheme]) setActiveTheme(data.activeTheme);
-        setPhase1Standings(data.phase1Standings || null); setPast([]); setFuture([]);
+        setPhase1Standings(data.phase1Standings || null);
+        setPast([]); setFuture([]);
       } catch (err) { alert("Gagal memuat! Format file tidak valid."); }
     };
     reader.readAsText(file); e.target.value = null; 
   };
 
+  const handleExportPDF = () => { window.print(); };
+
+  const handleExportPNG = async (elementId = 'master-print-area', filename = 'Laporan_Turnamen') => {
+    setIsExportingPng(true); document.body.classList.add('export-mode');
+    try {
+      if (!window.htmlToImage) {
+        if (!document.getElementById('html-to-image-script')) {
+            const script = document.createElement('script'); script.id = 'html-to-image-script'; 
+            script.src = "https://cdnjs.cloudflare.com/ajax/libs/html-to-image/1.11.11/html-to-image.min.js";
+            document.head.appendChild(script); 
+            await new Promise((resolve, reject) => { script.onload = resolve; script.onerror = () => reject(new Error("Gagal memuat pustaka html-to-image")); });
+        } else { await new Promise(r => setTimeout(r, 1000)); }
+      }
+      await new Promise(r => setTimeout(r, 500)); 
+      const element = document.getElementById(elementId);
+      const dataUrl = await window.htmlToImage.toPng(element, { quality: 1, pixelRatio: 2, backgroundColor: "#ffffff", style: { margin: '0' } });
+      const link = document.createElement("a"); link.download = `${filename}_${new Date().toISOString().slice(0,10)}.png`; link.href = dataUrl; link.click();
+    } catch (error) { console.error("Error Export PNG:", error); alert("Gagal mengekspor gambar PNG."); 
+    } finally { document.body.classList.remove('export-mode'); setIsExportingPng(false); }
+  };
+
+  const handleCopyWhatsApp = () => {
+    const standings = getStandings();
+    let waText = `🏆 *FASE PENYISIHAN* 🏆\n*${championshipTitles[0]}*\n\n`;
+    Object.entries(standings).filter(([gn]) => !gn.toLowerCase().includes('unknown') && !gn.toLowerCase().includes('eliminated')).forEach(([groupName, groupTeams]) => {
+      waText += `*${groupName}*\n`;
+      groupTeams.forEach((stat, index) => {
+        let medal = index === 0 ? '🥇 ' : index === 1 ? '🥈 ' : index === 2 ? '🥉 ' : '▪️ ';
+        waText += `${index + 1}. ${medal}*${stat.team}* - *${stat.totalPoints} PTS* (W:${stat.win} L:${stat.lose})\n`;
+      }); waText += `\n`;
+    });
+    waText += `_Update via Sepak Takraw System_`;
+    const textArea = document.createElement("textarea"); textArea.value = waText; document.body.appendChild(textArea); textArea.select();
+    try { document.execCommand('copy'); alert("✅ Klasemen disalin! Silakan Paste di grup WhatsApp."); } catch (err) { alert("❌ Gagal menyalin."); } document.body.removeChild(textArea);
+  };
+
+  // --- UNDO / REDO LOGIC ---
   const getCurrentSnapshot = () => ({
     stage, schedule: JSON.parse(JSON.stringify(schedule)), matchHistory: JSON.parse(JSON.stringify(matchHistory)),
     knockoutData: JSON.parse(JSON.stringify(knockoutData)), teams: [...teams], groupAssignments: { ...groupAssignments },
@@ -182,21 +219,27 @@ export default function App() {
   const handleNumGroupsChange = (e) => { const val = e.target.value; if (val === '') { setNumGroups(''); return; } const num = Number(val); if (num >= 1 && num <= 26) { setNumGroups(num); setGroupAssignments({}); } };
   const handleAutoAssign = () => { if (teams.length === 0) return; const activeNG = Number(numGroups) || 2; const shf = [...teams].sort(() => 0.5 - Math.random()); const assignments = {}; const gl = Array.from({length: activeNG}, (_, i) => String.fromCharCode(65 + i)); shf.forEach((t, i) => { assignments[t] = gl[i % activeNG]; }); setGroupAssignments(assignments); };
 
-  // --- TAHAP 4: DRAG & DROP UNTUK GRUP (STAGE 0) ---
+  // --- DRAG & DROP FUNGSI ---
   const handleTeamDropGroup = (e, targetGroup) => {
     e.preventDefault();
     const teamName = e.dataTransfer.getData('text/plain');
     if (!teamName || !teams.includes(teamName)) return;
     if (groupAssignments[teamName] === targetGroup) return;
-    
     saveSnapshot();
     const newAssignments = { ...groupAssignments };
-    if (targetGroup === '') {
-        delete newAssignments[teamName];
-    } else {
-        newAssignments[teamName] = targetGroup;
-    }
+    if (targetGroup === '') delete newAssignments[teamName]; else newAssignments[teamName] = targetGroup;
     setGroupAssignments(newAssignments);
+  };
+
+  const reorderMatchSchedule = (srcIdx, destIdx) => {
+    if (srcIdx === destIdx) return;
+    saveSnapshot();
+    const newSchedule = [...schedule];
+    const [moved] = newSchedule.splice(srcIdx, 1);
+    newSchedule.splice(destIdx, 0, moved);
+    const origMeta = schedule.map(m => ({ id: m.id, time: m.time, date: m.date, court: m.court }));
+    const finalized = newSchedule.map((m, i) => ({ ...m, id: origMeta[i].id, time: origMeta[i].time, date: origMeta[i].date, court: origMeta[i].court }));
+    setSchedule(finalized);
   };
 
   const getStandings = (specificSchedule = schedule, specificAssignments = groupAssignments) => {
@@ -338,27 +381,7 @@ export default function App() {
     });
   };
 
-  // --- TAHAP 4: FUNGSI REORDER (DRAG & DROP JADWAL) ---
-  const reorderMatchSchedule = (srcIdx, destIdx) => {
-    if (srcIdx === destIdx) return;
-    saveSnapshot();
-    const newSchedule = [...schedule];
-    const [moved] = newSchedule.splice(srcIdx, 1);
-    newSchedule.splice(destIdx, 0, moved);
-
-    // Mempertahankan Waktu, ID, dan Lapangan agar urutan tidak rusak di laporan
-    const origMeta = schedule.map(m => ({ id: m.id, time: m.time, date: m.date, court: m.court }));
-    const finalized = newSchedule.map((m, i) => ({ 
-        ...m, 
-        id: origMeta[i].id, 
-        time: origMeta[i].time, 
-        date: origMeta[i].date, 
-        court: origMeta[i].court 
-    }));
-    setSchedule(finalized);
-  };
-
-  // SCOREBOARD LOGIC (TAHAP 3)
+  // --- SCOREBOARD LOGIC ---
   const handleUpdatePapanSkor = (isA, amount) => {
     if (!activeScoreboard) return;
     const currentMatch = activeScoreboard.isKnockout ? knockoutData[activeScoreboard.rI]?.[activeScoreboard.mI] : schedule.find(m => m.id === activeScoreboard.id);
@@ -494,7 +517,7 @@ export default function App() {
             <button onClick={() => setActiveScoreboard({ id: m.id, isKnockout: isK, rI: m.roundIndex, mI: m.matchIndex, pIndex: 0, setIndex: 0 })} className="absolute right-4 top-1/2 -translate-y-1/2 bg-blue-600 text-white text-[10px] font-black px-4 py-2 rounded-xl shadow-md flex items-center gap-2 hover:bg-blue-700 transition-colors">SCOREBOARD <IconChevronRight /></button>
           )}
 
-          {/* TAHAP 4: SHORTCUT REORDER (DRAG & DROP) */}
+          {/* SHORTCUT REORDER (DRAG & DROP) */}
           {!isProjectorMode && !isK && index !== null && (
             <div className="no-print absolute right-0 top-1/2 -translate-y-1/2 flex flex-col gap-0.5">
                <button onClick={(e) => { e.stopPropagation(); reorderMatchSchedule(index, 0); }} disabled={index === 0} title="Pindah ke Paling Atas" className={`p-1 rounded bg-white border border-gray-200 shadow-sm transition-all ${index===0?'opacity-30':'hover:bg-gray-100 hover:text-blue-600'}`}><IconChevronsUp /></button>
@@ -542,20 +565,41 @@ export default function App() {
     <div className={`min-h-screen uppercase ${theme.bgApp} font-sans text-gray-800 pb-20 transition-all duration-500`}>
       <style>{`.export-mode .master-modal-content { max-height:none!important; overflow:visible!important; height:auto!important; } @media print { .no-print { display:none!important; } body { background:white!important; } }`}</style>
       
+      {/* HEADER DIKEMBALIKAN 100% SESUAI ASLI */}
       {!isProjectorMode && (
         <div className="no-print sticky top-0 z-40 p-4 backdrop-blur-md bg-white/60 border-b border-white/20 shadow-sm flex justify-between items-center">
-           <div className="flex items-center gap-3"><div className={`${theme.primary} text-white p-2 rounded-xl shadow-md`}><IconTrophy /></div><div className="font-black text-xs">SEPAK TAKRAW TMS</div></div>
-           <div className="flex items-center gap-2 sm:gap-4 bg-white p-1.5 rounded-2xl shadow-sm border border-gray-100">
-              <div className="flex bg-gray-50 rounded-xl p-1 border border-gray-100">
-                 {Object.keys(themes).map(t => ( <button key={t} onClick={() => setActiveTheme(t)} className={`w-6 h-6 rounded-lg flex items-center justify-center ${activeTheme===t?'bg-white shadow-sm':''}`}><div className={`w-3 h-3 rounded-full ${themes[t].primary}`}></div></button> ))}
+           <div className="flex items-center gap-3">
+              <div className={`${theme.primary} text-white p-2 rounded-xl shadow-md`}><IconTrophy /></div>
+              <div className="hidden sm:block">
+                 <div className="font-black tracking-widest text-gray-800 leading-none">SEPAK TAKRAW<span className={theme.textPrimary}> Tournament Management System</span></div>
+                 <div className={`text-[10px] font-black uppercase tracking-widest mt-1 ${theme.textPrimary} opacity-70`}>by fiqhipondaa9</div>
               </div>
-              <label className="cursor-pointer bg-emerald-50 text-emerald-700 px-4 py-2 rounded-xl flex items-center gap-2 text-xs font-bold"><IconFolder /> OPEN<input type="file" accept=".json" hidden onChange={handleOpenFile} /></label>
-              <button onClick={handleSaveFile} className={`${theme.primary} text-white px-4 py-2 rounded-xl flex items-center gap-2 text-xs font-bold shadow-md`}><IconSave /> SAVE</button>
+           </div>
+           <div className="flex items-center gap-2 sm:gap-4 bg-white p-1.5 rounded-2xl shadow-sm border border-gray-100">
+              <div className="flex bg-gray-50 rounded-xl p-1 border border-gray-100 mr-2">
+                 {Object.keys(themes).map(t => ( <button key={t} onClick={() => setActiveTheme(t)} className={`w-6 h-6 sm:w-8 sm:h-8 rounded-lg flex items-center justify-center transition-all ${activeTheme === t ? 'bg-white shadow-sm scale-110' : 'hover:bg-gray-200'}`} title={themes[t].name}><div className={`w-3 h-3 sm:w-4 sm:h-4 rounded-full ${themes[t].primary}`}></div></button> ))}
+              </div>
+              <label className={`cursor-pointer ${theme.soft} ${theme.textPrimary} hover:bg-gray-100 px-4 py-2 rounded-xl flex items-center gap-2 transition-colors font-bold text-xs sm:text-sm`}><IconFolder /> <span className="hidden md:inline">OPEN</span><input type="file" accept=".json" hidden onChange={handleOpenFile} /></label>
+              <button onClick={handleSaveFile} className={`${theme.primary} ${theme.primaryHover} text-white px-4 py-2 rounded-xl flex items-center gap-2 font-bold transition-colors shadow-md text-xs sm:text-sm`}><IconSave /> <span className="hidden md:inline">SAVE</span></button>
            </div>
         </div>
       )}
 
       <main className="max-w-7xl mx-auto mt-6 px-4 space-y-6">
+        {/* DASHBOARD DIKEMBALIKAN SESUAI ASLI */}
+        {!isProjectorMode && stage > 0 && (
+          <div className="no-print bg-white rounded-3xl shadow-sm p-4 flex flex-col md:flex-row justify-between items-center gap-4 border border-gray-100">
+            <div className="flex items-center gap-3">
+               <div className={`p-3 rounded-2xl ${theme.soft} ${theme.textPrimary}`}><IconTable /></div>
+               <div><h3 className="font-black text-gray-800">Tournament Dashboard</h3><p className="text-xs text-gray-500 font-medium normal-case">Input skor pertandingan atau lihat Jadwal Induk (Master Report).</p></div>
+            </div>
+            <div className="flex flex-wrap gap-2 items-center">
+              <button onClick={() => setShowMasterModal(true)} className={`${theme.soft} ${theme.textPrimary} hover:bg-gray-100 px-4 py-2.5 rounded-2xl flex items-center gap-2 text-sm font-black transition-colors`}><IconList /> JADWAL INDUK (LAPORAN)</button>
+              <button onClick={handleEnterProjectorMode} className={`${theme.accent} ${theme.accentHover} ${theme.accentText} px-5 py-2.5 rounded-2xl flex items-center gap-2 text-sm font-black transition-colors shadow-md ml-2`}><IconMonitor /> LIVE MODE</button>
+            </div>
+          </div>
+        )}
+
         <div className="bg-white rounded-3xl shadow-sm border border-gray-100 p-8 relative overflow-hidden text-center">
            <div className="absolute top-0 left-0 w-full h-2 bg-emerald-600"></div>
            <div className="flex justify-center flex-wrap gap-4 mb-8">
@@ -575,10 +619,11 @@ export default function App() {
         {stage === 0 ? (
           <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 no-print">
              <div className="lg:col-span-7 bg-white rounded-3xl shadow-sm border border-gray-100 p-8 flex flex-col h-[600px] overflow-hidden">
-                <h2 className="font-black text-lg mb-6 flex items-center gap-3"><IconUsers /> PENDAFTARAN TIM</h2>
+                <h2 className="text-xl font-black text-gray-800 mb-6 flex items-center gap-3"><IconUsers /> Pendaftaran Peserta</h2>
                 <form onSubmit={handleAddTeam} className="flex gap-3 mb-6 shrink-0"><input value={inputValue} onChange={e=>setInputValue(e.target.value)} placeholder="Nama Tim..." className="flex-1 px-5 py-4 bg-gray-50 border border-gray-200 rounded-2xl font-black text-sm uppercase outline-none focus:border-blue-400" /><button className={`${theme.primary} text-white px-6 rounded-2xl shadow-lg`}><IconPlus /></button></form>
                 
                 {/* TAHAP 4: DRAG & DROP UNTUK GRUP */}
+                <div className="flex justify-between items-end mb-4 px-1"><h3 className="text-xs font-black text-gray-400 uppercase tracking-widest">Daftar Tim ({teams.length})</h3></div>
                 <div className="flex-1 overflow-y-auto pr-2 pb-4">
                   {tournamentType === 'Groups' ? (
                      <div className="flex flex-col gap-4 h-full">
@@ -613,27 +658,66 @@ export default function App() {
                 </div>
              </div>
 
-             <div className="lg:col-span-5 bg-white rounded-3xl shadow-sm border border-gray-100 p-8 flex flex-col gap-6">
-                <div><h3 className="text-[10px] font-black text-gray-400 uppercase mb-3">Event</h3><select value={selectedEventFormat} onChange={e=>setSelectedEventFormat(e.target.value)} className="w-full bg-gray-50 p-4 rounded-2xl font-black text-sm uppercase outline-none focus:border-blue-400"><option value="Regu Event">Regu Event</option><option value="Regu Event Team">Regu Event Team</option><option value="Mixed Event Team">Mixed Event Team</option></select></div>
-                <div><h3 className="text-[10px] font-black text-gray-400 uppercase mb-3">Sistem Turnamen</h3>
-                  <select value={tournamentType} onChange={e=>setTournamentType(e.target.value)} className="w-full bg-gray-50 p-4 rounded-2xl font-black text-sm uppercase outline-none focus:border-blue-400 mb-4"><option value="Group">1 Pool Utama</option><option value="Groups">Banyak Grup</option><option value="Knocked Out Round">Sistem Gugur</option></select>
-                  {tournamentType==='Groups' && <div className="flex items-center justify-between bg-emerald-50 p-4 rounded-2xl border border-emerald-100"><span className="text-xs font-black text-emerald-800">Jumlah Grup</span><div className="flex gap-2"><input type="number" min="2" max="26" value={numGroups} onChange={handleNumGroupsChange} className="w-16 text-center font-black p-2 rounded-lg border border-emerald-200 outline-none" /><button onClick={handleAutoAssign} className="bg-white text-[10px] font-black px-4 py-2 rounded-lg text-emerald-700 shadow-sm border border-emerald-200 hover:bg-emerald-100">ACAK</button></div></div>}
+             <div className="lg:col-span-5 flex flex-col gap-6">
+                <div className="bg-white rounded-3xl shadow-sm border border-gray-100 p-6">
+                  <h2 className="text-sm font-black text-gray-400 mb-4 uppercase tracking-widest">Kategori & Disiplin Event</h2>
+                  <div className="mb-6">
+                    <select value={selectedEventFormat} onChange={(e) => setSelectedEventFormat(e.target.value)} className="w-full bg-gray-50 border border-gray-200 text-gray-800 font-black text-sm rounded-2xl px-5 py-4 outline-none focus:border-blue-400 focus:bg-white shadow-sm cursor-pointer transition-colors uppercase">
+                       <option value="Double Event">1. Double Event</option>
+                       <option value="Regu Event">2. Regu Event</option>
+                       <option value="Quadrant Event">3. Quadrant Event</option>
+                       <option value="Double Event Team">4. Double Event Team</option>
+                       <option value="Regu Event Team">5. Regu Event Team</option>
+                       <option value="Quadrant Event Team">6. Quadrant Event Team</option>
+                       <option value="Mixed Event Team">7. Mixed Event Team</option>
+                    </select>
+                  </div>
+                  
+                  {selectedEventFormat === 'Mixed Event Team' && (
+                    <div className={`p-5 rounded-2xl border ${theme.border} ${theme.soft} flex flex-col gap-4 animate-in fade-in duration-200`}>
+                       <div className="flex flex-col gap-1.5"><span className={`text-[10px] font-black uppercase tracking-widest ${theme.textPrimary} opacity-80 px-1`}>Format Partai 1</span><select value={mixDisciplines[0]} onChange={(e) => setMixDisciplines([e.target.value, mixDisciplines[1], mixDisciplines[2]])} className="w-full bg-white border border-gray-200 text-gray-800 font-bold text-xs rounded-xl px-3 py-2 outline-none focus:border-gray-400 shadow-sm uppercase"><option value="Double">Double</option><option value="Regu">Regu</option><option value="Quadrant">Quadrant</option></select></div>
+                       <div className="flex flex-col gap-1.5"><span className={`text-[10px] font-black uppercase tracking-widest ${theme.textPrimary} opacity-80 px-1`}>Format Partai 2</span><select value={mixDisciplines[1]} onChange={(e) => setMixDisciplines([mixDisciplines[0], e.target.value, mixDisciplines[2]])} className="w-full bg-white border border-gray-200 text-gray-800 font-bold text-xs rounded-xl px-3 py-2 outline-none focus:border-gray-400 shadow-sm uppercase"><option value="Double">Double</option><option value="Regu">Regu</option><option value="Quadrant">Quadrant</option></select></div>
+                       <div className="flex flex-col gap-1.5"><span className={`text-[10px] font-black uppercase tracking-widest ${theme.textPrimary} opacity-80 px-1`}>Format Partai 3</span><select value={mixDisciplines[2]} onChange={(e) => setMixDisciplines([mixDisciplines[0], mixDisciplines[1], e.target.value])} className="w-full bg-white border border-gray-200 text-gray-800 font-bold text-xs rounded-xl px-3 py-2 outline-none focus:border-gray-400 shadow-sm uppercase"><option value="Double">Double</option><option value="Regu">Regu</option><option value="Quadrant">Quadrant</option></select></div>
+                    </div>
+                  )}
                 </div>
-                <button onClick={tournamentType==='Knocked Out Round'?()=>{setKnockoutData(generateDirectKnockout());setStage(3);}:generateSchedule} disabled={teams.length<2} className={`mt-auto w-full ${theme.accent} ${theme.accentText} py-5 rounded-2xl font-black text-lg uppercase shadow-lg transition-all active:scale-95 disabled:opacity-50`}>Mulai Turnamen</button>
+
+                <div className="bg-white rounded-3xl shadow-sm border border-gray-100 p-6 flex-1 flex flex-col">
+                  <h2 className="text-sm font-black text-gray-400 mb-4 uppercase tracking-widest">Sistem & Lapangan</h2>
+                  <div className="mb-6">
+                    <form className="flex gap-2 mb-3"><input type="text" value={courtInputValue} onChange={(e) => setCourtInputValue(e.target.value)} placeholder="Tambah lapangan..." className="flex-1 px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl focus:outline-none focus:bg-white text-xs font-bold uppercase" /><button type="button" onClick={handleAddCourt} className="bg-gray-800 hover:bg-black text-white px-4 py-3 rounded-xl font-bold transition-colors"><IconPlus /></button></form>
+                    <div className="flex flex-wrap gap-2">{courts.map((court, index) => ( <div key={index} className="bg-gray-100 text-gray-700 px-3 py-2 rounded-xl text-[10px] font-black flex items-center gap-2 border border-gray-200">{court} {courts.length > 1 && <button type="button" onClick={() => handleRemoveCourt(court)} className="text-gray-400 hover:text-red-500"><IconTrash /></button>}</div> ))}</div>
+                  </div>
+
+                  <div className="mb-4">
+                    <label className="text-[10px] font-black uppercase tracking-widest text-gray-400 block mb-2 px-1">Tipe Turnamen</label>
+                    <select value={tournamentType} onChange={(e) => setTournamentType(e.target.value)} className="w-full bg-white border border-gray-200 text-gray-800 font-bold text-sm rounded-xl px-4 py-3 outline-none focus:border-blue-400 shadow-sm cursor-pointer mb-3 uppercase">
+                       <option value="Group">Group (Satu Pool)</option>
+                       <option value="Groups">Groups (Banyak Grup)</option>
+                       <option value="Knocked Out Round">Knocked Out Round (Sistem Gugur)</option>
+                    </select>
+
+                    {(tournamentType === 'Group' || tournamentType === 'Groups') && (
+                       <select value={roundRobinType} onChange={(e) => setRoundRobinType(e.target.value)} className="w-full bg-gray-50 border border-gray-200 text-gray-700 font-bold text-xs rounded-xl px-4 py-3 outline-none focus:border-blue-400 shadow-sm cursor-pointer mb-3 uppercase">
+                          <option value="Single Round Robin">Single Round Robin (1x Pertemuan)</option>
+                          <option value="Double Round Robin">Double Round Robin (Kandang & Tandang)</option>
+                       </select>
+                    )}
+
+                    {tournamentType === 'Groups' && (
+                       <div className={`p-4 rounded-xl border ${theme.border} ${theme.soft} flex justify-between items-center`}>
+                          <div className="font-black text-gray-700 text-xs uppercase tracking-wider">Jumlah Grup</div>
+                          <div className="flex items-center gap-2"><input type="number" min="2" max="26" value={numGroups} onChange={handleNumGroupsChange} onBlur={() => !numGroups && setNumGroups(2)} className="w-12 h-10 text-center font-black bg-white border border-gray-200 rounded-lg outline-none" /><button onClick={handleAutoAssign} className="bg-white border border-gray-200 text-gray-700 font-black text-[10px] px-3 h-10 rounded-lg hover:bg-gray-50 uppercase shadow-sm">Susun</button></div>
+                       </div>
+                    )}
+                  </div>
+
+                  <div className="mt-auto pt-4"><button onClick={tournamentType === 'Knocked Out Round' ? () => { saveSnapshot(); setSchedule([]); setKnockoutData(generateDirectKnockout(teams, 0, 1)); setStage(3); } : generateSchedule} disabled={teams.length < 2} className={`w-full ${theme.accent} ${theme.accentHover} ${theme.accentText} disabled:bg-gray-100 disabled:text-gray-300 font-black py-5 rounded-2xl shadow-md transition-all flex justify-center items-center gap-3 text-lg uppercase tracking-wider`}><IconCalendar /> {teams.length < 2 ? "Min. 2 Tim" : "Mulai Turnamen"}</button></div>
+                </div>
              </div>
           </div>
         ) : (
           <div className="space-y-6">
-             <div className="no-print bg-white p-4 rounded-3xl border border-gray-100 shadow-sm flex flex-col md:flex-row justify-between items-center gap-4">
-                <div className="flex items-center gap-3"><div className="p-3 bg-emerald-50 text-emerald-600 rounded-2xl"><IconTable /></div><div><h3 className="font-black text-sm">Dashboard</h3><p className="text-[10px] text-gray-400 font-bold">Input Skor & Pantau Laporan</p></div></div>
-                <div className="flex gap-2">
-                   <button onClick={handleUndo} disabled={past.length===0} className="bg-white border text-[10px] font-black px-4 py-2 rounded-xl shadow-sm disabled:opacity-30"><IconUndo /> UNDO</button>
-                   <button onClick={handleRedo} disabled={future.length===0} className="bg-white border text-[10px] font-black px-4 py-2 rounded-xl shadow-sm disabled:opacity-30">REDO</button>
-                   <button onClick={()=>setShowMasterModal(true)} className="bg-emerald-50 text-emerald-600 px-5 py-2.5 rounded-2xl text-[10px] font-black uppercase shadow-sm"><IconList /> Laporan Induk</button>
-                   <button onClick={handleEnterProjectorMode} className="bg-amber-400 text-amber-900 px-5 py-2.5 rounded-2xl text-[10px] font-black uppercase shadow-sm"><IconMonitor /> Live Mode</button>
-                </div>
-             </div>
-
              {stage < 3 && (
                <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
                  {Object.entries(getStandings()).map(([gn, gt]) => (
@@ -659,27 +743,69 @@ export default function App() {
                </div>
              )}
 
-             <div className="grid grid-cols-1 xl:grid-cols-2 gap-6">
-                {(stage < 3 ? schedule : knockoutData.flat()).map((m, i) => renderMatchCard(m, stage >= 3, i))}
+             {/* TAHAP 4: DRAG & DROP JADWAL + TAHAP 2: UNDO/REDO */}
+             <div className={`bg-white rounded-3xl shadow-sm border border-gray-100 overflow-hidden print-border ${isProjectorMode ? 'shadow-2xl border-none' : ''}`}>
+                <div className={`flex justify-between items-center border-b border-gray-100 print:bg-gray-200 print:text-black ${isProjectorMode ? 'p-8 bg-gray-50' : 'p-6 bg-white'}`}>
+                  <div className="flex items-center gap-4"><div className={`p-3 rounded-2xl ${theme.soft} ${theme.textPrimary}`}><IconCalendar /></div><h2 className={`font-black text-gray-800 tracking-tight print:text-black ${isProjectorMode ? 'text-4xl' : 'text-xl'}`}>Jadwal Pertandingan {roundRobinType === 'Double Round Robin' ? '(Ptg 1 & 2)' : ''}</h2></div>
+                  {!isProjectorMode && ( 
+                     <div className="no-print flex items-center gap-2">
+                        <button onClick={handleUndo} disabled={past.length === 0} className={`text-xs px-4 py-2.5 rounded-xl font-bold uppercase tracking-widest border shadow-sm flex items-center gap-2 transition-all ${past.length === 0 ? 'bg-gray-50 text-gray-400 border-gray-200 cursor-not-allowed' : 'bg-purple-50 hover:bg-purple-100 text-purple-700 border-purple-200'}`}>
+                            <IconUndo /> Undo
+                        </button>
+                        <button onClick={handleRedo} disabled={future.length === 0} className={`text-xs px-4 py-2.5 rounded-xl font-bold uppercase tracking-widest border shadow-sm flex items-center gap-2 transition-all ${future.length === 0 ? 'bg-gray-50 text-gray-400 border-gray-200 cursor-not-allowed' : 'bg-purple-50 hover:bg-purple-100 text-purple-700 border-purple-200'}`}>
+                            Redo <IconUndo className="scale-x-[-1]" />
+                        </button>
+                        <button onClick={handleClearScores} className="text-xs bg-amber-50 hover:bg-amber-100 text-amber-700 px-4 py-2.5 rounded-xl font-bold uppercase tracking-widest border border-amber-200">Bersihkan Skor</button>
+                        <button onClick={handleReset} className="text-xs bg-red-50 hover:bg-red-100 text-red-600 px-4 py-2.5 rounded-xl font-bold uppercase tracking-widest border border-red-200">Reset Ulang</button>
+                     </div> 
+                  )}
+                </div>
+                <div className={`grid grid-cols-1 xl:grid-cols-2 bg-gray-50/50 print:bg-white print:p-2 print:gap-4 ${isProjectorMode ? 'p-8 gap-8' : 'p-6 gap-6'}`}>
+                  {(stage < 3 ? schedule : knockoutData.flat()).map((m, i) => renderMatchCard(m, stage >= 3, i))}
+                </div>
              </div>
              
              {stage === 1 && isActivePhaseFinished && (
-               <div className="no-print bg-gray-900 p-12 rounded-[40px] text-center text-white shadow-2xl">
-                  <h2 className="text-2xl font-black mb-6">Penyisihan Selesai!</h2>
-                  <button onClick={()=>{
-                    const std = tournamentType === 'Group' ? getStandings()['Pool Utama'] : [];
-                    const top4 = tournamentType === 'Group' ? [std[0]?.team, std[2]?.team, std[1]?.team, std[3]?.team] : teams;
-                    saveSnapshot();
-                    setKnockoutData(generateDirectKnockout(top4, 0, schedule.length+1));
-                    setStage(3);
-                  }} className="bg-emerald-600 px-10 py-5 rounded-2xl font-black uppercase text-lg shadow-xl hover:bg-emerald-700 transition-all">Lanjut Semi Final</button>
+               <div className="no-print bg-gray-900 text-white rounded-3xl p-8 sm:p-12 text-center shadow-xl border border-gray-800 relative overflow-hidden mt-8">
+                  <div className="absolute -top-10 -right-10 opacity-5 text-gray-100"><svg className="w-64 h-64" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M3 3v18"/><path d="M3 12h5"/><path d="M8 7v10"/><path d="M8 7h5"/><path d="M8 17h5"/><path d="M13 12h5"/><path d="M18 7v10"/><path d="M18 12h3"/></svg></div>
+                  <div className="relative z-10 max-w-4xl mx-auto">
+                    <h2 className="text-3xl font-black text-white mb-3 tracking-tight">Penyisihan Selesai!</h2>
+                    {tournamentType === 'Group' ? (
+                       <>
+                         <p className="text-emerald-400 mb-8 font-medium normal-case">✨ Pool Utama telah selesai! Anda bisa mengakhiri turnamen di sini, atau lanjut ke Semi Final (Opsional).</p>
+                         <button onClick={()=>{
+                            const std = getStandings()['Pool Utama'] || [];
+                            const top4 = [std[0]?.team || '?', std[2]?.team || '?', std[1]?.team || '?', std[3]?.team || '?']; // Peringkat 1v3, 2v4
+                            const startId = [...matchHistory, ...schedule].length + 1;
+                            saveSnapshot();
+                            setKnockoutData(generateDirectKnockout(top4, 0, startId));
+                            setStage(3);
+                         }} className="bg-emerald-600 hover:bg-emerald-700 text-white font-black py-4 px-8 rounded-2xl shadow-md transition-all uppercase tracking-widest">
+                            Lanjut Semi Final & Final
+                         </button>
+                       </>
+                    ) : (
+                       <button onClick={()=>{
+                         const std = tournamentType === 'Group' ? getStandings()['Pool Utama'] : [];
+                         const top4 = tournamentType === 'Group' ? [std[0]?.team, std[2]?.team, std[1]?.team, std[3]?.team] : teams;
+                         saveSnapshot();
+                         setKnockoutData(generateDirectKnockout(top4, 0, schedule.length+1));
+                         setStage(3);
+                       }} className="bg-emerald-600 px-10 py-5 rounded-2xl font-black uppercase text-lg shadow-xl hover:bg-emerald-700 transition-all">Lanjut Fase Berikutnya</button>
+                    )}
+                  </div>
                </div>
              )}
           </div>
         )}
+
+        {/* FOOTER DIKEMBALIKAN 100% SESUAI ASLI */}
+        <div className="text-center mt-16 pb-8 print:mt-10 print:pb-4">
+            <p className="font-black text-sm tracking-widest uppercase text-gray-400">Sepak Takraw Tournament Management System <span className={`mx-2 ${theme.textPrimary}`}>&bull;</span> by <span className={theme.textPrimary}>fiqhipondaa9</span></p>
+        </div>
       </main>
 
-      {/* --- SCOREBOARD OVERLAY MODAL --- */}
+      {/* --- TAHAP 3: SCOREBOARD OVERLAY MODAL --- */}
       {activeMatch && activeScoreboard && (
         <div className="fixed inset-0 z-[100] bg-gray-950 flex flex-col p-6 text-white animate-in zoom-in duration-300">
            <div className="flex justify-between items-center mb-8 border-b border-white/10 pb-4">
@@ -753,6 +879,7 @@ export default function App() {
         </div>
       )}
 
+      {/* MODAL MASTER MODAL TETAP SAMA SEPERTI VERSI SEBELUMNYA */}
       {showMasterModal && (
         <div className="fixed inset-0 z-[60] bg-black/60 backdrop-blur-sm flex items-center justify-center p-4 master-modal-overlay">
            <div className="bg-white w-full max-w-5xl max-h-[90vh] rounded-[40px] shadow-2xl flex flex-col overflow-hidden master-modal-content">
