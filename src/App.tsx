@@ -16,6 +16,8 @@ const IconMonitor = () => <svg className="w-4 h-4" xmlns="http://www.w3.org/2000
 const IconX = () => <svg className="w-5 h-5" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>;
 const IconArrowUp = () => <svg className="w-4 h-4" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><line x1="12" y1="19" x2="12" y2="5"/><polyline points="5 12 12 5 19 12"/></svg>;
 const IconArrowDown = () => <svg className="w-4 h-4" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><polyline points="19 12 12 19 5 12"/></svg>;
+const IconChevronsUp = () => <svg className="w-4 h-4" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="m17 11-5-5-5 5"/><path d="m17 18-5-5-5 5"/></svg>;
+const IconChevronsDown = () => <svg className="w-4 h-4" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="m7 13 5 5 5-5"/><path d="m7 6 5 5 5-5"/></svg>;
 const IconCopy = () => <svg className="w-4 h-4" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>;
 const IconList = () => <svg className="w-5 h-5" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><line x1="8" y1="6" x2="21" y2="6"/><line x1="8" y1="12" x2="21" y2="12"/><line x1="8" y1="18" x2="21" y2="18"/><line x1="3" y1="6" x2="3.01" y2="6"/><line x1="3" y1="12" x2="3.01" y2="12"/><line x1="3" y1="18" x2="3.01" y2="18"/></svg>;
 const IconUndo = () => <svg className="w-4 h-4" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M3 7v6h6"/><path d="M21 17a9 9 0 0 0-9-9 9 9 0 0 0-6 2.3L3 13"/></svg>;
@@ -32,8 +34,7 @@ const themes = {
   slate: { name: 'Slate', bgApp: 'bg-slate-100', primary: 'bg-slate-800', primaryHover: 'hover:bg-slate-900', textPrimary: 'text-slate-900', border: 'border-slate-200', accent: 'bg-indigo-500', accentText: 'text-indigo-50', accentHover: 'hover:bg-indigo-600', soft: 'bg-slate-100', header: 'bg-slate-950' },
   amber: { name: 'Amber', bgApp: 'bg-amber-50/50', primary: 'bg-amber-600', primaryHover: 'hover:bg-amber-700', textPrimary: 'text-amber-900', border: 'border-amber-100', accent: 'bg-blue-400', accentText: 'text-blue-900', accentHover: 'hover:bg-blue-500', soft: 'bg-amber-50', header: 'bg-amber-800' },
   indigo: { name: 'Indigo', bgApp: 'bg-indigo-50/50', primary: 'bg-indigo-600', primaryHover: 'hover:bg-indigo-700', textPrimary: 'text-indigo-900', border: 'border-indigo-100', accent: 'bg-pink-400', accentText: 'text-pink-900', accentHover: 'hover:bg-pink-500', soft: 'bg-indigo-50', header: 'bg-indigo-800' },
-  teal: { name: 'Teal', bgApp: 'bg-teal-50/50', primary: 'bg-teal-600', primaryHover: 'hover:bg-teal-700', textPrimary: 'text-teal-900', border: 'border-teal-100', accent: 'bg-orange-400', accentText: 'text-orange-900', accentHover: 'hover:bg-orange-500', soft: 'bg-teal-50', header: 'bg-teal-800' },
-  rose: { name: 'Rose', bgApp: 'bg-rose-50/50', primary: 'bg-rose-600', primaryHover: 'hover:bg-rose-700', textPrimary: 'text-rose-900', border: 'border-rose-100', accent: 'bg-emerald-400', accentText: 'text-emerald-900', accentHover: 'hover:bg-emerald-500', soft: 'bg-rose-50', header: 'bg-rose-800' }
+  teal: { name: 'Teal', bgApp: 'bg-teal-50/50', primary: 'bg-teal-600', primaryHover: 'hover:bg-teal-700', textPrimary: 'text-teal-900', border: 'border-teal-100', accent: 'bg-orange-400', accentText: 'text-orange-900', accentHover: 'hover:bg-orange-500', soft: 'bg-teal-50', header: 'bg-teal-800' }
 };
 
 export default function App() {
@@ -65,11 +66,11 @@ export default function App() {
   const [isProjectorMode, setIsProjectorMode] = useState(false);
   const [isExportingPng, setIsExportingPng] = useState(false);
   
-  // TAHAP 2: STATE UNTUK UNDO/REDO SYSTEM
+  // UNDO/REDO STATE
   const [past, setPast] = useState([]);
   const [future, setFuture] = useState([]);
 
-  // TAHAP 3: SCOREBOARD STATE
+  // SCOREBOARD STATE
   const [activeScoreboard, setActiveScoreboard] = useState(null); 
   const [serviceStarter, setServiceStarter] = useState(null); 
 
@@ -131,14 +132,12 @@ export default function App() {
         setTournamentStartDate(data.tournamentStartDate || '');
         setKnockoutData(data.knockoutData || []); setCourts(data.courts || ['LAPANGAN 1', 'LAPANGAN 2']);
         if (data.activeTheme && themes[data.activeTheme]) setActiveTheme(data.activeTheme);
-        setPhase1Standings(data.phase1Standings || null);
-        setPast([]); setFuture([]);
+        setPhase1Standings(data.phase1Standings || null); setPast([]); setFuture([]);
       } catch (err) { alert("Gagal memuat! Format file tidak valid."); }
     };
     reader.readAsText(file); e.target.value = null; 
   };
 
-  // --- TAHAP 2: SNAPSHOT SYSTEM ---
   const getCurrentSnapshot = () => ({
     stage, schedule: JSON.parse(JSON.stringify(schedule)), matchHistory: JSON.parse(JSON.stringify(matchHistory)),
     knockoutData: JSON.parse(JSON.stringify(knockoutData)), teams: [...teams], groupAssignments: { ...groupAssignments },
@@ -182,6 +181,23 @@ export default function App() {
   const handleRemoveTeam = (teamToRemove) => { setTeams(teams.filter(team => team !== teamToRemove)); const newAssignments = { ...groupAssignments }; delete newAssignments[teamToRemove]; setGroupAssignments(newAssignments); const newLogos = { ...teamLogos }; delete newLogos[teamToRemove]; setTeamLogos(newLogos); };
   const handleNumGroupsChange = (e) => { const val = e.target.value; if (val === '') { setNumGroups(''); return; } const num = Number(val); if (num >= 1 && num <= 26) { setNumGroups(num); setGroupAssignments({}); } };
   const handleAutoAssign = () => { if (teams.length === 0) return; const activeNG = Number(numGroups) || 2; const shf = [...teams].sort(() => 0.5 - Math.random()); const assignments = {}; const gl = Array.from({length: activeNG}, (_, i) => String.fromCharCode(65 + i)); shf.forEach((t, i) => { assignments[t] = gl[i % activeNG]; }); setGroupAssignments(assignments); };
+
+  // --- TAHAP 4: DRAG & DROP UNTUK GRUP (STAGE 0) ---
+  const handleTeamDropGroup = (e, targetGroup) => {
+    e.preventDefault();
+    const teamName = e.dataTransfer.getData('text/plain');
+    if (!teamName || !teams.includes(teamName)) return;
+    if (groupAssignments[teamName] === targetGroup) return;
+    
+    saveSnapshot();
+    const newAssignments = { ...groupAssignments };
+    if (targetGroup === '') {
+        delete newAssignments[teamName];
+    } else {
+        newAssignments[teamName] = targetGroup;
+    }
+    setGroupAssignments(newAssignments);
+  };
 
   const getStandings = (specificSchedule = schedule, specificAssignments = groupAssignments) => {
     let standings = {};
@@ -322,52 +338,50 @@ export default function App() {
     });
   };
 
-  // --- TAHAP 3: FUNGSI SCOREBOARD INTERAKTIF ---
+  // --- TAHAP 4: FUNGSI REORDER (DRAG & DROP JADWAL) ---
+  const reorderMatchSchedule = (srcIdx, destIdx) => {
+    if (srcIdx === destIdx) return;
+    saveSnapshot();
+    const newSchedule = [...schedule];
+    const [moved] = newSchedule.splice(srcIdx, 1);
+    newSchedule.splice(destIdx, 0, moved);
+
+    // Mempertahankan Waktu, ID, dan Lapangan agar urutan tidak rusak di laporan
+    const origMeta = schedule.map(m => ({ id: m.id, time: m.time, date: m.date, court: m.court }));
+    const finalized = newSchedule.map((m, i) => ({ 
+        ...m, 
+        id: origMeta[i].id, 
+        time: origMeta[i].time, 
+        date: origMeta[i].date, 
+        court: origMeta[i].court 
+    }));
+    setSchedule(finalized);
+  };
+
+  // SCOREBOARD LOGIC (TAHAP 3)
   const handleUpdatePapanSkor = (isA, amount) => {
     if (!activeScoreboard) return;
-    
-    // Tarik match yang segar dari state
-    const currentMatch = activeScoreboard.isKnockout 
-        ? knockoutData[activeScoreboard.rI]?.[activeScoreboard.mI] 
-        : schedule.find(m => m.id === activeScoreboard.id);
-        
+    const currentMatch = activeScoreboard.isKnockout ? knockoutData[activeScoreboard.rI]?.[activeScoreboard.mI] : schedule.find(m => m.id === activeScoreboard.id);
     if (!currentMatch) return;
-
     const currentSet = currentMatch.parties[activeScoreboard.pIndex].sets[activeScoreboard.setIndex];
     const scoreA = parseInt(currentSet.scoreA) || 0;
     const scoreB = parseInt(currentSet.scoreB) || 0;
 
-    // Logika Penguncian Otomatis (Set Lock)
     const isFinished = (scoreA >= 15 || scoreB >= 15) && Math.abs(scoreA - scoreB) >= 2;
     const isMax = scoreA === 17 || scoreB === 17;
-    
-    // Operator bisa mengurangi skor (amount < 0) jika ada kesalahan meski set sudah dikunci
-    if (amount > 0 && (isFinished || isMax)) {
-        alert(`Set sudah selesai di angka ${scoreA} - ${scoreB}! Silakan lanjut ke set berikutnya.`);
-        return;
-    }
+    if (amount > 0 && (isFinished || isMax)) { alert(`Set sudah selesai di angka ${scoreA} - ${scoreB}! Silakan lanjut ke set berikutnya.`); return; }
 
-    saveSnapshot(); // Menyimpan riwayat
-
+    saveSnapshot();
     const newVal = isA ? Math.max(0, scoreA + amount) : Math.max(0, scoreB + amount);
-    
-    if (activeScoreboard.isKnockout) {
-        handleKnockoutScoreChange(activeScoreboard.rI, activeScoreboard.mI, activeScoreboard.pIndex, activeScoreboard.setIndex, isA ? 'scoreA' : 'scoreB', newVal.toString());
-    } else {
-        handleScoreChange(activeScoreboard.id, activeScoreboard.pIndex, activeScoreboard.setIndex, isA ? 'scoreA' : 'scoreB', newVal.toString());
-    }
+    if (activeScoreboard.isKnockout) { handleKnockoutScoreChange(activeScoreboard.rI, activeScoreboard.mI, activeScoreboard.pIndex, activeScoreboard.setIndex, isA ? 'scoreA' : 'scoreB', newVal.toString()); } 
+    else { handleScoreChange(activeScoreboard.id, activeScoreboard.pIndex, activeScoreboard.setIndex, isA ? 'scoreA' : 'scoreB', newVal.toString()); }
   };
 
   const handleResetSet = () => {
     if (!activeScoreboard || !window.confirm("Mulai ulang skor set ini?")) return;
     saveSnapshot();
-    if (activeScoreboard.isKnockout) {
-        handleKnockoutScoreChange(activeScoreboard.rI, activeScoreboard.mI, activeScoreboard.pIndex, activeScoreboard.setIndex, 'scoreA', '0');
-        handleKnockoutScoreChange(activeScoreboard.rI, activeScoreboard.mI, activeScoreboard.pIndex, activeScoreboard.setIndex, 'scoreB', '0');
-    } else {
-        handleScoreChange(activeScoreboard.id, activeScoreboard.pIndex, activeScoreboard.setIndex, 'scoreA', '0');
-        handleScoreChange(activeScoreboard.id, activeScoreboard.pIndex, activeScoreboard.setIndex, 'scoreB', '0');
-    }
+    if (activeScoreboard.isKnockout) { handleKnockoutScoreChange(activeScoreboard.rI, activeScoreboard.mI, activeScoreboard.pIndex, activeScoreboard.setIndex, 'scoreA', '0'); handleKnockoutScoreChange(activeScoreboard.rI, activeScoreboard.mI, activeScoreboard.pIndex, activeScoreboard.setIndex, 'scoreB', '0'); } 
+    else { handleScoreChange(activeScoreboard.id, activeScoreboard.pIndex, activeScoreboard.setIndex, 'scoreA', '0'); handleScoreChange(activeScoreboard.id, activeScoreboard.pIndex, activeScoreboard.setIndex, 'scoreB', '0'); }
   };
 
   const handleClearScores = () => {
@@ -440,13 +454,29 @@ export default function App() {
     return <div className="text-gray-400 text-xs font-bold p-8 text-center border-2 border-dashed rounded-3xl">BAGAN AKAN DITAMPILKAN SESUAI FORMAT</div>;
   };
 
-  const renderMatchCard = (m, isK = false, idx = null) => {
+  const renderTeamCard = (team) => (
+    <div key={team} draggable onDragStart={(e) => { e.dataTransfer.setData('text/plain', team); }} className="bg-white p-3 rounded-2xl flex items-center justify-between border border-gray-200 shadow-sm hover:border-blue-400 hover:shadow-md transition-all cursor-grab active:cursor-grabbing group">
+       <div className="flex items-center gap-4">
+          <label className={`cursor-pointer w-12 h-12 rounded-2xl bg-gray-50 border-2 border-gray-100 flex items-center justify-center overflow-hidden hover:border-gray-300 group-hover:border-blue-200 relative`}>{teamLogos[team] ? <img src={teamLogos[team]} className="w-full h-full object-cover" alt="Logo" /> : <IconImage className="w-5 h-5 text-gray-300 group-hover:text-blue-400" />}<input type="file" accept="image/*" hidden onChange={(e) => handleTeamLogoUpload(team, e)} /></label>
+          <span className="font-black text-gray-800 text-sm uppercase">{team}</span>
+       </div>
+       <div className="flex items-center gap-3">
+          {tournamentType === 'Groups' && (
+             <select value={groupAssignments[team] || ''} onChange={(e) => setGroupAssignments({...groupAssignments, [team]: e.target.value})} className="bg-gray-50 border border-gray-200 text-gray-700 font-bold text-xs rounded-xl px-2 py-1 outline-none cursor-pointer focus:bg-white focus:border-gray-300 transition-colors hidden sm:block"><option value="" disabled>GRUP</option>{Array.from({length: Number(numGroups) || 2}, (_, i) => String.fromCharCode(65 + i)).map(g => <option key={g} value={g}>{g}</option>)}</select>
+          )}
+          <button onClick={() => handleRemoveTeam(team)} className="text-gray-300 hover:text-red-500 hover:bg-red-50 p-2 rounded-xl transition-colors" title="Hapus"><IconTrash /></button>
+       </div>
+    </div>
+  );
+
+  const renderMatchCard = (m, isK = false, index = null) => {
     const isTBD = String(m.teamA).includes('?') || String(m.teamB).includes('?');
     const isL = !isTBD && !m.winner && m.parties.some(p => p.sets.some(s => s.scoreA!=='' || s.scoreB!==''));
+    
     return (
-      <div key={m.id} className={`bg-white rounded-3xl shadow-sm border ${isL ? 'border-red-400 ring-4 ring-red-50' : theme.border} overflow-hidden flex flex-col transition-all print:border-gray-300`}>
-        <div className={`p-4 text-center border-b ${isL ? 'bg-red-50/80' : 'bg-gray-50/50'} relative`}>
-          {isL && <div className="no-print absolute left-4 top-1/2 -translate-y-1/2 flex items-center gap-1.5 bg-red-100 px-3 py-1 rounded-xl text-[10px] font-black text-red-700 animate-pulse">LIVE</div>}
+      <div key={m.id} draggable={!isProjectorMode && !isK && !isL} onDragStart={(e) => { e.dataTransfer.setData('text/plain', index); }} onDragOver={(e) => e.preventDefault()} onDrop={(e) => { e.preventDefault(); const src = e.dataTransfer.getData('text/plain'); if(src !== '') reorderMatchSchedule(parseInt(src), index); }} className={`bg-white rounded-3xl shadow-sm border ${isL && !isProjectorMode ? 'border-red-400 shadow-md ring-4 ring-red-50' : theme.border} overflow-hidden flex flex-col transition-all duration-300 print-break-inside-avoid print:border-gray-300 print:shadow-none print:ring-0 ${isProjectorMode ? (isLive ? 'border-4 border-red-500 shadow-2xl' : 'border-none shadow-xl') : ''} ${!isProjectorMode && !isK && !isL ? 'cursor-grab active:cursor-grabbing hover:ring-2 hover:ring-blue-200' : ''}`}>
+        <div className={`p-4 text-center border-b ${isL ? 'border-red-200' : theme.border} ${m.winner ? (m.winner === 'SERI' ? 'bg-gray-100 border-transparent print:bg-gray-100' : `${theme.accent} ${theme.accentText} border-transparent print:bg-gray-100`) : isL ? 'bg-red-50/80 print:bg-white' : `bg-gray-50/50 print:bg-white`} ${isProjectorMode ? 'py-5' : ''} relative`}>
+          {isL && <div className="no-print absolute left-4 top-1/2 -translate-y-1/2 flex items-center gap-1.5 bg-red-100 px-3 py-1.5 rounded-xl border border-red-200 shadow-sm"><span className="w-2.5 h-2.5 rounded-full bg-red-600 animate-pulse"></span><span className={`font-black text-red-700 uppercase tracking-widest ${isProjectorMode ? 'text-xs' : 'text-[10px]'}`}>LIVE</span></div>}
           <div className="flex flex-col items-center">
              <span className="font-black uppercase tracking-widest text-xs">{isK ? m.title : m.groupLabel}</span>
              <div className="font-medium mt-1 flex items-center justify-center gap-2 text-[10px] opacity-70">
@@ -459,12 +489,22 @@ export default function App() {
                 )}
              </div>
           </div>
-          {/* TAHAP 3: TOMBOL BUKA SCOREBOARD */}
+          {/* TOMBOL BUKA SCOREBOARD */}
           {!isProjectorMode && !isTBD && !m.winner && (
             <button onClick={() => setActiveScoreboard({ id: m.id, isKnockout: isK, rI: m.roundIndex, mI: m.matchIndex, pIndex: 0, setIndex: 0 })} className="absolute right-4 top-1/2 -translate-y-1/2 bg-blue-600 text-white text-[10px] font-black px-4 py-2 rounded-xl shadow-md flex items-center gap-2 hover:bg-blue-700 transition-colors">SCOREBOARD <IconChevronRight /></button>
           )}
+
+          {/* TAHAP 4: SHORTCUT REORDER (DRAG & DROP) */}
+          {!isProjectorMode && !isK && index !== null && (
+            <div className="no-print absolute right-0 top-1/2 -translate-y-1/2 flex flex-col gap-0.5">
+               <button onClick={(e) => { e.stopPropagation(); reorderMatchSchedule(index, 0); }} disabled={index === 0} title="Pindah ke Paling Atas" className={`p-1 rounded bg-white border border-gray-200 shadow-sm transition-all ${index===0?'opacity-30':'hover:bg-gray-100 hover:text-blue-600'}`}><IconChevronsUp /></button>
+               <button onClick={(e) => { e.stopPropagation(); reorderMatchSchedule(index, index - 1); }} disabled={index === 0} title="Naik Satu Tingkat" className={`p-1 rounded bg-white border border-gray-200 shadow-sm transition-all ${index===0?'opacity-30':'hover:bg-gray-100 hover:text-blue-600'}`}><IconArrowUp /></button>
+               <button onClick={(e) => { e.stopPropagation(); reorderMatchSchedule(index, index + 1); }} disabled={index === schedule.length - 1} title="Turun Satu Tingkat" className={`p-1 rounded bg-white border border-gray-200 shadow-sm transition-all ${index===schedule.length-1?'opacity-30':'hover:bg-gray-100 hover:text-blue-600'}`}><IconArrowDown /></button>
+               <button onClick={(e) => { e.stopPropagation(); reorderMatchSchedule(index, schedule.length - 1); }} disabled={index === schedule.length - 1} title="Pindah ke Paling Bawah" className={`p-1 rounded bg-white border border-gray-200 shadow-sm transition-all ${index===schedule.length-1?'opacity-30':'hover:bg-gray-100 hover:text-blue-600'}`}><IconChevronsDown /></button>
+            </div>
+          )}
         </div>
-        <div className="flex justify-between items-center p-5 bg-white relative">
+        <div className="flex justify-between items-center p-5 bg-white relative pointer-events-none">
           <div className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 bg-gray-100 text-gray-400 font-black rounded-xl text-[10px] px-3 py-1">VS</div>
           <div className="w-2/5 flex flex-col items-center text-center"><div className="w-14 h-14 bg-gray-50 rounded-2xl flex items-center justify-center mb-2 overflow-hidden">{teamLogos[m.teamA] ? <img src={teamLogos[m.teamA]} className="w-full h-full object-cover" /> : <IconUsers />}</div><span className="font-black text-sm uppercase truncate w-full">{m.teamA}</span></div>
           <div className="w-2/5 flex flex-col items-center text-center"><div className="w-14 h-14 bg-gray-50 rounded-2xl flex items-center justify-center mb-2 overflow-hidden">{teamLogos[m.teamB] ? <img src={teamLogos[m.teamB]} className="w-full h-full object-cover" /> : <IconUsers />}</div><span className="font-black text-sm uppercase truncate w-full">{m.teamB}</span></div>
@@ -492,14 +532,10 @@ export default function App() {
     );
   };
 
-  // --- MENGAMBIL MATCH AKTIF UNTUK SCOREBOARD ---
   let activeMatch = null;
   if (activeScoreboard) {
-      if (activeScoreboard.isKnockout) {
-          activeMatch = knockoutData[activeScoreboard.rI]?.[activeScoreboard.mI];
-      } else {
-          activeMatch = schedule.find(m => m.id === activeScoreboard.id);
-      }
+      if (activeScoreboard.isKnockout) { activeMatch = knockoutData[activeScoreboard.rI]?.[activeScoreboard.mI]; } 
+      else { activeMatch = schedule.find(m => m.id === activeScoreboard.id); }
   }
 
   return (
@@ -538,38 +574,64 @@ export default function App() {
 
         {stage === 0 ? (
           <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 no-print">
-             <div className="lg:col-span-7 bg-white rounded-3xl shadow-sm border border-gray-100 p-8 flex flex-col h-[500px]">
-                <h2 className="font-black text-lg mb-6 flex items-center gap-3"><IconUsers /> PESERTA</h2>
-                <form onSubmit={handleAddTeam} className="flex gap-3 mb-6"><input value={inputValue} onChange={e=>setInputValue(e.target.value)} placeholder="Nama Tim..." className="flex-1 px-5 py-4 bg-gray-50 border border-gray-200 rounded-2xl font-black text-sm uppercase" /><button className={`${theme.primary} text-white px-6 rounded-2xl shadow-lg`}><IconPlus /></button></form>
-                <div className="flex-1 overflow-y-auto space-y-3 pr-2">
-                   {teams.map(t => (
-                     <div key={t} className="bg-white border border-gray-100 p-3 rounded-2xl flex justify-between items-center shadow-sm">
-                        <div className="flex items-center gap-4">
-                           <label className="w-12 h-12 bg-gray-50 border-2 border-gray-100 rounded-2xl flex items-center justify-center overflow-hidden cursor-pointer hover:border-gray-300">{teamLogos[t] ? <img src={teamLogos[t]} className="w-full h-full object-cover" /> : <IconImage />}<input type="file" hidden onChange={e=>handleTeamLogoUpload(t,e)} /></label>
-                           <span className="font-black text-sm">{t}</span>
+             <div className="lg:col-span-7 bg-white rounded-3xl shadow-sm border border-gray-100 p-8 flex flex-col h-[600px] overflow-hidden">
+                <h2 className="font-black text-lg mb-6 flex items-center gap-3"><IconUsers /> PENDAFTARAN TIM</h2>
+                <form onSubmit={handleAddTeam} className="flex gap-3 mb-6 shrink-0"><input value={inputValue} onChange={e=>setInputValue(e.target.value)} placeholder="Nama Tim..." className="flex-1 px-5 py-4 bg-gray-50 border border-gray-200 rounded-2xl font-black text-sm uppercase outline-none focus:border-blue-400" /><button className={`${theme.primary} text-white px-6 rounded-2xl shadow-lg`}><IconPlus /></button></form>
+                
+                {/* TAHAP 4: DRAG & DROP UNTUK GRUP */}
+                <div className="flex-1 overflow-y-auto pr-2 pb-4">
+                  {tournamentType === 'Groups' ? (
+                     <div className="flex flex-col gap-4 h-full">
+                        <div className="text-xs font-black text-gray-400 text-center border-b border-dashed pb-2">Geser (Drag & Drop) tim ke dalam Grup</div>
+                        
+                        {/* KOTAK UNASSIGNED */}
+                        <div onDragOver={(e) => e.preventDefault()} onDrop={(e) => handleTeamDropGroup(e, '')} className="bg-gray-50/80 p-4 rounded-2xl border-2 border-dashed border-gray-200 min-h-[120px]">
+                           <h4 className="text-[10px] font-black text-gray-400 mb-3 text-center">BELUM MASUK GRUP ({teams.filter(t => !groupAssignments[t]).length})</h4>
+                           <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                              {teams.filter(t => !groupAssignments[t]).map(t => renderTeamCard(t))}
+                           </div>
                         </div>
-                        <div className="flex items-center gap-3">
-                           {tournamentType==='Groups' && <select value={groupAssignments[t]||''} onChange={e=>setGroupAssignments({...groupAssignments,[t]:e.target.value})} className="bg-gray-50 text-[10px] font-black p-2 rounded-xl outline-none"><option value="" disabled>GRUP</option>{Array.from({length:numGroups},(_,i)=>String.fromCharCode(65+i)).map(g=><option key={g} value={g}>{g}</option>)}</select>}
-                           <button onClick={()=>handleRemoveTeam(t)} className="text-gray-300 hover:text-red-500"><IconTrash /></button>
+
+                        {/* KOTAK GRUP */}
+                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mt-2">
+                           {Array.from({length: Number(numGroups) || 2}, (_, i) => String.fromCharCode(65 + i)).map(g => (
+                              <div key={g} onDragOver={(e) => e.preventDefault()} onDrop={(e) => handleTeamDropGroup(e, g)} className="bg-blue-50/40 p-4 rounded-2xl border-2 border-dashed border-blue-200 min-h-[150px]">
+                                 <h4 className="text-[10px] font-black text-blue-700 mb-3 text-center">GRUP {g} ({teams.filter(t => groupAssignments[t] === g).length})</h4>
+                                 <div className="flex flex-col gap-2">
+                                    {teams.filter(t => groupAssignments[t] === g).map(t => renderTeamCard(t))}
+                                 </div>
+                              </div>
+                           ))}
                         </div>
                      </div>
-                   ))}
+                  ) : (
+                     <div className="flex flex-col gap-3">
+                        {teams.length === 0 && <div className="h-32 flex items-center justify-center border-2 border-dashed border-gray-100 rounded-2xl text-gray-400 font-bold text-sm normal-case">Belum ada tim didaftarkan.</div>}
+                        {teams.map(t => renderTeamCard(t))}
+                     </div>
+                  )}
                 </div>
              </div>
+
              <div className="lg:col-span-5 bg-white rounded-3xl shadow-sm border border-gray-100 p-8 flex flex-col gap-6">
-                <div><h3 className="text-[10px] font-black text-gray-400 uppercase mb-3">Event</h3><select value={selectedEventFormat} onChange={e=>setSelectedEventFormat(e.target.value)} className="w-full bg-gray-50 p-4 rounded-2xl font-black text-sm uppercase outline-none"><option value="Regu Event">Regu Event</option><option value="Regu Event Team">Regu Event Team</option><option value="Mixed Event Team">Mixed Event Team</option></select></div>
-                <div><h3 className="text-[10px] font-black text-gray-400 uppercase mb-3">Sistem</h3>
-                  <select value={tournamentType} onChange={e=>setTournamentType(e.target.value)} className="w-full bg-gray-50 p-4 rounded-2xl font-black text-sm uppercase outline-none mb-4"><option value="Group">1 Pool Utama</option><option value="Groups">Banyak Grup</option><option value="Knocked Out Round">Sistem Gugur</option></select>
-                  {tournamentType==='Groups' && <div className="flex items-center justify-between bg-emerald-50 p-4 rounded-2xl"><span className="text-xs font-black">Jumlah Grup</span><div className="flex gap-2"><input type="number" min="2" max="4" value={numGroups} onChange={handleNumGroupsChange} className="w-12 text-center font-black p-2 rounded-lg" /><button onClick={handleAutoAssign} className="bg-white text-[10px] font-black px-3 py-2 rounded-lg">Acak</button></div></div>}
+                <div><h3 className="text-[10px] font-black text-gray-400 uppercase mb-3">Event</h3><select value={selectedEventFormat} onChange={e=>setSelectedEventFormat(e.target.value)} className="w-full bg-gray-50 p-4 rounded-2xl font-black text-sm uppercase outline-none focus:border-blue-400"><option value="Regu Event">Regu Event</option><option value="Regu Event Team">Regu Event Team</option><option value="Mixed Event Team">Mixed Event Team</option></select></div>
+                <div><h3 className="text-[10px] font-black text-gray-400 uppercase mb-3">Sistem Turnamen</h3>
+                  <select value={tournamentType} onChange={e=>setTournamentType(e.target.value)} className="w-full bg-gray-50 p-4 rounded-2xl font-black text-sm uppercase outline-none focus:border-blue-400 mb-4"><option value="Group">1 Pool Utama</option><option value="Groups">Banyak Grup</option><option value="Knocked Out Round">Sistem Gugur</option></select>
+                  {tournamentType==='Groups' && <div className="flex items-center justify-between bg-emerald-50 p-4 rounded-2xl border border-emerald-100"><span className="text-xs font-black text-emerald-800">Jumlah Grup</span><div className="flex gap-2"><input type="number" min="2" max="26" value={numGroups} onChange={handleNumGroupsChange} className="w-16 text-center font-black p-2 rounded-lg border border-emerald-200 outline-none" /><button onClick={handleAutoAssign} className="bg-white text-[10px] font-black px-4 py-2 rounded-lg text-emerald-700 shadow-sm border border-emerald-200 hover:bg-emerald-100">ACAK</button></div></div>}
                 </div>
-                <button onClick={tournamentType==='Knocked Out Round'?()=>{setKnockoutData(generateDirectKnockout());setStage(3);}:generateSchedule} disabled={teams.length<2} className={`mt-auto w-full ${theme.accent} ${theme.accentText} py-5 rounded-2xl font-black text-lg uppercase shadow-lg transition-all active:scale-95`}>Mulai Turnamen</button>
+                <button onClick={tournamentType==='Knocked Out Round'?()=>{setKnockoutData(generateDirectKnockout());setStage(3);}:generateSchedule} disabled={teams.length<2} className={`mt-auto w-full ${theme.accent} ${theme.accentText} py-5 rounded-2xl font-black text-lg uppercase shadow-lg transition-all active:scale-95 disabled:opacity-50`}>Mulai Turnamen</button>
              </div>
           </div>
         ) : (
           <div className="space-y-6">
              <div className="no-print bg-white p-4 rounded-3xl border border-gray-100 shadow-sm flex flex-col md:flex-row justify-between items-center gap-4">
                 <div className="flex items-center gap-3"><div className="p-3 bg-emerald-50 text-emerald-600 rounded-2xl"><IconTable /></div><div><h3 className="font-black text-sm">Dashboard</h3><p className="text-[10px] text-gray-400 font-bold">Input Skor & Pantau Laporan</p></div></div>
-                <div className="flex gap-2"><button onClick={()=>setShowMasterModal(true)} className="bg-emerald-50 text-emerald-600 px-5 py-2.5 rounded-2xl text-[10px] font-black uppercase shadow-sm"><IconList /> Laporan Induk</button><button onClick={handleEnterProjectorMode} className="bg-amber-400 text-amber-900 px-5 py-2.5 rounded-2xl text-[10px] font-black uppercase shadow-sm"><IconMonitor /> Live Mode</button></div>
+                <div className="flex gap-2">
+                   <button onClick={handleUndo} disabled={past.length===0} className="bg-white border text-[10px] font-black px-4 py-2 rounded-xl shadow-sm disabled:opacity-30"><IconUndo /> UNDO</button>
+                   <button onClick={handleRedo} disabled={future.length===0} className="bg-white border text-[10px] font-black px-4 py-2 rounded-xl shadow-sm disabled:opacity-30">REDO</button>
+                   <button onClick={()=>setShowMasterModal(true)} className="bg-emerald-50 text-emerald-600 px-5 py-2.5 rounded-2xl text-[10px] font-black uppercase shadow-sm"><IconList /> Laporan Induk</button>
+                   <button onClick={handleEnterProjectorMode} className="bg-amber-400 text-amber-900 px-5 py-2.5 rounded-2xl text-[10px] font-black uppercase shadow-sm"><IconMonitor /> Live Mode</button>
+                </div>
              </div>
 
              {stage < 3 && (
@@ -610,19 +672,16 @@ export default function App() {
                     saveSnapshot();
                     setKnockoutData(generateDirectKnockout(top4, 0, schedule.length+1));
                     setStage(3);
-                  }} className="bg-emerald-600 px-10 py-5 rounded-2xl font-black uppercase text-lg shadow-xl">Lanjut Semi Final & Final</button>
+                  }} className="bg-emerald-600 px-10 py-5 rounded-2xl font-black uppercase text-lg shadow-xl hover:bg-emerald-700 transition-all">Lanjut Semi Final</button>
                </div>
              )}
           </div>
         )}
-
-        <div className="text-center py-10 opacity-30 font-black text-[9px] tracking-[0.3em]">Takraw TMS &bull; fiqhipondaa9</div>
       </main>
 
-      {/* --- TAHAP 3: SCOREBOARD OVERLAY MODAL --- */}
+      {/* --- SCOREBOARD OVERLAY MODAL --- */}
       {activeMatch && activeScoreboard && (
         <div className="fixed inset-0 z-[100] bg-gray-950 flex flex-col p-6 text-white animate-in zoom-in duration-300">
-           {/* Header Scoreboard */}
            <div className="flex justify-between items-center mb-8 border-b border-white/10 pb-4">
               <div>
                  <h2 className="text-xl font-black text-amber-500 uppercase tracking-widest">{activeMatch.groupLabel || activeMatch.title}</h2>
@@ -641,12 +700,9 @@ export default function App() {
               </div>
            </div>
 
-           {/* Main Score Area */}
            <div className="flex-1 flex items-center justify-center gap-10">
-              {/* TIM A */}
               <div className="flex-1 flex flex-col items-center gap-8">
                  <div className={`relative p-8 rounded-[40px] border-4 transition-all duration-500 w-full text-center ${serviceStarter === 'A' ? 'border-amber-400 bg-amber-400/5' : 'border-white/10 bg-white/5'}`}>
-                    {/* Indikator Servis Dinamis: Berganti setiap 1 Poin */}
                     {((parseInt(activeMatch.parties[activeScoreboard.pIndex].sets[activeScoreboard.setIndex].scoreA || 0) + parseInt(activeMatch.parties[activeScoreboard.pIndex].sets[activeScoreboard.setIndex].scoreB || 0)) % 2 === (serviceStarter === 'A' ? 0 : 1)) && (
                        <div className="absolute -top-6 left-1/2 -translate-x-1/2 bg-amber-400 text-gray-900 px-6 py-2 rounded-full font-black text-xs shadow-xl animate-bounce">SERVICE</div>
                     )}
@@ -659,7 +715,6 @@ export default function App() {
                  </div>
               </div>
 
-              {/* VS & DEUCE AREA */}
               <div className="flex flex-col items-center gap-6">
                  <div className="text-4xl font-black text-gray-700">VS</div>
                  {(parseInt(activeMatch.parties[activeScoreboard.pIndex].sets[activeScoreboard.setIndex].scoreA || 0) >= 14 && parseInt(activeMatch.parties[activeScoreboard.pIndex].sets[activeScoreboard.setIndex].scoreB || 0) >= 14) && (
@@ -667,10 +722,8 @@ export default function App() {
                  )}
               </div>
 
-              {/* TIM B */}
               <div className="flex-1 flex flex-col items-center gap-8">
                  <div className={`relative p-8 rounded-[40px] border-4 transition-all duration-500 w-full text-center ${serviceStarter === 'B' ? 'border-amber-400 bg-amber-400/5' : 'border-white/10 bg-white/5'}`}>
-                    {/* Indikator Servis Dinamis: Berganti setiap 1 Poin */}
                     {((parseInt(activeMatch.parties[activeScoreboard.pIndex].sets[activeScoreboard.setIndex].scoreA || 0) + parseInt(activeMatch.parties[activeScoreboard.pIndex].sets[activeScoreboard.setIndex].scoreB || 0)) % 2 === (serviceStarter === 'B' ? 0 : 1)) && (
                        <div className="absolute -top-6 left-1/2 -translate-x-1/2 bg-amber-400 text-gray-900 px-6 py-2 rounded-full font-black text-xs shadow-xl animate-bounce">SERVICE</div>
                     )}
@@ -684,7 +737,6 @@ export default function App() {
               </div>
            </div>
 
-           {/* Set Selector */}
            <div className="flex justify-center gap-4 mt-8">
               {[0, 1, 2].map(idx => (
                  <button key={idx} onClick={() => {
