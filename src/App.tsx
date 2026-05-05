@@ -51,7 +51,7 @@ export default function App() {
   const [teamLogos, setTeamLogos] = useState({}); 
   const [sponsorLogos, setSponsorLogos] = useState([]); 
   const [championshipTitles, setChampionshipTitles] = useState(["EDIT NAMA KEJUARAAN", "EDIT KETERANGAN", "LOKASI & TANGGAL"]);
-  const [tournamentStartDate, setTournamentStartDate] = useState(''); // STATE BARU TAHAP 1
+  const [tournamentStartDate, setTournamentStartDate] = useState(''); 
   const [knockoutData, setKnockoutData] = useState([]);
   const [showMasterModal, setShowMasterModal] = useState(false);
   const [selectedEventFormat, setSelectedEventFormat] = useState('REGU EVENT');
@@ -132,7 +132,7 @@ export default function App() {
         if (data.mixDisciplines) setMixDisciplines(data.mixDisciplines); setNumGroups(data.numGroups || 2); setGroupAssignments(data.groupAssignments || {});
         setTeamLogos(data.teamLogos || {}); setSponsorLogos(data.sponsorLogos || []); if (data.championshipTitles) setChampionshipTitles(data.championshipTitles);
         setTournamentStartDate(data.tournamentStartDate || '');
-        setKnockoutData(data.knockoutData || []); setCourts(data.courts || ['Lapangan Utama', 'Lapangan B']);
+        setKnockoutData(data.knockoutData || []); setCourts(data.courts || ['LAPANGAN 1', 'LAPANGAN 2']);
         if (data.activeTheme && themes[data.activeTheme]) setActiveTheme(data.activeTheme);
         setPhase1Standings(data.phase1Standings || null);
         setUndoHistory(null); 
@@ -335,7 +335,6 @@ export default function App() {
     let cTimes = aC.map(() => { let t = new Date(); t.setHours(8, 0, 0, 0); return t; });
     const addMins = isTeamEvent ? 120 : 45;
     
-    // TAHAP 1: Set Default Date berdasarkan state tournamentStartDate
     const defaultDate = tournamentStartDate || new Date().toISOString().slice(0, 10);
 
     allMatches.forEach(m => {
@@ -371,7 +370,6 @@ export default function App() {
     const pL = eventDiscipline === 'Mix' ? mixDisciplines : [`${eventDiscipline} 1`, `${eventDiscipline} 2`, `${eventDiscipline} 3`];
     let matchCounter = initialId;
     
-    // TAHAP 1: Set Default Date
     const defaultDate = tournamentStartDate || new Date().toISOString().slice(0, 10);
 
     for(let r = 0; r < numRounds; r++) {
@@ -630,8 +628,9 @@ export default function App() {
          masterPlan.push({ id: matchId++, teamA: "[MENANG SF 1]", teamB: "[MENANG SF 2]", winner: null, label: "FINAL", phase: "Final Stage", court: "TBD", time: "TBD", date: "TBD" });
       } 
       else if ((tournamentType === 'Groups' && n === 2) || tournamentType === 'Group') {
-         masterPlan.push({ id: matchId++, teamA: "[JUARA A]", teamB: "[RUNNER B]", winner: null, label: "SEMI FINAL 1", phase: "Knockout", court: "TBD", time: "TBD", date: "TBD" });
-         masterPlan.push({ id: matchId++, teamA: "[JUARA B]", teamB: "[RUNNER A]", winner: null, label: "SEMI FINAL 2", phase: "Knockout", court: "TBD", time: "TBD", date: "TBD" });
+         const isSP = tournamentType === 'Group';
+         masterPlan.push({ id: matchId++, teamA: isSP ? "[PERINGKAT 1]" : "[JUARA A]", teamB: isSP ? "[PERINGKAT 3]" : "[RUNNER B]", winner: null, label: "SEMI FINAL 1", phase: "Knockout", court: "TBD", time: "TBD", date: "TBD" });
+         masterPlan.push({ id: matchId++, teamA: isSP ? "[PERINGKAT 2]" : "[JUARA B]", teamB: isSP ? "[PERINGKAT 4]" : "[RUNNER A]", winner: null, label: "SEMI FINAL 2", phase: "Knockout", court: "TBD", time: "TBD", date: "TBD" });
          masterPlan.push({ id: matchId++, teamA: "[MENANG SF 1]", teamB: "[MENANG SF 2]", winner: null, label: "FINAL", phase: "Final Stage", court: "TBD", time: "TBD", date: "TBD" });
       }
       else if (tournamentType === 'Groups' && n === 3) {
@@ -784,13 +783,14 @@ export default function App() {
             </div>
          </div>
        );
-    } else if (tournamentType === 'Groups' && (n === 2 || n === 3)) {
-       const qfMatches = isRealData && n === 3 && knockoutData.length === 3 ? knockoutData[0] : null;
-       const sfMatches = isRealData ? (knockoutData.length === 3 ? knockoutData[1] : knockoutData[0]) : [
-           { teamA: n === 3 ? "JUARA D" : "JUARA A", teamB: n === 3 ? "RUNNER E" : "RUNNER B" }, 
-           { teamA: n === 3 ? "JUARA E" : "JUARA B", teamB: n === 3 ? "RUNNER D" : "RUNNER A" }
+    } else if ((tournamentType === 'Groups' && (n === 2 || n === 3)) || tournamentType === 'Group') {
+       const isSinglePool = tournamentType === 'Group';
+       const qfMatches = isRealData && n === 3 && !isSinglePool && knockoutData.length === 3 ? knockoutData[0] : null;
+       const sfMatches = isRealData ? (knockoutData.length === 3 && !isSinglePool ? knockoutData[1] : knockoutData[0]) : [
+           { teamA: isSinglePool ? "PERINGKAT 1" : (n === 3 ? "JUARA D" : "JUARA A"), teamB: isSinglePool ? "PERINGKAT 3" : (n === 3 ? "RUNNER E" : "RUNNER B") }, 
+           { teamA: isSinglePool ? "PERINGKAT 2" : (n === 3 ? "JUARA E" : "JUARA B"), teamB: isSinglePool ? "PERINGKAT 4" : (n === 3 ? "RUNNER D" : "RUNNER A") }
        ];
-       const fMatch = isRealData ? (knockoutData.length === 3 ? knockoutData[2][0] : knockoutData[1][0]) : { teamA: "MENANG SF 1", teamB: "MENANG SF 2" };
+       const fMatch = isRealData ? (knockoutData.length === 3 && !isSinglePool ? knockoutData[2][0] : knockoutData[1][0]) : { teamA: "MENANG SF 1", teamB: "MENANG SF 2" };
 
        return (
          <div className="flex gap-10 min-w-max items-center justify-start p-6 bg-gray-50/30 rounded-[40px] border border-gray-50 print-break-inside-avoid">
@@ -1266,6 +1266,7 @@ export default function App() {
                 </div>
               </div>
 
+              {/* --- PERUBAHAN FASE BERIKUTNYA UNTUK SEMUA MODE --- */}
               {!isProjectorMode && stage === 1 && tournamentType === 'Groups' && (
                 <div className="no-print bg-gray-900 text-white rounded-3xl p-8 sm:p-12 text-center shadow-xl border border-gray-800 relative overflow-hidden mt-8">
                    <div className="absolute -top-10 -right-10 opacity-5 text-gray-100"><svg className="w-64 h-64" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M3 3v18"/><path d="M3 12h5"/><path d="M8 7v10"/><path d="M8 7h5"/><path d="M8 17h5"/><path d="M13 12h5"/><path d="M18 7v10"/><path d="M18 12h3"/></svg></div>
@@ -1304,6 +1305,31 @@ export default function App() {
                               <button onClick={handleExecutePhase2} className="bg-emerald-600 hover:bg-emerald-700 text-white font-black py-4 px-8 rounded-2xl shadow-md transition-all uppercase tracking-widest">Lanjut Sistem Gugur</button>
                            </div>
                          )}
+                       </>
+                     ) : <p className="text-gray-400 font-bold normal-case">Menunggu semua skor diinput untuk membuka kunci fase berikutnya.</p>}
+                   </div>
+                </div>
+              )}
+
+              {!isProjectorMode && stage === 1 && tournamentType === 'Group' && (
+                <div className="no-print bg-gray-900 text-white rounded-3xl p-8 sm:p-12 text-center shadow-xl border border-gray-800 relative overflow-hidden mt-8">
+                   <div className="absolute -top-10 -right-10 opacity-5 text-gray-100"><svg className="w-64 h-64" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M3 3v18"/><path d="M3 12h5"/><path d="M8 7v10"/><path d="M8 7h5"/><path d="M8 17h5"/><path d="M13 12h5"/><path d="M18 7v10"/><path d="M18 12h3"/></svg></div>
+                   <div className="relative z-10 max-w-4xl mx-auto">
+                     <h2 className="text-3xl font-black text-white mb-3 tracking-tight">Penyisihan Selesai!</h2>
+                     {isActivePhaseFinished ? (
+                       <>
+                         <p className="text-emerald-400 mb-8 font-medium normal-case">✨ Pool Utama telah selesai! Anda bisa mengakhiri turnamen di sini, atau lanjut ke Semi Final (Opsional).</p>
+                         <div className="flex flex-wrap justify-center gap-4">
+                            <button onClick={()=>{
+                                const std = getStandings()['Pool Utama'] || [];
+                                const top4 = [std[0]?.team || '?', std[2]?.team || '?', std[1]?.team || '?', std[3]?.team || '?']; // Peringkat 1v3, 2v4
+                                const startId = [...matchHistory, ...schedule].length + 1;
+                                setKnockoutData(generateDirectKnockout(top4, 0, startId));
+                                setStage(3);
+                            }} className="bg-emerald-600 hover:bg-emerald-700 text-white font-black py-4 px-8 rounded-2xl shadow-md transition-all uppercase tracking-widest">
+                                Lanjut Semi Final & Final
+                            </button>
+                         </div>
                        </>
                      ) : <p className="text-gray-400 font-bold normal-case">Menunggu semua skor diinput untuk membuka kunci fase berikutnya.</p>}
                    </div>
