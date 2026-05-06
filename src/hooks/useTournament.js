@@ -94,7 +94,7 @@ export const useTournament = () => {
         return { ...m, parties: pts, winner: fW, winsA: mW, winsB: mL };
       } 
       return m;
-    });
+    })); // <--- PERBAIKAN ERROR: Kurung tutup ini sudah ditambahkan!
   }, []);
 
   // --- FITUR ORISINAL: CLEAR SCORES (DENGAN BYE PROTECTOR) ---
