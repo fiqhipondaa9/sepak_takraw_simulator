@@ -35,8 +35,8 @@ export default function App() {
   else if (selectedEventFormat.toUpperCase().includes('QUADRANT')) eventDiscipline = 'Quadrant';
   else if (selectedEventFormat.toUpperCase().includes('MIXED')) eventDiscipline = 'Mix';
 
-  const isActivePhaseFinished = schedule.length > 0 && schedule.every(match => match.winner !== null);
-  const isSinglePoolCompleted = tournamentType === 'Group' && isActivePhaseFinished;
+  // const isActivePhaseFinished = schedule.length > 0 && schedule.every(match => match.winner !== null);
+  // const isSinglePoolCompleted = tournamentType === 'Group' && isActivePhaseFinished;
   
   const hasPhase2GroupStage = Object.values(groupAssignments).includes('Eliminated');
 
@@ -168,9 +168,10 @@ export default function App() {
     let orderedTeams = Array(size).fill('BYE');
     if (manualTeams.length === size && manualTeams.some(t => t.includes('['))) { orderedTeams = [...manualTeams]; } 
     else if (tournamentType === 'Knocked Out Round' && stage === 0) {
-        let shuffledTeams = [...manualTeams].sort(() => 0.5 - Math.random()); let fillOrder = [];
-        for(let i=0; i < size; i+=2) fillOrder.push(i); for(let i=1; i < size; i+=2) fillOrder.push(i); 
-        shuffledTeams.forEach((team, index) => { orderedTeams[fillOrder[index]] = team; });
+        let shuffledTeams = [...manualTeams];
+        // Memastikan tim tidak diacak jika tidak diperlukan, biarkan urut sesuai pendaftaran
+        orderedTeams = [...shuffledTeams];
+        while(orderedTeams.length < size) orderedTeams.push('BYE');
     } else { orderedTeams = [...manualTeams]; while(orderedTeams.length < size) orderedTeams.push('BYE'); }
 
     const numRounds = Math.log2(size); let rounds = []; let matchCounter = initialId;
@@ -199,30 +200,44 @@ export default function App() {
     return rounds;
   };
 
-  // --- PERBAIKAN: Fungsi Penguncian dan Kembali Manual ke Stage 0 ---
-  const handleLockPhaseAndReturn = () => {
-    if (!window.confirm("Kunci hasil klasemen saat ini dan kembali ke halaman pengaturan awal untuk merakit fase selanjutnya secara manual?")) return;
-    saveSnapshot(); 
-    setPhase1Standings(getStandings()); 
-    setMatchHistory([...matchHistory, ...schedule]); 
-    setSchedule([]);
-    setStage(0); 
-    window.scrollTo(0,0);
-  };
-
   const generateSchedule = () => {
     if (tournamentType === 'Groups' && !teams.every(t => groupAssignments[t])) return alert("Ada tim yang belum masuk ke dalam grup!");
     saveSnapshot(); 
     let allMatches = [];
+    
+    // PERBAIKAN POIN 4: Jadwal tersilang berurutan (Round Robin standard)
     const createRR = (gTeams, label) => {
-      if(gTeams.length < 2) return []; let sch = []; let cur = [...gTeams]; if(cur.length % 2 !== 0) cur.push(null);
-      const n = cur.length; for(let r=0; r<n-1; r++){ for(let i=0; i<n/2; i++){ if(cur[i] && cur[n-1-i]) sch.push({ teamA: cur[i], teamB: cur[n-1-i], groupLabel: label, roundLabel: 'P1' }); } cur.splice(1, 0, cur.pop()); } return sch;
+      if(gTeams.length < 2) return []; 
+      let sch = []; let cur = [...gTeams]; if(cur.length % 2 !== 0) cur.push(null);
+      const n = cur.length; 
+      for(let r=0; r<n-1; r++){ 
+        let roundMatches = [];
+        for(let i=0; i<n/2; i++){ 
+            if(cur[i] && cur[n-1-i]) roundMatches.push({ teamA: cur[i], teamB: cur[n-1-i], groupLabel: label, roundLabel: `P${r+1}` }); 
+        } 
+        sch.push(roundMatches);
+        cur.splice(1, 0, cur.pop()); 
+      } 
+      return sch; 
     };
+
     if (tournamentType === 'Groups') {
       const gl = Array.from({length: Number(numGroups) || 2}, (_, i) => String.fromCharCode(65 + i));
-      let gM = {}; let maxM = 0; gl.forEach(g => { const t = teams.filter(x => groupAssignments[x] === g); const m = createRR(t, `Grup ${g}`); gM[g] = m; if(m.length > maxM) maxM = m.length; });
-      for (let i = 0; i < maxM; i++) { gl.forEach(g => { if (gM[g] && gM[g][i]) allMatches.push(gM[g][i]); }); }
-    } else { allMatches = createRR(teams, 'Pool Utama'); }
+      let gM = {}; let maxRounds = 0; 
+      gl.forEach(g => { 
+          const t = teams.filter(x => groupAssignments[x] === g); 
+          const m = createRR(t, `Grup ${g}`); 
+          gM[g] = m; 
+          if(m.length > maxRounds) maxRounds = m.length; 
+      });
+      // Rotasi penyilangan jadwal antar Grup
+      for (let r = 0; r < maxRounds; r++) { 
+          gl.forEach(g => { if (gM[g] && gM[g][r]) allMatches.push(...gM[g][r]); }); 
+      }
+    } else { 
+      const rounds = createRR(teams, 'Pool Utama'); 
+      rounds.forEach(r => allMatches.push(...r));
+    }
 
     if (roundRobinType === 'Double Round Robin') {
       const round2Matches = allMatches.map(m => ({ teamA: m.teamB, teamB: m.teamA, groupLabel: m.groupLabel, roundLabel: 'P2' }));
@@ -231,9 +246,15 @@ export default function App() {
 
     let fSch = []; let counter = 1; const nP = isTeamEvent ? 3 : 1; const aC = courts.length > 0 ? courts : ['Lap. Utama'];
     let cTimes = aC.map(() => { let t = new Date(); t.setHours(8, 0, 0, 0); return t; }); const addMins = isTeamEvent ? 120 : 45;
+    
+    // PERBAIKAN POIN 2: Label Partai menyesuaikan Kategori Disiplin
+    const pL = eventDiscipline === 'Mix' ? mixDisciplines : [`${eventDiscipline} 1`, `${eventDiscipline} 2`, `${eventDiscipline} 3`];
 
     allMatches.forEach(m => {
-      let pts = []; for(let p=0; p<nP; p++) pts.push({ id: `p${p}`, label: `Match`, sets: [{scoreA:'',scoreB:''},{scoreA:'',scoreB:''},{scoreA:'',scoreB:''}], winner: null });
+      let pts = []; 
+      for(let p=0; p<nP; p++) {
+          pts.push({ id: `p${p}`, label: isTeamEvent ? pL[p] : `Match`, sets: [{scoreA:'',scoreB:''},{scoreA:'',scoreB:''},{scoreA:'',scoreB:''}], winner: null });
+      }
       let eIdx = 0; for(let i=1; i<cTimes.length; i++) if(cTimes[i] < cTimes[eIdx]) eIdx = i;
       fSch.push({ id: counter++, teamA: m.teamA, teamB: m.teamB, groupLabel: m.groupLabel, roundLabel: m.roundLabel, parties: pts, winner: null, winsA: 0, winsB: 0, date: cTimes[eIdx].toISOString().slice(0, 10), time: cTimes[eIdx].toLocaleTimeString([],{hour:'2-digit',minute:'2-digit', hour12: false}), court: aC[eIdx] });
       cTimes[eIdx].setMinutes(cTimes[eIdx].getMinutes() + addMins);
@@ -277,20 +298,19 @@ export default function App() {
     finally { document.body.classList.remove('export-mode'); setIsExportingPng(false); }
   };
 
+  // PERBAIKAN POIN 6: Bagan Knockout Menyesuaikan Jumlah Tim dengan Bebas & Opsi Juara 3 Bersama
   const renderAestheticBracket = () => {
-    const isRealData = knockoutData.length > 0;
+    if (knockoutData.length === 0) return <div className="text-gray-400 text-xs font-bold p-8 text-center border-2 border-dashed rounded-3xl">BAGAN SISTEM GUGUR BELUM TERSEDIA</div>;
     
     let jointThirdTeams = [];
-    if (isRealData) {
-      const semiFinalRound = knockoutData.find(r => r && r[0] && r[0].title === 'SEMI FINAL');
-      if (semiFinalRound && semiFinalRound.length === 2) {
-        const m1 = semiFinalRound[0]; const m2 = semiFinalRound[1];
+    const sfIndex = knockoutData.findIndex(r => r && r.length > 0 && r[0].title.includes('SEMI'));
+    if (sfIndex !== -1 && knockoutData[sfIndex].length === 2) {
+        const m1 = knockoutData[sfIndex][0]; const m2 = knockoutData[sfIndex][1];
         if (m1.winner && m2.winner && m1.winner !== '?' && m2.winner !== '?') {
-           const loser1 = m1.winner === m1.teamA ? m1.teamB : m1.teamA;
-           const loser2 = m2.winner === m2.teamA ? m2.teamB : m2.teamA;
-           if (loser1 !== '?' && loser2 !== '?') jointThirdTeams = [loser1, loser2];
+            const loser1 = m1.winner === m1.teamA ? m1.teamB : m1.teamA;
+            const loser2 = m2.winner === m2.teamA ? m2.teamB : m2.teamA;
+            if (loser1 !== '?' && loser2 !== '?') jointThirdTeams = [loser1, loser2];
         }
-      }
     }
 
     const getTeamScore = (matchInfo, isTeamA) => {
@@ -316,37 +336,43 @@ export default function App() {
         )
     };
 
-    if (knockoutData.length === 3 || numGroups === 4) {
-       const qf = isRealData ? knockoutData[0] : [{ teamA: "JUARA A", teamB: "RUNNER B" }, { teamA: "JUARA C", teamB: "RUNNER D" }, { teamA: "JUARA B", teamB: "RUNNER A" }, { teamA: "JUARA D", teamB: "RUNNER C" }];
-       const sf = isRealData ? knockoutData[1] : [{ teamA: "MENANG PF 1", teamB: "MENANG PF 2" }, { teamA: "MENANG PF 3", teamB: "MENANG PF 4" }];
-       const fM = isRealData ? knockoutData[2][0] : { teamA: "MENANG SF 1", teamB: "MENANG SF 2" };
-       return (
-         <div className="flex gap-8 min-w-max items-center justify-start p-6 bg-gray-50/30 rounded-[40px] border border-gray-50 print-break-inside-avoid">
-            <div className="flex flex-col gap-6 w-56"><div className="text-[9px] font-black text-gray-400 text-center mb-2 tracking-widest">PEREMPAT FINAL</div>{qf.map((m, i) => <BracketBox key={i} matchInfo={m} />)}</div>
-            <div className="flex flex-col gap-12 w-56 justify-around h-full"><div className="text-[9px] font-black text-gray-400 text-center mb-2 tracking-widest -mt-8">SEMI FINAL</div>{sf.map((m, i) => <BracketBox key={i} matchInfo={m} />)}</div>
-            <div className="flex flex-col gap-6 w-64 items-center">
-               <div className="text-[9px] font-black text-emerald-600 text-center mb-4 tracking-[0.3em]">PARTAI PUNCAK</div>
-               <div className="bg-emerald-50 border-2 border-emerald-200 rounded-[32px] p-8 shadow-xl flex flex-col gap-3 w-full text-center relative print-break-inside-avoid">
-                  <div className="absolute -top-4 left-1/2 -translate-x-1/2 bg-emerald-500 text-white text-[8px] font-black px-4 py-1 rounded-full">FINALIS</div>
-                  <div className="flex justify-between items-center w-full px-2">
-                      <div className={`text-[10px] font-black truncate w-1/3 text-right ${fM.winner === fM.teamA ? 'text-emerald-700' : 'text-emerald-900'}`}>{fM.teamA}</div>
-                      <div className="flex flex-col items-center justify-center w-1/3"><div className="text-[10px] font-black text-emerald-500 mb-1">VS</div><div className="bg-emerald-100 text-emerald-800 px-3 py-1 rounded-lg text-[9px] font-black">{getTeamScore(fM, true)} - {getTeamScore(fM, false)}</div></div>
-                      <div className={`text-[10px] font-black truncate w-1/3 text-left ${fM.winner === fM.teamB ? 'text-emerald-700' : 'text-emerald-900'}`}>{fM.teamB}</div>
-                  </div>
-               </div>
-               {isRealData && jointThirdTeams.length === 2 && (
-                  <div className="mt-8 text-center print-break-inside-avoid">
-                     <div className="text-amber-500 font-black text-xs flex flex-col items-center gap-2"><Icons.IconTrophy /><span className="tracking-widest">JUARA 3 BERSAMA</span></div>
-                     <div className="mt-3 bg-amber-50/50 border border-amber-100 rounded-xl p-2 shadow-sm text-[10px] font-black text-amber-800 flex flex-col gap-1">
-                        <div>{jointThirdTeams[0]}</div><div className="h-px bg-amber-200/50"></div><div>{jointThirdTeams[1]}</div>
-                     </div>
-                  </div>
-               )}
-            </div>
-         </div>
-       );
-    }
-    return <div className="text-gray-400 text-xs font-bold p-8 text-center border-2 border-dashed rounded-3xl">BAGAN SISTEM GUGUR AKAN DITAMPILKAN BERDASARKAN HASIL FASE SEBELUMNYA</div>;
+    return (
+        <div className="flex gap-8 min-w-max items-center justify-start p-6 bg-gray-50/30 rounded-[40px] border border-gray-50 print-break-inside-avoid">
+            {knockoutData.map((round, rIdx) => {
+                const isFinal = rIdx === knockoutData.length - 1;
+                if (isFinal) {
+                    const fM = round[0];
+                    return (
+                        <div key={rIdx} className="flex flex-col gap-6 w-64 items-center">
+                           <div className="text-[9px] font-black text-emerald-600 text-center mb-4 tracking-[0.3em]">{fM.title}</div>
+                           <div className="bg-emerald-50 border-2 border-emerald-200 rounded-[32px] p-8 shadow-xl flex flex-col gap-3 w-full text-center relative print-break-inside-avoid">
+                              <div className="absolute -top-4 left-1/2 -translate-x-1/2 bg-emerald-500 text-white text-[8px] font-black px-4 py-1 rounded-full">FINALIS</div>
+                              <div className="flex justify-between items-center w-full px-2">
+                                  <div className={`text-[10px] font-black truncate w-1/3 text-right ${fM.winner === fM.teamA ? 'text-emerald-700' : 'text-emerald-900'}`}>{fM.teamA}</div>
+                                  <div className="flex flex-col items-center justify-center w-1/3"><div className="text-[10px] font-black text-emerald-500 mb-1">VS</div><div className="bg-emerald-100 text-emerald-800 px-3 py-1 rounded-lg text-[9px] font-black">{getTeamScore(fM, true)} - {getTeamScore(fM, false)}</div></div>
+                                  <div className={`text-[10px] font-black truncate w-1/3 text-left ${fM.winner === fM.teamB ? 'text-emerald-700' : 'text-emerald-900'}`}>{fM.teamB}</div>
+                              </div>
+                           </div>
+                           {jointThirdTeams.length === 2 && (
+                              <div className="mt-8 text-center print-break-inside-avoid">
+                                 <div className="text-amber-500 font-black text-xs flex flex-col items-center gap-2"><Icons.IconTrophy /><span className="tracking-widest">JUARA 3 BERSAMA</span></div>
+                                 <div className="mt-3 bg-amber-50/50 border border-amber-100 rounded-xl p-2 shadow-sm text-[10px] font-black text-amber-800 flex flex-col gap-1">
+                                    <div>{jointThirdTeams[0]}</div><div className="h-px bg-amber-200/50"></div><div>{jointThirdTeams[1]}</div>
+                                 </div>
+                              </div>
+                           )}
+                        </div>
+                    )
+                }
+                return (
+                    <div key={rIdx} className={`flex flex-col w-56 justify-around h-full ${rIdx > 0 ? 'gap-12' : 'gap-6'}`}>
+                        <div className={`text-[9px] font-black text-gray-400 text-center tracking-widest ${rIdx > 0 ? '-mt-8 mb-2' : 'mb-2'}`}>{round[0].title}</div>
+                        {round.map((m, i) => <BracketBox key={i} matchInfo={m} />)}
+                    </div>
+                );
+            })}
+        </div>
+    );
   };
 
   return (
@@ -555,7 +581,6 @@ export default function App() {
           </div>
         )}
 
-        {/* --- PERBAIKAN PENTING: TOMBOL KEMBALI MANUAL --- */}
         {(stage === 1 || stage === 2) && schedule.length > 0 && (
           <div className="space-y-8 animate-in fade-in duration-500">
             <div className={`bg-white rounded-3xl shadow-sm border border-gray-100 p-8 ${isProjectorMode ? 'shadow-2xl' : ''}`}>
@@ -595,15 +620,6 @@ export default function App() {
                  ))}
                </div>
             </div>
-
-            {!isProjectorMode && (
-               <div className="bg-gray-900 text-white rounded-3xl p-8 md:p-12 text-center shadow-xl border border-gray-800 mt-8 animate-in zoom-in-95">
-                 <Icons.IconTrophy className="w-16 h-16 mx-auto mb-4 text-emerald-400 opacity-90" />
-                 <h2 className="text-3xl font-black mb-4 tracking-tight drop-shadow-md">KUNCI KLASEMEN & LANJUT FASE</h2>
-                 <p className="text-gray-300 font-bold mb-8 max-w-2xl mx-auto">Klik tombol di bawah ini untuk menyimpan Laporan Fase ini, lalu kembali ke halaman awal tanpa kehilangan data tim. Dari sana, Anda bisa menghapus tim yang gugur dan merakit Fase Sistem Gugur secara manual.</p>
-                 <button onClick={handleLockPhaseAndReturn} className="bg-emerald-500 hover:bg-emerald-600 text-white font-black py-4 px-10 rounded-2xl shadow-lg hover:scale-105 transition-transform uppercase tracking-widest text-lg">KUNCI & KEMBALI KE PENGATURAN AWAL</button>
-               </div>
-            )}
           </div>
         )}
 

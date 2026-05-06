@@ -14,6 +14,8 @@ export const StandingsTable = memo(({
       <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
         {Object.entries(standingsData)
           .filter(([gn]) => !gn.toLowerCase().includes('unknown') && !gn.toLowerCase().includes('eliminated'))
+          // PERBAIKAN POIN 3: Urutkan nama grup berdasarkan abjad (A, B, C, D, dst)
+          .sort((a, b) => a[0].localeCompare(b[0]))
           .map(([gn, gt]) => (
           <div key={gn} className="bg-gray-50 p-4 rounded-2xl border border-gray-100 shadow-sm print-break-inside-avoid">
             <div className="text-center font-black text-xs mb-3 text-gray-400 uppercase tracking-widest">{gn}</div>

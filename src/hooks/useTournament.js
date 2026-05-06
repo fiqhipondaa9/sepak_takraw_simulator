@@ -94,7 +94,7 @@ export const useTournament = () => {
         return { ...m, parties: pts, winner: fW, winsA: mW, winsB: mL };
       } 
       return m;
-    })); // <--- PERBAIKAN ERROR: Kurung tutup ini sudah ditambahkan!
+    }));
   }, []);
 
   // --- FITUR ORISINAL: CLEAR SCORES (DENGAN BYE PROTECTOR) ---
@@ -118,14 +118,14 @@ export const useTournament = () => {
     }
   }, [knockoutData]);
 
-  // --- FITUR ORISINAL: SUSUN ACAK ---
+  // --- PERBAIKAN POIN 1: Distribusi Grup Sesuai Abjad (Tanpa Math.random) ---
   const handleAutoAssign = useCallback(() => { 
     if (teams.length === 0) return; 
     const activeNG = Number(numGroups) || 2; 
-    const shf = [...teams].sort(() => 0.5 - Math.random()); 
     const assignments = {}; 
     const gl = Array.from({length: activeNG}, (_, i) => String.fromCharCode(65 + i)); 
-    shf.forEach((t, i) => { assignments[t] = gl[i % activeNG]; }); 
+    // Menggunakan array 'teams' langsung tanpa mengacak (shf)
+    teams.forEach((t, i) => { assignments[t] = gl[i % activeNG]; }); 
     setGroupAssignments(assignments); 
   }, [teams, numGroups]);
 
