@@ -97,6 +97,57 @@ export const useTournament = () => {
     }));
   }, []);
 
+  // --- PERBAIKAN POIN 2: FUNGSI INPUT SKOR KNOCKOUT YANG HILANG DIKEMBALIKAN ---
+  const handleKnockoutScoreChange = useCallback((rIndex, mIdx, pIdx, sIdx, side, val) => {
+    if (val !== '' && (val < 0 || val > 30)) return; 
+    setKnockoutData(prevData => {
+        const newData = [...prevData];
+        const round = [...newData[rIndex]];
+        const match = { ...round[mIdx] };
+        
+        const pts = match.parties.map((party, i) => {
+            if (i !== pIdx) return party;
+            const sets = party.sets.map((set, j) => j === sIdx ? { ...set, [side]: val } : set);
+            let wA=0, wB=0, z=0;
+            sets.forEach(s => { 
+                const a=parseInt(s.scoreA); const b=parseInt(s.scoreB); 
+                if(!isNaN(a)&&!isNaN(b)){ if(a>b)wA++; else if(b>a)wB++; else if(a===0&&b===0)z++; }
+            });
+            const winner = wA>=2 ? match.teamA : wB>=2 ? match.teamB : (z>=2 ? 'SERI' : null);
+            return { ...party, sets, winner };
+        });
+
+        let mW=0, mL=0, mS=0; 
+        pts.forEach(px => { if(px.winner===match.teamA) mW++; else if(px.winner===match.teamB) mL++; else if(px.winner==='SERI') mS++; });
+        let req = Math.ceil(pts.length/2); 
+        let fW = mW>=req ? match.teamA : mL>=req ? match.teamB : mS>=req ? 'SERI' : (mW+mL+mS===pts.length ? (mW>mL?match.teamA:mL>mW?match.teamB:'SERI') : null);
+        
+        match.parties = pts;
+        match.winner = fW;
+        match.winsA = mW;
+        match.winsB = mL;
+        round[mIdx] = match;
+        newData[rIndex] = round;
+
+        // Auto Advance Logic: Memasukkan tim pemenang ke babak selanjutnya
+        if (match.nextMatchRef) {
+           const { r: nextR, m: nextM, slot: nextSlot } = match.nextMatchRef;
+           if (newData[nextR] && newData[nextR][nextM]) {
+               const nextMatchObj = { ...newData[nextR][nextM] };
+               if (fW && fW !== 'SERI' && fW !== '?') {
+                   nextMatchObj[nextSlot] = fW;
+               } else {
+                   nextMatchObj[nextSlot] = '?'; 
+               }
+               const newNextRound = [...newData[nextR]];
+               newNextRound[nextM] = nextMatchObj;
+               newData[nextR] = newNextRound;
+           }
+        }
+        return newData;
+    });
+  }, []);
+
   // --- FITUR ORISINAL: CLEAR SCORES (DENGAN BYE PROTECTOR) ---
   const handleClearScores = useCallback(() => {
     if (!window.confirm("Bersihkan semua skor?")) return;
@@ -143,6 +194,7 @@ export const useTournament = () => {
     mixDisciplines, setMixDisciplines, courts, setCourts, teamLogos, setTeamLogos, sponsorLogos, setSponsorLogos,
     championshipTitles, setChampionshipTitles, knockoutData, setKnockoutData, phase1Standings, setPhase1Standings,
     undoStack, saveSnapshot, handleRollback, moveMatchSchedule, updateMatchDateTime, handleScoreChange, 
+    handleKnockoutScoreChange, // <-- DIEKSPOR DI SINI AGAR BISA DIGUNAKAN APP.JS
     handleClearScores, handleAutoAssign, handleReset
   };
 };

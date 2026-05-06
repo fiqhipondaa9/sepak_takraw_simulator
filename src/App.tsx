@@ -35,9 +35,6 @@ export default function App() {
   else if (selectedEventFormat.toUpperCase().includes('QUADRANT')) eventDiscipline = 'Quadrant';
   else if (selectedEventFormat.toUpperCase().includes('MIXED')) eventDiscipline = 'Mix';
 
-  // const isActivePhaseFinished = schedule.length > 0 && schedule.every(match => match.winner !== null);
-  // const isSinglePoolCompleted = tournamentType === 'Group' && isActivePhaseFinished;
-  
   const hasPhase2GroupStage = Object.values(groupAssignments).includes('Eliminated');
 
   useEffect(() => {
@@ -100,6 +97,57 @@ export default function App() {
   const handleAddCourt = (e) => { if (e) e.preventDefault(); const newCourt = courtInputValue.trim(); if (!newCourt || courts.includes(newCourt)) return; setCourts([...courts, newCourt]); setCourtInputValue(''); };
   const handleRemoveCourt = (courtToRemove) => { if (courts.length === 1) return alert("Minimal 1 lapangan aktif!"); setCourts(courts.filter(c => c !== courtToRemove)); };
   const handleRemoveTeam = (teamToRemove) => { setTeams(teams.filter(team => team !== teamToRemove)); const newAssignments = { ...groupAssignments }; delete newAssignments[teamToRemove]; setGroupAssignments(newAssignments); const newLogos = { ...teamLogos }; delete newLogos[teamToRemove]; setTeamLogos(newLogos); };
+
+  // --- PERBAIKAN: Fungsi Input Skor Knockout ---
+  const handleKnockoutScoreChange = (rIndex, mIdx, pIdx, sIdx, side, val) => {
+    if (val !== '' && (val < 0 || val > 30)) return; 
+    setKnockoutData(prevData => {
+        const newData = [...prevData];
+        const round = [...newData[rIndex]];
+        const match = { ...round[mIdx] };
+        
+        const pts = match.parties.map((party, i) => {
+            if (i !== pIdx) return party;
+            const sets = party.sets.map((set, j) => j === sIdx ? { ...set, [side]: val } : set);
+            let wA=0, wB=0, z=0;
+            sets.forEach(s => { 
+                const a=parseInt(s.scoreA); const b=parseInt(s.scoreB); 
+                if(!isNaN(a)&&!isNaN(b)){ if(a>b)wA++; else if(b>a)wB++; else if(a===0&&b===0)z++; }
+            });
+            const winner = wA>=2 ? match.teamA : wB>=2 ? match.teamB : (z>=2 ? 'SERI' : null);
+            return { ...party, sets, winner };
+        });
+
+        let mW=0, mL=0, mS=0; 
+        pts.forEach(px => { if(px.winner===match.teamA) mW++; else if(px.winner===match.teamB) mL++; else if(px.winner==='SERI') mS++; });
+        let req = Math.ceil(pts.length/2); 
+        let fW = mW>=req ? match.teamA : mL>=req ? match.teamB : mS>=req ? 'SERI' : (mW+mL+mS===pts.length ? (mW>mL?match.teamA:mL>mW?match.teamB:'SERI') : null);
+        
+        match.parties = pts;
+        match.winner = fW;
+        match.winsA = mW;
+        match.winsB = mL;
+        round[mIdx] = match;
+        newData[rIndex] = round;
+
+        // Auto Advance & Rollback Logic (Jika Menang Lolos, Jika Dihapus Mundur)
+        if (match.nextMatchRef) {
+           const { r: nextR, m: nextM, slot: nextSlot } = match.nextMatchRef;
+           if (newData[nextR] && newData[nextR][nextM]) {
+               const nextMatchObj = { ...newData[nextR][nextM] };
+               if (fW && fW !== 'SERI' && fW !== '?') {
+                   nextMatchObj[nextSlot] = fW;
+               } else {
+                   nextMatchObj[nextSlot] = '?'; 
+               }
+               const newNextRound = [...newData[nextR]];
+               newNextRound[nextM] = nextMatchObj;
+               newData[nextR] = newNextRound;
+           }
+        }
+        return newData;
+    });
+  };
 
   const getStandings = useCallback((specificSchedule = schedule, specificAssignments = groupAssignments) => {
     let standings = {};
@@ -169,7 +217,6 @@ export default function App() {
     if (manualTeams.length === size && manualTeams.some(t => t.includes('['))) { orderedTeams = [...manualTeams]; } 
     else if (tournamentType === 'Knocked Out Round' && stage === 0) {
         let shuffledTeams = [...manualTeams];
-        // Memastikan tim tidak diacak jika tidak diperlukan, biarkan urut sesuai pendaftaran
         orderedTeams = [...shuffledTeams];
         while(orderedTeams.length < size) orderedTeams.push('BYE');
     } else { orderedTeams = [...manualTeams]; while(orderedTeams.length < size) orderedTeams.push('BYE'); }
@@ -200,12 +247,21 @@ export default function App() {
     return rounds;
   };
 
+  const handleLockPhaseAndReturn = () => {
+    if (!window.confirm("Kunci hasil klasemen saat ini dan kembali ke halaman pengaturan awal untuk merakit fase selanjutnya secara manual?")) return;
+    saveSnapshot(); 
+    setPhase1Standings(getStandings()); 
+    setMatchHistory([...matchHistory, ...schedule]); 
+    setSchedule([]);
+    setStage(0); 
+    window.scrollTo(0,0);
+  };
+
   const generateSchedule = () => {
     if (tournamentType === 'Groups' && !teams.every(t => groupAssignments[t])) return alert("Ada tim yang belum masuk ke dalam grup!");
     saveSnapshot(); 
     let allMatches = [];
     
-    // PERBAIKAN POIN 4: Jadwal tersilang berurutan (Round Robin standard)
     const createRR = (gTeams, label) => {
       if(gTeams.length < 2) return []; 
       let sch = []; let cur = [...gTeams]; if(cur.length % 2 !== 0) cur.push(null);
@@ -230,7 +286,6 @@ export default function App() {
           gM[g] = m; 
           if(m.length > maxRounds) maxRounds = m.length; 
       });
-      // Rotasi penyilangan jadwal antar Grup
       for (let r = 0; r < maxRounds; r++) { 
           gl.forEach(g => { if (gM[g] && gM[g][r]) allMatches.push(...gM[g][r]); }); 
       }
@@ -247,7 +302,6 @@ export default function App() {
     let fSch = []; let counter = 1; const nP = isTeamEvent ? 3 : 1; const aC = courts.length > 0 ? courts : ['Lap. Utama'];
     let cTimes = aC.map(() => { let t = new Date(); t.setHours(8, 0, 0, 0); return t; }); const addMins = isTeamEvent ? 120 : 45;
     
-    // PERBAIKAN POIN 2: Label Partai menyesuaikan Kategori Disiplin
     const pL = eventDiscipline === 'Mix' ? mixDisciplines : [`${eventDiscipline} 1`, `${eventDiscipline} 2`, `${eventDiscipline} 3`];
 
     allMatches.forEach(m => {
@@ -298,19 +352,26 @@ export default function App() {
     finally { document.body.classList.remove('export-mode'); setIsExportingPng(false); }
   };
 
-  // PERBAIKAN POIN 6: Bagan Knockout Menyesuaikan Jumlah Tim dengan Bebas & Opsi Juara 3 Bersama
+  // PERBAIKAN: Bracket dinamis dan selalu menampilkan format Juara 3 Bersama
   const renderAestheticBracket = () => {
     if (knockoutData.length === 0) return <div className="text-gray-400 text-xs font-bold p-8 text-center border-2 border-dashed rounded-3xl">BAGAN SISTEM GUGUR BELUM TERSEDIA</div>;
     
-    let jointThirdTeams = [];
+    let jointThirdTeams = null;
     const sfIndex = knockoutData.findIndex(r => r && r.length > 0 && r[0].title.includes('SEMI'));
     if (sfIndex !== -1 && knockoutData[sfIndex].length === 2) {
-        const m1 = knockoutData[sfIndex][0]; const m2 = knockoutData[sfIndex][1];
-        if (m1.winner && m2.winner && m1.winner !== '?' && m2.winner !== '?') {
-            const loser1 = m1.winner === m1.teamA ? m1.teamB : m1.teamA;
-            const loser2 = m2.winner === m2.teamA ? m2.teamB : m2.teamA;
-            if (loser1 !== '?' && loser2 !== '?') jointThirdTeams = [loser1, loser2];
-        }
+        const m1 = knockoutData[sfIndex][0]; 
+        const m2 = knockoutData[sfIndex][1];
+        
+        const getLoser = (match, defaultLabel) => {
+            if (match.winner && match.winner !== '?') {
+                return match.winner === match.teamA ? match.teamB : match.teamA;
+            }
+            return defaultLabel;
+        };
+
+        const loser1 = getLoser(m1, "KALAH SEMIFINAL 1");
+        const loser2 = getLoser(m2, "KALAH SEMIFINAL 2");
+        jointThirdTeams = [loser1, loser2];
     }
 
     const getTeamScore = (matchInfo, isTeamA) => {
@@ -353,7 +414,7 @@ export default function App() {
                                   <div className={`text-[10px] font-black truncate w-1/3 text-left ${fM.winner === fM.teamB ? 'text-emerald-700' : 'text-emerald-900'}`}>{fM.teamB}</div>
                               </div>
                            </div>
-                           {jointThirdTeams.length === 2 && (
+                           {jointThirdTeams && (
                               <div className="mt-8 text-center print-break-inside-avoid">
                                  <div className="text-amber-500 font-black text-xs flex flex-col items-center gap-2"><Icons.IconTrophy /><span className="tracking-widest">JUARA 3 BERSAMA</span></div>
                                  <div className="mt-3 bg-amber-50/50 border border-amber-100 rounded-xl p-2 shadow-sm text-[10px] font-black text-amber-800 flex flex-col gap-1">
@@ -581,6 +642,7 @@ export default function App() {
           </div>
         )}
 
+        {/* --- TOMBOL KEMBALI MANUAL --- */}
         {(stage === 1 || stage === 2) && schedule.length > 0 && (
           <div className="space-y-8 animate-in fade-in duration-500">
             <div className={`bg-white rounded-3xl shadow-sm border border-gray-100 p-8 ${isProjectorMode ? 'shadow-2xl' : ''}`}>
