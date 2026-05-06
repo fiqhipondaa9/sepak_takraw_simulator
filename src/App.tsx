@@ -98,57 +98,6 @@ export default function App() {
   const handleRemoveCourt = (courtToRemove) => { if (courts.length === 1) return alert("Minimal 1 lapangan aktif!"); setCourts(courts.filter(c => c !== courtToRemove)); };
   const handleRemoveTeam = (teamToRemove) => { setTeams(teams.filter(team => team !== teamToRemove)); const newAssignments = { ...groupAssignments }; delete newAssignments[teamToRemove]; setGroupAssignments(newAssignments); const newLogos = { ...teamLogos }; delete newLogos[teamToRemove]; setTeamLogos(newLogos); };
 
-  // --- PERBAIKAN: Fungsi Input Skor Knockout ---
-  const handleKnockoutScoreChange = (rIndex, mIdx, pIdx, sIdx, side, val) => {
-    if (val !== '' && (val < 0 || val > 30)) return; 
-    setKnockoutData(prevData => {
-        const newData = [...prevData];
-        const round = [...newData[rIndex]];
-        const match = { ...round[mIdx] };
-        
-        const pts = match.parties.map((party, i) => {
-            if (i !== pIdx) return party;
-            const sets = party.sets.map((set, j) => j === sIdx ? { ...set, [side]: val } : set);
-            let wA=0, wB=0, z=0;
-            sets.forEach(s => { 
-                const a=parseInt(s.scoreA); const b=parseInt(s.scoreB); 
-                if(!isNaN(a)&&!isNaN(b)){ if(a>b)wA++; else if(b>a)wB++; else if(a===0&&b===0)z++; }
-            });
-            const winner = wA>=2 ? match.teamA : wB>=2 ? match.teamB : (z>=2 ? 'SERI' : null);
-            return { ...party, sets, winner };
-        });
-
-        let mW=0, mL=0, mS=0; 
-        pts.forEach(px => { if(px.winner===match.teamA) mW++; else if(px.winner===match.teamB) mL++; else if(px.winner==='SERI') mS++; });
-        let req = Math.ceil(pts.length/2); 
-        let fW = mW>=req ? match.teamA : mL>=req ? match.teamB : mS>=req ? 'SERI' : (mW+mL+mS===pts.length ? (mW>mL?match.teamA:mL>mW?match.teamB:'SERI') : null);
-        
-        match.parties = pts;
-        match.winner = fW;
-        match.winsA = mW;
-        match.winsB = mL;
-        round[mIdx] = match;
-        newData[rIndex] = round;
-
-        // Auto Advance & Rollback Logic (Jika Menang Lolos, Jika Dihapus Mundur)
-        if (match.nextMatchRef) {
-           const { r: nextR, m: nextM, slot: nextSlot } = match.nextMatchRef;
-           if (newData[nextR] && newData[nextR][nextM]) {
-               const nextMatchObj = { ...newData[nextR][nextM] };
-               if (fW && fW !== 'SERI' && fW !== '?') {
-                   nextMatchObj[nextSlot] = fW;
-               } else {
-                   nextMatchObj[nextSlot] = '?'; 
-               }
-               const newNextRound = [...newData[nextR]];
-               newNextRound[nextM] = nextMatchObj;
-               newData[nextR] = newNextRound;
-           }
-        }
-        return newData;
-    });
-  };
-
   const getStandings = useCallback((specificSchedule = schedule, specificAssignments = groupAssignments) => {
     let standings = {};
     teams.forEach(t => { standings[t] = { team: t, group: tournamentType === 'Groups' ? (specificAssignments[t] ? `Grup ${specificAssignments[t]}` : 'Unknown') : 'Pool Utama', play: 0, win: 0, lose: 0, partyWin: 0, partyLose: 0, setWin: 0, setLose: 0, pointWin: 0, pointLose: 0, totalPoints: 0 }; });
@@ -352,9 +301,9 @@ export default function App() {
     finally { document.body.classList.remove('export-mode'); setIsExportingPng(false); }
   };
 
-  // PERBAIKAN: Bracket dinamis dan selalu menampilkan format Juara 3 Bersama
+  // PERBAIKAN: Bracket dinamis
   const renderAestheticBracket = () => {
-    if (knockoutData.length === 0) return <div className="text-gray-400 text-xs font-bold p-8 text-center border-2 border-dashed rounded-3xl">BAGAN SISTEM GUGUR BELUM TERSEDIA</div>;
+    if (knockoutData.length === 0) return null;
     
     let jointThirdTeams = null;
     const sfIndex = knockoutData.findIndex(r => r && r.length > 0 && r[0].title.includes('SEMI'));
@@ -762,7 +711,8 @@ export default function App() {
                 
                 {(phase1Standings && hasPhase2GroupStage && stage >= 2) && <StandingsTable standingsData={getStandings()} title="HASIL FASE 2" borderColor="border-amber-400" isTeamEvent={isTeamEvent} teamLogos={teamLogos} />}
 
-                {(knockoutData.length > 0 || tournamentType === 'Groups') && (
+                {/* PERBAIKAN: HANYA RENDER JIKA ADA DATA KNOCKOUT */}
+                {knockoutData.length > 0 && (
                   <div className="mb-12 print-break-inside-avoid">
                       <h3 className="text-lg font-black uppercase mb-6 border-l-4 border-emerald-500 pl-4 text-gray-800">FASE SISTEM GUGUR</h3>
                       <div className="overflow-x-auto pb-4">
