@@ -39,6 +39,9 @@ export default function App() {
 
   const isActivePhaseFinished = schedule.length > 0 && schedule.every(match => match.winner !== null);
   const isSinglePoolCompleted = tournamentType === 'Group' && isActivePhaseFinished;
+  
+  // PENANDA BARU: Mengecek secara pasti apakah turnamen benar-benar melewati Fase 2 (Grup D & E)
+  const hasPhase2GroupStage = Object.values(groupAssignments).includes('Eliminated');
 
   useEffect(() => {
     const handleBeforeUnload = (e) => { if (stage > 0) { e.preventDefault(); e.returnValue = ''; } };
@@ -101,14 +104,24 @@ export default function App() {
   const handleRemoveCourt = (courtToRemove) => { if (courts.length === 1) return alert("Minimal 1 lapangan aktif!"); setCourts(courts.filter(c => c !== courtToRemove)); };
   const handleRemoveTeam = (teamToRemove) => { setTeams(teams.filter(team => team !== teamToRemove)); const newAssignments = { ...groupAssignments }; delete newAssignments[teamToRemove]; setGroupAssignments(newAssignments); const newLogos = { ...teamLogos }; delete newLogos[teamToRemove]; setTeamLogos(newLogos); };
 
-  // --- BUG FIX: Logika Klasemen ---
+  // --- BUG FIX: Logika Klasemen Presisi ---
   const getStandings = useCallback((specificSchedule = schedule, specificAssignments = groupAssignments) => {
     let standings = {};
     teams.forEach(t => { standings[t] = { team: t, group: tournamentType === 'Groups' ? (specificAssignments[t] ? `Grup ${specificAssignments[t]}` : 'Unknown') : 'Pool Utama', play: 0, win: 0, lose: 0, partyWin: 0, partyLose: 0, setWin: 0, setLose: 0, pointWin: 0, pointLose: 0, totalPoints: 0 }; });
     
-    // PERBAIKAN: Hanya baca dari specificSchedule (jadwal yang sedang aktif).
-    // Menghapus aturan "isPhase2Active" yang menyebabkan Grup D macet.
-    const filteredMatches = specificSchedule.filter(match => match.winner && match.winner !== '?');
+    // Perbaikan membaca data Fase 2 dengan aman
+    const isPhase2 = Object.values(specificAssignments).includes('Eliminated');
+    
+    // Menggunakan seluruh matchHistory agar Klasemen Master Schedule aman membaca rekaman lama
+    const filteredMatches = [...matchHistory, ...specificSchedule].filter(match => {
+       if (!match.winner || match.winner === '?') return false;
+       if (isPhase2) {
+           // Jika kita sedang di Fase 2, pastikan HANYA pertandingan Fase 2 yang dihitung
+           return match.groupLabel === 'Grup D' || match.groupLabel === 'Grup E';
+       }
+       // Jika bukan Fase 2, artinya kita di Fase 1 (hitung semua)
+       return true;
+    });
     
     filteredMatches.forEach(match => {
       const tA = match.teamA; const tB = match.teamB;
@@ -141,7 +154,7 @@ export default function App() {
     });
     const grouped = {}; sortedTeams.forEach(stat => { if (!grouped[stat.group]) grouped[stat.group] = []; grouped[stat.group].push(stat); });
     return grouped;
-  }, [teams, schedule, tournamentType, groupAssignments, isTeamEvent]);
+  }, [teams, matchHistory, schedule, tournamentType, groupAssignments, isTeamEvent]);
 
   const handleCopyWhatsApp = () => {
     const standings = getStandings();
@@ -743,7 +756,9 @@ export default function App() {
                 {phase1Standings && <StandingsTable standingsData={phase1Standings} title="HASIL FASE 1 (PENYISIHAN AWAL)" borderColor="border-blue-500" isTeamEvent={isTeamEvent} teamLogos={teamLogos} />}
                 
                 {(!phase1Standings && (tournamentType === 'Groups' || tournamentType === 'Group')) && <StandingsTable standingsData={getStandings()} title="FASE PENYISIHAN" borderColor="border-amber-400" isTeamEvent={isTeamEvent} teamLogos={teamLogos} />}
-                {(phase1Standings && phase2Format === 'group' && stage >= 2) && <StandingsTable standingsData={getStandings()} title="HASIL FASE 2" borderColor="border-amber-400" isTeamEvent={isTeamEvent} teamLogos={teamLogos} />}
+                
+                {/* BUG FIX: Memastikan HASIL FASE 2 hanya muncul JIKA turnamen benar-benar melewati fase tersebut */}
+                {(phase1Standings && hasPhase2GroupStage && stage >= 2) && <StandingsTable standingsData={getStandings()} title="HASIL FASE 2" borderColor="border-amber-400" isTeamEvent={isTeamEvent} teamLogos={teamLogos} />}
 
                 {(knockoutData.length > 0 || tournamentType === 'Groups') && (
                   <div className="mb-12 print-break-inside-avoid">
