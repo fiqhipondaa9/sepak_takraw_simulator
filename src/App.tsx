@@ -28,8 +28,6 @@ export default function App() {
 
   const [inputValue, setInputValue] = useState('');
   const [courtInputValue, setCourtInputValue] = useState('');
-  const [phase2Format, setPhase2Format] = useState('group'); 
-  const [phase2ByeSystem, setPhase2ByeSystem] = useState('seeding'); 
 
   const isTeamEvent = selectedEventFormat.toUpperCase().includes('TEAM');
   let eventDiscipline = 'Regu';
@@ -40,7 +38,6 @@ export default function App() {
   const isActivePhaseFinished = schedule.length > 0 && schedule.every(match => match.winner !== null);
   const isSinglePoolCompleted = tournamentType === 'Group' && isActivePhaseFinished;
   
-  // PENANDA BARU: Mengecek secara pasti apakah turnamen benar-benar melewati Fase 2 (Grup D & E)
   const hasPhase2GroupStage = Object.values(groupAssignments).includes('Eliminated');
 
   useEffect(() => {
@@ -104,22 +101,17 @@ export default function App() {
   const handleRemoveCourt = (courtToRemove) => { if (courts.length === 1) return alert("Minimal 1 lapangan aktif!"); setCourts(courts.filter(c => c !== courtToRemove)); };
   const handleRemoveTeam = (teamToRemove) => { setTeams(teams.filter(team => team !== teamToRemove)); const newAssignments = { ...groupAssignments }; delete newAssignments[teamToRemove]; setGroupAssignments(newAssignments); const newLogos = { ...teamLogos }; delete newLogos[teamToRemove]; setTeamLogos(newLogos); };
 
-  // --- BUG FIX: Logika Klasemen Presisi ---
   const getStandings = useCallback((specificSchedule = schedule, specificAssignments = groupAssignments) => {
     let standings = {};
     teams.forEach(t => { standings[t] = { team: t, group: tournamentType === 'Groups' ? (specificAssignments[t] ? `Grup ${specificAssignments[t]}` : 'Unknown') : 'Pool Utama', play: 0, win: 0, lose: 0, partyWin: 0, partyLose: 0, setWin: 0, setLose: 0, pointWin: 0, pointLose: 0, totalPoints: 0 }; });
     
-    // Perbaikan membaca data Fase 2 dengan aman
     const isPhase2 = Object.values(specificAssignments).includes('Eliminated');
     
-    // Menggunakan seluruh matchHistory agar Klasemen Master Schedule aman membaca rekaman lama
     const filteredMatches = [...matchHistory, ...specificSchedule].filter(match => {
        if (!match.winner || match.winner === '?') return false;
        if (isPhase2) {
-           // Jika kita sedang di Fase 2, pastikan HANYA pertandingan Fase 2 yang dihitung
            return match.groupLabel === 'Grup D' || match.groupLabel === 'Grup E';
        }
-       // Jika bukan Fase 2, artinya kita di Fase 1 (hitung semua)
        return true;
     });
     
@@ -207,40 +199,15 @@ export default function App() {
     return rounds;
   };
 
-  const handleExecutePhase2 = () => {
-    const std = getStandings(); let q = []; Object.values(std).forEach(gt => { if (gt[0]) q.push(gt[0]); if (gt[1]) q.push(gt[1]); });
-    if (q.length < 2) return alert("Tim tidak cukup!");
-    saveSnapshot(); setMatchHistory([...matchHistory, ...schedule]); const startId = [...matchHistory, ...schedule].length + 1;
-
-    if (tournamentType === 'Groups' && Number(numGroups) === 4) {
-       const ord = [std['Grup A']?.[0]?.team||'?', std['Grup B']?.[1]?.team||'?', std['Grup C']?.[0]?.team||'?', std['Grup D']?.[1]?.team||'?', std['Grup B']?.[0]?.team||'?', std['Grup A']?.[1]?.team||'?', std['Grup D']?.[0]?.team||'?', std['Grup C']?.[1]?.team||'?'];
-       setPhase1Standings(std); setSchedule([]); setKnockoutData(generateDirectKnockout(ord, 0, startId)); setStage(3); window.scrollTo(0,0);
-    }
-    else if (tournamentType === 'Groups' && Number(numGroups) === 2) {
-       const ord = [std['Grup A']?.[0]?.team||'?', std['Grup B']?.[1]?.team||'?', std['Grup B']?.[0]?.team||'?', std['Grup A']?.[1]?.team||'?'];
-       setPhase1Standings(std); setSchedule([]); setKnockoutData(generateDirectKnockout(ord, 0, startId)); setStage(3); window.scrollTo(0,0);
-    }
-    else if (phase2Format === 'group' && Number(numGroups) === 3 && q.length >= 6) {
-       const tA1=std['Grup A']?.[0]?.team, tA2=std['Grup A']?.[1]?.team, tB1=std['Grup B']?.[0]?.team, tB2=std['Grup B']?.[1]?.team, tC1=std['Grup C']?.[0]?.team, tC2=std['Grup C']?.[1]?.team;
-       if(!tA1||!tB1||!tC1) return alert("Skor belum lengkap.");
-       setPhase1Standings(std); const newAssigns = { ...groupAssignments };
-       teams.forEach(t => { if ([tA1, tB2, tC1].includes(t)) newAssigns[t] = 'D'; else if ([tB1, tA2, tC2].includes(t)) newAssigns[t] = 'E'; else newAssigns[t] = 'Eliminated'; });
-       setGroupAssignments(newAssigns); setTournamentType('Groups'); setNumGroups(2);
-       let fSch = []; let counter = startId; const aC = courts.length > 0 ? courts : ['Lap. Utama']; let cTimes = aC.map(() => { let t = new Date(); t.setHours(8, 0, 0, 0); return t; });
-       const pushMatch = (tA, tB, lbl) => { let pts = []; for(let p=0; p<(isTeamEvent?3:1); p++) pts.push({ id: `p${p}`, label: `Match`, sets: [{scoreA:'',scoreB:''},{scoreA:'',scoreB:''},{scoreA:'',scoreB:''}], winner: null }); let eIdx = 0; for(let i=1; i<cTimes.length; i++) if(cTimes[i] < cTimes[eIdx]) eIdx = i; fSch.push({ id: counter++, teamA: tA, teamB: tB, groupLabel: lbl, parties: pts, winner: null, winsA: 0, winsB: 0, date: cTimes[eIdx].toISOString().slice(0, 10), time: cTimes[eIdx].toLocaleTimeString([],{hour:'2-digit',minute:'2-digit',hour12:false}), court: aC[eIdx] }); cTimes[eIdx].setMinutes(cTimes[eIdx].getMinutes() + (isTeamEvent?120:45)); };
-       pushMatch(tA1, tB2, "Grup D"); pushMatch(tB1, tA2, "Grup E"); pushMatch(tB2, tC1, "Grup D"); pushMatch(tA2, tC2, "Grup E"); pushMatch(tA1, tC1, "Grup D"); pushMatch(tB1, tC2, "Grup E");
-       setSchedule(fSch); setStage(2); window.scrollTo(0,0);
-    } 
-    else if (phase2Format === 'knockout') {
-       let ord = Array(8).fill('BYE');
-       if (phase2ByeSystem === 'seeding') {
-          q.sort((a,b) => { if (b.totalPoints !== a.totalPoints) return b.totalPoints - a.totalPoints; const aS = a.setWin - a.setLose; const bS = b.setWin - b.setLose; if (bS !== aS) return bS - aS; return 0; });
-          if(q.length >= 6) { ord[0]=q[0].team; ord[1]='BYE'; ord[2]=q[3].team; ord[3]=q[4].team; ord[4]=q[1].team; ord[5]='BYE'; ord[6]=q[2].team; ord[7]=q[5].team; }
-       } else {
-          if(q.length >= 6) { ord[0]=std['Grup A']?.[0]?.team||'?'; ord[1]='BYE'; ord[2]=std['Grup C']?.[0]?.team||'?'; ord[3]=std['Grup B']?.[1]?.team||'?'; ord[4]=std['Grup B']?.[0]?.team||'?'; ord[5]='BYE'; ord[6]=std['Grup C']?.[1]?.team||'?'; ord[7]=std['Grup A']?.[1]?.team||'?'; }
-       }
-       setPhase1Standings(std); setSchedule([]); setKnockoutData(generateDirectKnockout(ord, 0, startId)); setStage(3); window.scrollTo(0,0);
-    }
+  // --- PERBAIKAN: Fungsi Penguncian dan Kembali Manual ke Stage 0 ---
+  const handleLockPhaseAndReturn = () => {
+    if (!window.confirm("Kunci hasil klasemen saat ini dan kembali ke halaman pengaturan awal untuk merakit fase selanjutnya secara manual?")) return;
+    saveSnapshot(); 
+    setPhase1Standings(getStandings()); 
+    setMatchHistory([...matchHistory, ...schedule]); 
+    setSchedule([]);
+    setStage(0); 
+    window.scrollTo(0,0);
   };
 
   const generateSchedule = () => {
@@ -588,6 +555,7 @@ export default function App() {
           </div>
         )}
 
+        {/* --- PERBAIKAN PENTING: TOMBOL KEMBALI MANUAL --- */}
         {(stage === 1 || stage === 2) && schedule.length > 0 && (
           <div className="space-y-8 animate-in fade-in duration-500">
             <div className={`bg-white rounded-3xl shadow-sm border border-gray-100 p-8 ${isProjectorMode ? 'shadow-2xl' : ''}`}>
@@ -628,54 +596,12 @@ export default function App() {
                </div>
             </div>
 
-            {!isProjectorMode && stage === 1 && (
-               isSinglePoolCompleted ? (
-                 <div className="bg-gradient-to-r from-amber-500 to-amber-600 text-white rounded-3xl p-12 text-center shadow-2xl relative overflow-hidden mt-8 animate-in zoom-in-95">
-                    <Icons.IconTrophy className="w-20 h-20 mx-auto mb-4 opacity-90" />
-                    <h2 className="text-4xl font-black mb-2 tracking-tight drop-shadow-md">TURNAMEN TELAH BERAKHIR!</h2>
-                    <p className="text-amber-100 font-bold mb-6">Sistem Satu Pool (Kompetisi Penuh) telah menyelesaikan seluruh jadwal pertandingannya.</p>
-                    <button onClick={() => setShowMasterModal(true)} className="bg-white text-amber-700 font-black py-4 px-10 rounded-2xl shadow-lg hover:scale-105 transition-transform uppercase tracking-widest text-lg">Lihat Hasil Akhir</button>
-                 </div>
-               ) : (
-                 tournamentType === 'Groups' && (
-                   <div className="bg-gray-900 text-white rounded-3xl p-8 md:p-12 text-center shadow-xl border border-gray-800 mt-8">
-                     <h2 className="text-3xl font-black mb-6">PENGATURAN FASE BERIKUTNYA</h2>
-                     {isActivePhaseFinished ? (
-                        <div className="max-w-2xl mx-auto flex flex-col gap-4">
-                           {Number(numGroups) === 3 && (
-                             <div className="flex gap-4">
-                                <select value={phase2Format} onChange={(e) => setPhase2Format(e.target.value)} className="flex-1 bg-gray-800 border border-gray-700 text-white font-bold text-sm rounded-xl px-4 py-3 uppercase outline-none">
-                                   <option value="group">Grup Fase 2 (Grup D & E)</option>
-                                   <option value="knockout">Langsung Gugur (6 Tim Play-off)</option>
-                                </select>
-                                {phase2Format === 'knockout' && (
-                                   <select value={phase2ByeSystem} onChange={(e) => setPhase2ByeSystem(e.target.value)} className="flex-1 bg-gray-800 border border-gray-700 text-white font-bold text-sm rounded-xl px-4 py-3 uppercase outline-none">
-                                      <option value="seeding">BYE untuk Tim Terbaik (Poin/Set)</option>
-                                      <option value="standard">BYE untuk Juara Grup A & B</option>
-                                   </select>
-                                )}
-                             </div>
-                           )}
-                           <button onClick={handleExecutePhase2} className="bg-emerald-600 hover:bg-emerald-700 text-white font-black py-4 px-10 rounded-2xl shadow-lg uppercase tracking-widest text-lg mt-4">LANJUTKAN KE BABAK PLAY-OFF</button>
-                        </div>
-                     ) : <p className="text-gray-400 font-bold">Selesaikan semua pertandingan di atas untuk membuka babak sistem gugur.</p>}
-                   </div>
-                 )
-               )
-            )}
-            
-            {!isProjectorMode && stage === 2 && phase2Format === 'group' && (
-               <div className="no-print bg-gray-900 text-white rounded-3xl p-8 sm:p-12 text-center shadow-xl mt-8">
-                  <h2 className="text-3xl font-black text-white mb-3">Menuju Semi Final</h2>
-                  {isActivePhaseFinished ? (
-                     <button onClick={() => {
-                        const std = getStandings(); const gD = std['Grup D']||[]; const gE = std['Grup E']||[];
-                        if(!gD[0]||!gD[1]||!gE[0]||!gE[1]) return alert("Skor belum lengkap!");
-                        saveSnapshot(); setMatchHistory([...matchHistory, ...schedule]); 
-                        setSchedule([]); setKnockoutData(generateDirectKnockout([gD[0].team, gE[1].team, gE[0].team, gD[1].team], 0, [...matchHistory, ...schedule].length + 1)); 
-                        setStage(3); window.scrollTo(0,0);
-                     }} className="bg-emerald-600 hover:bg-emerald-700 text-white font-black py-4 px-8 rounded-2xl shadow-md transition-all text-lg uppercase tracking-widest mt-4">Mulai Semi Final & Final</button>
-                  ) : <p className="text-gray-400 font-bold normal-case">Selesaikan jadwal Fase 2 di atas untuk membuka Semi Final.</p>}
+            {!isProjectorMode && (
+               <div className="bg-gray-900 text-white rounded-3xl p-8 md:p-12 text-center shadow-xl border border-gray-800 mt-8 animate-in zoom-in-95">
+                 <Icons.IconTrophy className="w-16 h-16 mx-auto mb-4 text-emerald-400 opacity-90" />
+                 <h2 className="text-3xl font-black mb-4 tracking-tight drop-shadow-md">KUNCI KLASEMEN & LANJUT FASE</h2>
+                 <p className="text-gray-300 font-bold mb-8 max-w-2xl mx-auto">Klik tombol di bawah ini untuk menyimpan Laporan Fase ini, lalu kembali ke halaman awal tanpa kehilangan data tim. Dari sana, Anda bisa menghapus tim yang gugur dan merakit Fase Sistem Gugur secara manual.</p>
+                 <button onClick={handleLockPhaseAndReturn} className="bg-emerald-500 hover:bg-emerald-600 text-white font-black py-4 px-10 rounded-2xl shadow-lg hover:scale-105 transition-transform uppercase tracking-widest text-lg">KUNCI & KEMBALI KE PENGATURAN AWAL</button>
                </div>
             )}
           </div>
@@ -737,7 +663,6 @@ export default function App() {
              <div id="master-print-area" className="p-10 overflow-y-auto bg-white flex-1 uppercase relative">
                 <div className="text-center mb-10 border-b pb-8 print-break-inside-avoid">
                    
-                   {/* TAMBAHAN: SPONSOR LOGOS UNTUK CETAK/LAPORAN */}
                    {sponsorLogos && sponsorLogos.length > 0 && (
                       <div className="flex justify-center flex-wrap gap-4 mb-6">
                         {sponsorLogos.map((logo, index) => (
@@ -757,7 +682,6 @@ export default function App() {
                 
                 {(!phase1Standings && (tournamentType === 'Groups' || tournamentType === 'Group')) && <StandingsTable standingsData={getStandings()} title="FASE PENYISIHAN" borderColor="border-amber-400" isTeamEvent={isTeamEvent} teamLogos={teamLogos} />}
                 
-                {/* BUG FIX: Memastikan HASIL FASE 2 hanya muncul JIKA turnamen benar-benar melewati fase tersebut */}
                 {(phase1Standings && hasPhase2GroupStage && stage >= 2) && <StandingsTable standingsData={getStandings()} title="HASIL FASE 2" borderColor="border-amber-400" isTeamEvent={isTeamEvent} teamLogos={teamLogos} />}
 
                 {(knockoutData.length > 0 || tournamentType === 'Groups') && (
