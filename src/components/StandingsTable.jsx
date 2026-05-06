@@ -34,10 +34,13 @@ export const StandingsTable = memo(({
                 {gt.map((stat, i) => (
                   <tr key={stat.team} className={i === 0 ? "bg-white" : "hover:bg-gray-100/50"}>
                     <td className="p-2 text-gray-400">{i+1}</td>
-                    <td className="p-2 text-gray-800 uppercase font-black truncate max-w-[120px] flex items-center gap-2">
+                    
+                    {/* PERBAIKAN: Batasan lebar (max-w-[120px]) dan truncate telah dihapus di sini */}
+                    <td className="p-2 text-gray-800 uppercase font-black flex items-center gap-2">
                       {teamLogos[stat.team] && <img src={teamLogos[stat.team]} className="w-5 h-5 rounded-md object-cover border border-gray-200" alt="" />}
                       {stat.team}
                     </td>
+                    
                     <td className="p-2 text-center text-gray-500">{stat.play}</td>
                     <td className="p-2 text-center text-gray-700">{stat.win}</td>
                     <td className="p-2 text-center text-gray-400">{stat.lose}</td>

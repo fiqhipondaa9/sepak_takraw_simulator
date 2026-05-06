@@ -40,20 +40,17 @@ export default function App() {
   const isActivePhaseFinished = schedule.length > 0 && schedule.every(match => match.winner !== null);
   const isSinglePoolCompleted = tournamentType === 'Group' && isActivePhaseFinished;
 
-  // --- FITUR ORISINAL: PROTEKSI TUTUP TAB ---
   useEffect(() => {
     const handleBeforeUnload = (e) => { if (stage > 0) { e.preventDefault(); e.returnValue = ''; } };
     window.addEventListener('beforeunload', handleBeforeUnload);
     return () => window.removeEventListener('beforeunload', handleBeforeUnload);
   }, [stage]);
 
-  // --- FITUR ORISINAL: TIMER KOPI ---
   useEffect(() => {
     const apresiasiTimer = setInterval(() => { if (!isProjectorMode) setShowCoffeeModal(true); }, 33 * 60 * 1000);
     return () => clearInterval(apresiasiTimer);
   }, [isProjectorMode]);
 
-  // --- FITUR ORISINAL: TRUE FULLSCREEN API ---
   const handleEnterProjectorMode = () => {
     setIsProjectorMode(true);
     const elem = document.documentElement;
@@ -303,7 +300,6 @@ export default function App() {
   const renderAestheticBracket = () => {
     const isRealData = knockoutData.length > 0;
     
-    // --- FITUR ORISINAL: PLAKAT JUARA 3 BERSAMA ---
     let jointThirdTeams = [];
     if (isRealData) {
       const semiFinalRound = knockoutData.find(r => r && r[0] && r[0].title === 'SEMI FINAL');
@@ -373,7 +369,6 @@ export default function App() {
     return <div className="text-gray-400 text-xs font-bold p-8 text-center border-2 border-dashed rounded-3xl">BAGAN SISTEM GUGUR AKAN DITAMPILKAN BERDASARKAN HASIL FASE SEBELUMNYA</div>;
   };
 
-  // ===================== RENDER UI UTAMA =====================
   return (
     <div className={`min-h-screen uppercase ${theme.bgApp} font-sans text-gray-800 pb-20 transition-all duration-500`}>
       <style>{`
@@ -391,7 +386,6 @@ export default function App() {
         }
       `}</style>
 
-      {/* FITUR ORISINAL: MODAL KOPI */}
       {showCoffeeModal && (
         <div className="fixed inset-0 z-[70] bg-black/60 backdrop-blur-sm flex items-center justify-center p-4 animate-in fade-in duration-300">
           <div className="bg-white w-full max-w-sm rounded-3xl shadow-2xl flex flex-col overflow-hidden text-center relative p-8">
@@ -409,10 +403,8 @@ export default function App() {
         </div>
       )}
 
-      {/* FITUR ORISINAL: EXIT FULLSCREEN ANIMASI */}
       {isProjectorMode && <button onClick={handleExitProjectorMode} className="no-print fixed bottom-8 right-8 bg-white text-red-600 px-6 py-4 rounded-full shadow-2xl font-black z-50 flex items-center gap-3 animate-bounce border-4 border-red-100 hover:bg-red-50"><Icons.IconX /> EXIT</button>}
 
-      {/* FITUR ORISINAL: FAB KOPI (Floating Action Button) */}
       {!isProjectorMode && (
         <button onClick={() => setShowCoffeeModal(true)} className="no-print fixed bottom-8 right-8 bg-emerald-500 hover:bg-emerald-600 text-white h-14 rounded-full shadow-2xl z-50 flex items-center justify-center px-4 gap-0 hover:gap-3 transition-all duration-300 border-4 border-emerald-100 group overflow-hidden" title="Konsultasi & Apresiasi">
           <div className="relative flex items-center justify-center">
@@ -564,7 +556,6 @@ export default function App() {
                    {tournamentType === 'Groups' && (
                       <div className={`p-4 rounded-xl border ${theme.border} ${theme.soft} flex justify-between items-center`}>
                         <span className="font-black text-xs">JUMLAH GRUP</span>
-                        {/* FITUR ORISINAL: TOMBOL SUSUN ACAK */}
                         <div className="flex items-center gap-2">
                           <input type="number" min="2" max="26" value={numGroups} onChange={(e) => setNumGroups(e.target.value)} className="w-12 h-10 text-center font-black bg-white border border-gray-200 rounded-lg outline-none shadow-sm" />
                           <button onClick={handleAutoAssign} className="bg-white border border-gray-200 text-gray-700 font-black text-[10px] px-3 h-10 rounded-lg hover:bg-gray-50 uppercase shadow-sm">Susun</button>
@@ -605,8 +596,6 @@ export default function App() {
                    <div className={`p-3 rounded-2xl ${theme.soft} ${theme.textPrimary}`}><Icons.IconCalendar /></div>
                    <h2 className="text-3xl font-black text-gray-800 tracking-tight">JADWAL & SKOR LIVE</h2>
                  </div>
-                 
-                 {/* FITUR ORISINAL: TOMBOL CLEAR DAN RESET */}
                  {!isProjectorMode && (
                    <div className="no-print flex items-center gap-2">
                      {undoStack.length > 0 && <button onClick={handleRollback} className="bg-purple-50 text-purple-700 px-4 py-2 rounded-xl font-black text-xs flex items-center gap-2 border border-purple-200 shadow-sm"><Icons.IconUndo /> UNDO</button>}
@@ -684,7 +673,6 @@ export default function App() {
              <div className={`text-center bg-white rounded-3xl shadow-sm border border-gray-100 print:border-none print:shadow-none print:p-2 ${isProjectorMode ? 'p-12 shadow-2xl border-none' : 'p-8'}`}>
                 <h2 className={`font-black text-gray-900 flex items-center justify-center gap-4 ${isProjectorMode ? 'text-5xl tracking-tight' : 'text-3xl'}`}><div className={`p-3 rounded-2xl ${theme.primary} text-white`}><Icons.IconTrophy /></div>PENGINPUTAN SKOR BAGAN UTAMA</h2>
                 
-                {/* FITUR ORISINAL: TOMBOL CLEAR DAN RESET UNTUK KNOCKOUT */}
                 {!isProjectorMode && (
                    <div className="no-print mt-6 flex justify-center gap-2">
                      {undoStack.length > 0 && <button onClick={handleRollback} className="bg-purple-50 text-purple-700 px-4 py-2.5 rounded-xl font-black text-xs flex items-center gap-2 border border-purple-200 shadow-sm"><Icons.IconUndo /> Batal Lanjut Fase</button>}
