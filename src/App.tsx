@@ -723,6 +723,18 @@ export default function App() {
 
              <div id="master-print-area" className="p-10 overflow-y-auto bg-white flex-1 uppercase relative">
                 <div className="text-center mb-10 border-b pb-8 print-break-inside-avoid">
+                   
+                   {/* TAMBAHAN: SPONSOR LOGOS UNTUK CETAK/LAPORAN */}
+                   {sponsorLogos && sponsorLogos.length > 0 && (
+                      <div className="flex justify-center flex-wrap gap-4 mb-6">
+                        {sponsorLogos.map((logo, index) => (
+                          <div key={index} className="w-16 h-16 sm:w-24 sm:h-24 flex items-center justify-center">
+                            <img src={logo} alt="Sponsor" className="max-w-full max-h-full object-contain" />
+                          </div>
+                        ))}
+                      </div>
+                   )}
+
                    <h1 className="text-4xl font-black uppercase text-gray-900 tracking-tight mb-2">{championshipTitles[0] || "NAMA KEJUARAAN"}</h1>
                    <p className="text-xl font-bold text-gray-500 uppercase">{championshipTitles[1] || "KETERANGAN"}</p>
                    <p className="text-xs font-bold text-gray-400 mt-2 uppercase">{championshipTitles[2]}</p>
