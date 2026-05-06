@@ -37,6 +37,39 @@ export default function App() {
 
   const hasPhase2GroupStage = Object.values(groupAssignments).includes('Eliminated');
 
+  // ==========================================
+  // FITUR BARU: FUNGSI KOMPRESI GAMBAR OTOMATIS
+  // ==========================================
+  const compressImage = (file, maxWidth = 300, quality = 0.7) => {
+    return new Promise((resolve, reject) => {
+      const reader = new FileReader();
+      reader.readAsDataURL(file);
+      reader.onerror = error => reject(error);
+      reader.onload = (event) => {
+        const img = new Image();
+        img.src = event.target.result;
+        img.onload = () => {
+          const canvas = document.createElement('canvas');
+          let width = img.width;
+          let height = img.height;
+
+          if (width > maxWidth) {
+            height = (maxWidth / width) * height;
+            width = maxWidth;
+          }
+
+          canvas.width = width;
+          canvas.height = height;
+          const ctx = canvas.getContext('2d');
+          ctx.drawImage(img, 0, 0, width, height);
+
+          const compressedBase64 = canvas.toDataURL('image/jpeg', quality);
+          resolve(compressedBase64);
+        };
+      };
+    });
+  };
+
   useEffect(() => {
     const handleBeforeUnload = (e) => { if (stage > 0) { e.preventDefault(); e.returnValue = ''; } };
     window.addEventListener('beforeunload', handleBeforeUnload);
@@ -91,12 +124,82 @@ export default function App() {
     reader.readAsText(file); e.target.value = null; 
   };
 
-  const handleAddSponsor = (e) => { const file = e.target.files[0]; if (file) { const reader = new FileReader(); reader.onloadend = () => setSponsorLogos([...sponsorLogos, reader.result]); reader.readAsDataURL(file); } };
+  // ==========================================
+  // UPDATE: LOGIKA UPLOAD MENGGUNAKAN FUNGSI KOMPRESI
+  // ==========================================
+  const handleAddSponsor = async (e) => { 
+    const file = e.target.files[0]; 
+    if (file) { 
+      try {
+        const compressed = await compressImage(file, 400); 
+        setSponsorLogos([...sponsorLogos, compressed]); 
+      } catch (err) { alert("Gagal memproses gambar!"); }
+    } 
+  };
+
+  const handleTeamLogoUpload = async (teamName, e) => { 
+    const file = e.target.files[0]; 
+    if (file) { 
+      try {
+        const compressed = await compressImage(file, 200); 
+        setTeamLogos({ ...teamLogos, [teamName]: compressed }); 
+      } catch (err) { alert("Gagal memproses gambar!"); }
+    } 
+  };
+
   const handleRemoveSponsor = (index) => { const newSponsors = [...sponsorLogos]; newSponsors.splice(index, 1); setSponsorLogos(newSponsors); };
-  const handleTeamLogoUpload = (teamName, e) => { const file = e.target.files[0]; if (file) { const reader = new FileReader(); reader.onloadend = () => setTeamLogos({ ...teamLogos, [teamName]: reader.result }); reader.readAsDataURL(file); } };
   const handleAddCourt = (e) => { if (e) e.preventDefault(); const newCourt = courtInputValue.trim(); if (!newCourt || courts.includes(newCourt)) return; setCourts([...courts, newCourt]); setCourtInputValue(''); };
   const handleRemoveCourt = (courtToRemove) => { if (courts.length === 1) return alert("Minimal 1 lapangan aktif!"); setCourts(courts.filter(c => c !== courtToRemove)); };
   const handleRemoveTeam = (teamToRemove) => { setTeams(teams.filter(team => team !== teamToRemove)); const newAssignments = { ...groupAssignments }; delete newAssignments[teamToRemove]; setGroupAssignments(newAssignments); const newLogos = { ...teamLogos }; delete newLogos[teamToRemove]; setTeamLogos(newLogos); };
+
+  const handleKnockoutScoreChange = (rIndex, mIdx, pIdx, sIdx, side, val) => {
+    if (val !== '' && (val < 0 || val > 30)) return; 
+    setKnockoutData(prevData => {
+        const newData = [...prevData];
+        const round = [...newData[rIndex]];
+        const match = { ...round[mIdx] };
+        
+        const pts = match.parties.map((party, i) => {
+            if (i !== pIdx) return party;
+            const sets = party.sets.map((set, j) => j === sIdx ? { ...set, [side]: val } : set);
+            let wA=0, wB=0, z=0;
+            sets.forEach(s => { 
+                const a=parseInt(s.scoreA); const b=parseInt(s.scoreB); 
+                if(!isNaN(a)&&!isNaN(b)){ if(a>b)wA++; else if(b>a)wB++; else if(a===0&&b===0)z++; }
+            });
+            const winner = wA>=2 ? match.teamA : wB>=2 ? match.teamB : (z>=2 ? 'SERI' : null);
+            return { ...party, sets, winner };
+        });
+
+        let mW=0, mL=0, mS=0; 
+        pts.forEach(px => { if(px.winner===match.teamA) mW++; else if(px.winner===match.teamB) mL++; else if(px.winner==='SERI') mS++; });
+        let req = Math.ceil(pts.length/2); 
+        let fW = mW>=req ? match.teamA : mL>=req ? match.teamB : mS>=req ? 'SERI' : (mW+mL+mS===pts.length ? (mW>mL?match.teamA:mL>mW?match.teamB:'SERI') : null);
+        
+        match.parties = pts;
+        match.winner = fW;
+        match.winsA = mW;
+        match.winsB = mL;
+        round[mIdx] = match;
+        newData[rIndex] = round;
+
+        if (match.nextMatchRef) {
+           const { r: nextR, m: nextM, slot: nextSlot } = match.nextMatchRef;
+           if (newData[nextR] && newData[nextR][nextM]) {
+               const nextMatchObj = { ...newData[nextR][nextM] };
+               if (fW && fW !== 'SERI' && fW !== '?') {
+                   nextMatchObj[nextSlot] = fW;
+               } else {
+                   nextMatchObj[nextSlot] = '?'; 
+               }
+               const newNextRound = [...newData[nextR]];
+               newNextRound[nextM] = nextMatchObj;
+               newData[nextR] = newNextRound;
+           }
+        }
+        return newData;
+    });
+  };
 
   const getStandings = useCallback((specificSchedule = schedule, specificAssignments = groupAssignments) => {
     let standings = {};
@@ -301,7 +404,6 @@ export default function App() {
     finally { document.body.classList.remove('export-mode'); setIsExportingPng(false); }
   };
 
-  // PERBAIKAN: Bracket dinamis
   const renderAestheticBracket = () => {
     if (knockoutData.length === 0) return null;
     
