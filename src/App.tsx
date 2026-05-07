@@ -38,7 +38,7 @@ export default function App() {
   const hasPhase2GroupStage = Object.values(groupAssignments).includes('Eliminated');
 
   // ==========================================
-  // FITUR BARU: FUNGSI KOMPRESI GAMBAR OTOMATIS
+  // FITUR BARU: FUNGSI KOMPRESI GAMBAR (DENGAN LATAR PUTIH)
   // ==========================================
   const compressImage = (file, maxWidth = 300, quality = 0.7) => {
     return new Promise((resolve, reject) => {
@@ -61,8 +61,15 @@ export default function App() {
           canvas.width = width;
           canvas.height = height;
           const ctx = canvas.getContext('2d');
+          
+          // PERBAIKAN: Isi kanvas dengan warna putih terlebih dahulu sebelum menggambar gambar
+          // Ini mencegah background PNG transparan berubah menjadi hitam saat di-convert ke JPEG
+          ctx.fillStyle = "#ffffff";
+          ctx.fillRect(0, 0, width, height);
+          
           ctx.drawImage(img, 0, 0, width, height);
 
+          // Convert ke base64 JPEG dengan kualitas rendah (0.7)
           const compressedBase64 = canvas.toDataURL('image/jpeg', quality);
           resolve(compressedBase64);
         };
@@ -124,9 +131,6 @@ export default function App() {
     reader.readAsText(file); e.target.value = null; 
   };
 
-  // ==========================================
-  // UPDATE: LOGIKA UPLOAD MENGGUNAKAN FUNGSI KOMPRESI
-  // ==========================================
   const handleAddSponsor = async (e) => { 
     const file = e.target.files[0]; 
     if (file) { 
