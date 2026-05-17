@@ -26,6 +26,7 @@ export default function App() {
   const [showMasterModal, setShowMasterModal] = useState(false);
   const [isExportingPng, setIsExportingPng] = useState(false);
   const [showCoffeeModal, setShowCoffeeModal] = useState(false);
+  const [groupStartOffset, setGroupStartOffset] = useState(0); // 0 = A, 1 = B, 3 = D, dst.
 
   const {
     stage, setStage, matchHistory, setMatchHistory, teams, setTeams, schedule, setSchedule,
@@ -263,7 +264,7 @@ export default function App() {
     let allMatches = [];
     
     if (tournamentType === 'Groups') {
-      const gl = Array.from({length: Number(numGroups) || 2}, (_, i) => String.fromCharCode(65 + i));
+      const gl = Array.from({length: Number(numGroups) || 2}, (_, i) => String.fromCharCode(65 + groupStartOffset + i));
       let gM = {}; let maxRounds = 0; 
       gl.forEach(g => { 
           const t = teams.filter(x => groupAssignments[x] === g); 
@@ -435,7 +436,7 @@ export default function App() {
           setCourtInputValue={setCourtInputValue} handleAddCourt={handleAddCourt} courts={courts}
           handleRemoveCourt={handleRemoveCourt} tournamentType={tournamentType} setTournamentType={setTournamentType}
           roundRobinType={roundRobinType} setRoundRobinType={setRoundRobinType} handleAutoAssign={handleAutoAssign}
-          onStartTournament={handleStartTournament}
+          onStartTournament={handleStartTournament} groupStartOffset={groupStartOffset} setGroupStartOffset={setGroupStartOffset}
         />
         )}
 
