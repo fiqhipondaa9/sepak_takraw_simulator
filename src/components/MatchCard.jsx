@@ -39,14 +39,43 @@ export const MatchCard = memo(({
         )}
 
         {isKnockout ? (
-          <div className={`font-black tracking-widest uppercase ${isProjectorMode ? 'text-xl' : 'text-sm'} ${isLive ? 'text-red-800' : ''}`}>{match.title}</div>
+          <div className="flex flex-col items-center">
+             <div className={`font-black tracking-widest uppercase ${isProjectorMode ? 'text-xl' : 'text-sm'} ${isLive ? 'text-red-800' : ''}`}>
+               {match.title}
+             </div>
+             
+             {/* PERBAIKAN: Menampilkan Tanggal, Waktu & Lapangan di Knockout Mode */}
+             {!isProjectorMode ? (
+               <div className="flex flex-wrap justify-center items-center gap-2 mt-2">
+                 <span className="text-[10px] font-bold opacity-70">MATCH #{match.id} &bull; {match.court} &bull;</span>
+                 <div className="flex items-center gap-1 bg-white/50 px-2 py-1 rounded-lg border border-black/10 hover:bg-white transition-colors">
+                   <IconClock />
+                   <input 
+                     type="date" 
+                     value={match.date || ''} 
+                     onChange={(e) => onUpdateDateTime(match.id, 'date', e.target.value)}
+                     className="text-[10px] font-bold bg-transparent outline-none cursor-pointer"
+                   />
+                   <input 
+                     type="time" 
+                     value={match.time || ''} 
+                     onChange={(e) => onUpdateDateTime(match.id, 'time', e.target.value)}
+                     className="text-[10px] font-bold bg-transparent outline-none cursor-pointer w-16"
+                   />
+                 </div>
+               </div>
+             ) : (
+               <span className={`font-medium mt-1 ${isLive ? 'text-red-600 font-bold' : 'opacity-70'} text-base`}>
+                 MATCH #{match.id} &bull; {match.court} &bull; {match.date ? `${match.date} ` : ''}{match.time}
+               </span>
+             )}
+          </div>
         ) : (
           <div className="flex flex-col items-center">
             <span className={`font-black uppercase tracking-widest ${isLive ? 'text-red-800' : theme.textPrimary} ${isProjectorMode ? 'text-lg' : 'text-xs'}`}>
               {match.groupLabel} {match.roundLabel && `(${match.roundLabel})`}
             </span>
             
-            {/* FITUR BARU: TANGGAL & JAM EDITABLE (Mode Admin) */}
             {!isProjectorMode ? (
               <div className="flex flex-wrap justify-center items-center gap-2 mt-2">
                 <span className="text-[10px] font-bold opacity-70">MATCH #{match.id} &bull; {match.court} &bull;</span>
@@ -72,7 +101,7 @@ export const MatchCard = memo(({
               </span>
             )}
 
-            {/* FITUR BARU: TOMBOL SORONG JADWAL EKSTREM */}
+            {/* TOMBOL SORONG JADWAL EKSTREM (Hanya untuk grup) */}
             {!isProjectorMode && index !== null && onMove && (
               <div className="no-print absolute right-4 top-1/2 -translate-y-1/2 flex gap-1 bg-white/60 p-1 rounded-lg border border-black/5 shadow-sm backdrop-blur-sm">
                 <div className="flex flex-col gap-0.5">
