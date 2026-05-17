@@ -427,16 +427,16 @@ export default function App() {
         {/* KOMPONEN REGISTRASI */}
         {!isProjectorMode && stage === 0 && (
           <RegistrationForm 
-            theme={theme} teams={teams} setTeams={setTeams} inputValue={inputValue} setInputValue={setInputValue}
-            teamLogos={teamLogos} handleTeamLogoUpload={handleTeamLogoUpload} groupAssignments={groupAssignments}
-            setGroupAssignments={setGroupAssignments} numGroups={numGroups} handleRemoveTeam={handleRemoveTeam}
-            selectedEventFormat={selectedEventFormat} setSelectedEventFormat={setSelectedEventFormat}
-            mixDisciplines={mixDisciplines} setMixDisciplines={setMixDisciplines} courtInputValue={courtInputValue}
-            setCourtInputValue={setCourtInputValue} handleAddCourt={handleAddCourt} courts={courts}
-            handleRemoveCourt={handleRemoveCourt} tournamentType={tournamentType} setTournamentType={setTournamentType}
-            roundRobinType={roundRobinType} setRoundRobinType={setRoundRobinType} handleAutoAssign={handleAutoAssign}
-            onStartTournament={handleStartTournament}
-          />
+          theme={theme} teams={teams} setTeams={setTeams} inputValue={inputValue} setInputValue={setInputValue}
+          teamLogos={teamLogos} handleTeamLogoUpload={handleTeamLogoUpload} groupAssignments={groupAssignments}
+          setGroupAssignments={setGroupAssignments} numGroups={numGroups} setNumGroups={setNumGroups} handleRemoveTeam={handleRemoveTeam}
+          selectedEventFormat={selectedEventFormat} setSelectedEventFormat={setSelectedEventFormat}
+          mixDisciplines={mixDisciplines} setMixDisciplines={setMixDisciplines} courtInputValue={courtInputValue}
+          setCourtInputValue={setCourtInputValue} handleAddCourt={handleAddCourt} courts={courts}
+          handleRemoveCourt={handleRemoveCourt} tournamentType={tournamentType} setTournamentType={setTournamentType}
+          roundRobinType={roundRobinType} setRoundRobinType={setRoundRobinType} handleAutoAssign={handleAutoAssign}
+          onStartTournament={handleStartTournament}
+        />
         )}
 
         {/* FASE GRUP / PENYISIHAN */}

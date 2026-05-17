@@ -17,6 +17,7 @@ export const RegistrationForm = ({
   groupAssignments,
   setGroupAssignments,
   numGroups,
+  setNumGroups,
   handleRemoveTeam,
   selectedEventFormat,
   setSelectedEventFormat,
