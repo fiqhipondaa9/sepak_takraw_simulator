@@ -446,7 +446,9 @@ export default function App() {
                <div className="flex justify-between items-center border-b pb-6 mb-6">
                  <div className="flex items-center gap-4">
                    <div className={`p-3 rounded-2xl ${theme.soft} ${theme.textPrimary}`}><Icons.IconTable /></div>
-                   <h2 className="text-3xl font-black text-gray-800 tracking-tight">KLASEMEN SEMENTARA</h2>
+                   <h2 className="text-3xl font-black text-gray-800 tracking-tight">
+  {schedule.every(m => m.winner && m.winner !== '?') ? 'KLASEMEN AKHIR' : 'KLASEMEN SEMENTARA'}
+</h2>
                  </div>
                  {!isProjectorMode && (
                    <button onClick={handleCopyWhatsApp} className="no-print bg-green-50 text-green-700 px-4 py-2 rounded-xl font-black text-xs flex items-center gap-2 border border-green-200 shadow-sm"><Icons.IconCopy /> SALIN WA</button>

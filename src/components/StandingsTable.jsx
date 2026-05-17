@@ -14,10 +14,9 @@ export const StandingsTable = memo(({
       <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
         {Object.entries(standingsData)
           .filter(([gn]) => !gn.toLowerCase().includes('unknown') && !gn.toLowerCase().includes('eliminated'))
-          // PERBAIKAN POIN 3: Urutkan nama grup berdasarkan abjad (A, B, C, D, dst)
           .sort((a, b) => a[0].localeCompare(b[0]))
           .map(([gn, gt]) => (
-          <div key={gn} className="bg-gray-50 p-4 rounded-2xl border border-gray-100 shadow-sm print-break-inside-avoid">
+          <div key={gn} className="bg-gray-50 p-4 rounded-2xl border border-gray-100 shadow-sm print-break-inside-avoid overflow-x-auto">
             <div className="text-center font-black text-xs mb-3 text-gray-400 uppercase tracking-widest">{gn}</div>
             <table className="w-full text-xs font-bold text-left whitespace-nowrap">
               <thead>
@@ -27,9 +26,11 @@ export const StandingsTable = memo(({
                   <th className="p-2 text-center" title="Main">P</th>
                   <th className="p-2 text-center" title="Menang">W</th>
                   <th className="p-2 text-center" title="Kalah">L</th>
-                  {isTeamEvent && <th className="p-2 text-center">PRT</th>}
-                  <th className="p-2 text-center">SET</th>
-                  <th className="p-2 text-right">PTS</th>
+                  {isTeamEvent && <th className="p-2 text-center" title="Rasio Partai (Menang - Kalah)">PRT</th>}
+                  <th className="p-2 text-center" title="Rasio Set (Menang - Kalah)">SET</th>
+                  {/* FITUR BARU: Kolom Selisih Poin */}
+                  <th className="p-2 text-center" title="Selisih Poin (Memasukkan - Kemasukan)">PN</th>
+                  <th className="p-2 text-right" title="Poin Klasemen">PTS</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-gray-100">
@@ -37,18 +38,33 @@ export const StandingsTable = memo(({
                   <tr key={stat.team} className={i === 0 ? "bg-white" : "hover:bg-gray-100/50"}>
                     <td className="p-2 text-gray-400">{i+1}</td>
                     
-                    {/* PERBAIKAN: Batasan lebar (max-w-[120px]) dan truncate telah dihapus di sini */}
                     <td className="p-2 text-gray-800 uppercase font-black flex items-center gap-2">
                       {teamLogos[stat.team] && <img src={teamLogos[stat.team]} className="w-5 h-5 rounded-md object-cover border border-gray-200" alt="" />}
                       {stat.team}
                     </td>
                     
                     <td className="p-2 text-center text-gray-500">{stat.play}</td>
-                    <td className="p-2 text-center text-gray-700">{stat.win}</td>
+                    <td className="p-2 text-center text-emerald-600">{stat.win}</td>
                     <td className="p-2 text-center text-gray-400">{stat.lose}</td>
-                    {isTeamEvent && <td className="p-2 text-center text-gray-500">{stat.partyWin}-{stat.partyLose}</td>}
-                    <td className="p-2 text-center text-gray-500">{stat.setWin}-{stat.setLose}</td>
-                    <td className="p-2 text-right text-base font-black text-gray-800">{stat.totalPoints}</td>
+                    
+                    {isTeamEvent && (
+                      <td className="p-2 text-center text-gray-500 tracking-wider">
+                        {stat.partyWin}-{stat.partyLose}
+                      </td>
+                    )}
+                    
+                    <td className="p-2 text-center text-gray-500 tracking-wider">
+                      {stat.setWin}-{stat.setLose}
+                    </td>
+
+                    {/* FITUR BARU: Menampilkan Rasio/Selisih Poin */}
+                    <td className="p-2 text-center text-gray-500 tracking-wider">
+                      {stat.pointWin}-{stat.pointLose}
+                    </td>
+
+                    <td className="p-2 text-right text-base font-black text-gray-800">
+                      {stat.totalPoints}
+                    </td>
                   </tr>
                 ))}
               </tbody>
