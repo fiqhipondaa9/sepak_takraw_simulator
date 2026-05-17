@@ -1,18 +1,8 @@
 /**
- * Menghasilkan struktur bagan pertandingan sistem gugur.
- * 
- * @param {Array} manualTeams - Daftar tim yang bermain.
- * @param {string} tournamentType - Format turnamen.
- * @param {number} stage - Tahap aplikasi.
- * @param {boolean} isTeamEvent - Apakah event beregu.
- * @param {string} eventDiscipline - Disiplin pertandingan utama.
- * @param {Array} mixDisciplines - Disiplin untuk kategori Mix.
- * @param {number} startRoundIdx - Indeks awal (default: 0).
- * @param {number} initialId - Nomor urut pertandingan awal.
- * @returns {Array} Struktur bagan multi-dimensi.
+ * Menghasilkan struktur bagan pertandingan sistem gugur lengkap dengan jadwal.
  */
 export const generateDirectKnockout = (
-    manualTeams, tournamentType, stage, isTeamEvent, eventDiscipline, mixDisciplines, startRoundIdx = 0, initialId = 1
+    manualTeams, tournamentType, stage, isTeamEvent, eventDiscipline, mixDisciplines, courts = ['Lapangan Utama'], startRoundIdx = 0, initialId = 1
   ) => {
     const size = Math.pow(2, Math.ceil(Math.log2(manualTeams.length))); 
     let orderedTeams = Array(size).fill('BYE');
@@ -34,9 +24,16 @@ export const generateDirectKnockout = (
     const nP = isTeamEvent ? 3 : 1; 
     const pL = eventDiscipline === 'Mix' ? mixDisciplines : [`${eventDiscipline} 1`, `${eventDiscipline} 2`, `${eventDiscipline} 3`];
   
+    // --- LOGIKA PENJADWALAN WAKTU & LAPANGAN ---
+    const aC = courts.length > 0 ? courts : ['Lapangan Utama'];
+    let cTimes = aC.map(() => { let t = new Date(); t.setHours(8, 0, 0, 0); return t; }); 
+    const addMins = isTeamEvent ? 120 : 45; // 120 menit untuk beregu, 45 menit untuk individu
+    // -------------------------------------------
+  
     for(let r = 0; r < numRounds; r++) {
        let matchesInRound = size / Math.pow(2, r + 1); 
        let roundMatches = [];
+       
        for(let m = 0; m < matchesInRound; m++) {
           let tA = r === 0 ? orderedTeams[m * 2] : '?'; 
           let tB = r === 0 ? orderedTeams[m * 2 + 1] : '?';
@@ -62,10 +59,27 @@ export const generateDirectKnockout = (
           let nextSlot = m % 2 === 0 ? 'teamA' : 'teamB';
           let roundTitle = r === numRounds - 1 ? 'BABAK FINAL' : r === numRounds - 2 ? 'SEMI FINAL' : r === numRounds - 3 ? 'PEREMPAT FINAL' : 'BABAK PENYISIHAN';
           
+          // --- TENTUKAN WAKTU UNTUK MATCH INI ---
+          let eIdx = 0; 
+          for(let i=1; i<cTimes.length; i++) {
+            if(cTimes[i] < cTimes[eIdx]) eIdx = i;
+          }
+          
+          let matchDate = cTimes[eIdx].toISOString().slice(0, 10);
+          let matchTime = cTimes[eIdx].toLocaleTimeString([], {hour:'2-digit', minute:'2-digit', hour12: false});
+          let matchCourt = aC[eIdx];
+          
+          // Tambahkan durasi untuk pertandingan berikutnya di lapangan tersebut
+          cTimes[eIdx].setMinutes(cTimes[eIdx].getMinutes() + addMins);
+          // --------------------------------------
+  
           roundMatches.push({ 
               id: matchCounter++, roundIndex: r, matchIndex: m, title: roundTitle, 
               teamA: tA, teamB: tB, parties: initialParties, winner: autoWinner, winsA: 0, winsB: 0, 
-              isBye: isByeMatch, nextMatchRef: nextR < numRounds ? { r: nextR, m: nextM, slot: nextSlot } : null 
+              isBye: isByeMatch, nextMatchRef: nextR < numRounds ? { r: nextR, m: nextM, slot: nextSlot } : null,
+              date: matchDate, // Data tanggal tersimpan
+              time: matchTime, // Data waktu tersimpan
+              court: matchCourt // Data lapangan tersimpan
           });
        }
        rounds.push(roundMatches);

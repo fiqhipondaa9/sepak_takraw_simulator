@@ -243,7 +243,7 @@ export default function App() {
     if (tournamentType === 'Knocked Out Round') {
       saveSnapshot(); 
       setSchedule([]); 
-      setKnockoutData(generateDirectKnockout(teams, tournamentType, stage, isTeamEvent, eventDiscipline, mixDisciplines, 0, 1)); 
+      setKnockoutData(generateDirectKnockout(teams, tournamentType, stage, isTeamEvent, eventDiscipline, mixDisciplines, courts, 0, 1)); 
       setStage(3);
     } else {
       generateTournamentSchedule();
