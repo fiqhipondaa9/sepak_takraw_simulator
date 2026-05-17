@@ -177,6 +177,13 @@ export default function App() {
     });
   };
 
+  // FITUR BARU: Fungsi untuk mengubah jadwal di fase sistem gugur
+  const handleKnockoutDateTimeChange = (matchId, field, val) => {
+    setKnockoutData(prevData => prevData.map(round => 
+      round.map(m => m.id === matchId ? { ...m, [field]: val } : m)
+    ));
+  };
+
   const getStandings = useCallback((specificSchedule = schedule, specificAssignments = groupAssignments) => {
     let standings = {};
     teams.forEach(t => { standings[t] = { team: t, group: tournamentType === 'Groups' ? (specificAssignments[t] ? `Grup ${specificAssignments[t]}` : 'Unknown') : 'Pool Utama', play: 0, win: 0, lose: 0, partyWin: 0, partyLose: 0, setWin: 0, setLose: 0, pointWin: 0, pointLose: 0, totalPoints: 0 }; });
@@ -495,7 +502,7 @@ export default function App() {
                    <div className={`flex flex-wrap justify-center print:gap-4 ${isProjectorMode ? 'gap-10' : 'gap-6'}`}>
                       {round.map((match, mIdx) => ( 
                          <div key={match.id} className={`w-full ${isProjectorMode ? 'lg:w-[48%] xl:w-[46%]' : 'lg:w-[48%] xl:w-[45%]'}`}>
-                           <MatchCard match={match} theme={theme} isProjectorMode={isProjectorMode} isKnockout={true} teamLogos={teamLogos} isTeamEvent={isTeamEvent} onScoreChange={(mId, pIdx, sIdx, side, val) => handleKnockoutScoreChange(round[0].roundIndex, mIdx, pIdx, sIdx, side, val)} />
+                           <MatchCard match={match} theme={theme} isProjectorMode={isProjectorMode} isKnockout={true} teamLogos={teamLogos} isTeamEvent={isTeamEvent} onUpdateDateTime={handleKnockoutDateTimeChange} onScoreChange={(mId, pIdx, sIdx, side, val) => handleKnockoutScoreChange(round[0].roundIndex, mIdx, pIdx, sIdx, side, val)} />
                          </div> 
                       ))}
                    </div>
