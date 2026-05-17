@@ -161,6 +161,8 @@ export const MasterScheduleModal = ({
                      <tr className="bg-gray-100 text-[10px] font-black uppercase tracking-widest text-gray-500">
                         <th className="p-4 text-left rounded-tl-xl">ID</th>
                         <th className="p-4 text-left">FASE / GRUP</th>
+                        {/* Kolom Baru untuk Jadwal */}
+                        <th className="p-4 text-left">WAKTU & TEMPAT</th>
                         <th className="p-4 text-center">PERTANDINGAN</th>
                         <th className="p-4 text-right rounded-tr-xl">HASIL</th>
                      </tr>
@@ -169,7 +171,25 @@ export const MasterScheduleModal = ({
                     {generateMasterPlan().map((m, idx) => (
                       <tr key={idx} className="border-b border-gray-50 hover:bg-gray-50/50 transition-colors">
                         <td className="p-4 font-black text-gray-400">{String(m.id) !== 'TBD' ? `#${m.id}` : m.id}</td>
-                        <td className="p-4"><span className="bg-white border border-gray-200 px-3 py-1.5 rounded-full text-[10px] font-black uppercase tracking-widest text-gray-600 shadow-sm">{m.label || m.groupLabel}</span></td>
+                        
+                        <td className="p-4">
+                          <span className="bg-white border border-gray-200 px-3 py-1.5 rounded-full text-[10px] font-black uppercase tracking-widest text-gray-600 shadow-sm">
+                            {m.label || m.groupLabel}
+                          </span>
+                        </td>
+                        
+                        {/* Menampilkan Data Tanggal, Waktu, dan Lapangan */}
+                        <td className="p-4">
+                           <div className="flex flex-col">
+                             <span className="text-[10px] font-black text-gray-800">
+                               {m.date ? `${m.date} ` : ''}{m.time || ''}
+                             </span>
+                             <span className="text-[10px] font-bold text-gray-500 mt-0.5">
+                               {m.court || '-'}
+                             </span>
+                           </div>
+                        </td>
+
                         <td className="p-4 font-black text-center">
                           <div className="flex justify-center items-center gap-4">
                              <span className={`w-1/2 text-right uppercase ${m.winner === m.teamA && m.winner !== '?' && m.winner !== 'SERI' ? 'text-emerald-600' : 'text-gray-800'}`}>{m.teamA}</span>
@@ -177,6 +197,7 @@ export const MasterScheduleModal = ({
                              <span className={`w-1/2 text-left uppercase ${m.winner === m.teamB && m.winner !== '?' && m.winner !== 'SERI' ? 'text-emerald-600' : 'text-gray-800'}`}>{m.teamB}</span>
                           </div>
                         </td>
+                        
                         <td className="p-4 text-right">
                            {m.winner && m.winner !== '?' ? (
                              <span className={`text-[10px] font-black px-3 py-1.5 rounded-full shadow-sm ${m.winner==='SERI'?'bg-gray-100 text-gray-500 border border-gray-200':'bg-emerald-100 text-emerald-700 border border-emerald-200'}`}>
